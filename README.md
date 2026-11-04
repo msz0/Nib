@@ -1,4 +1,12 @@
-# Nib: a dark little notch for Windows 11
+<p align="center">
+  <img src="build/icon.png" alt="Nib logo" width="120">
+</p>
+
+<h1 align="center">Nib: a dark little notch for Windows 11</h1>
+
+<p align="center">
+  <a href="https://github.com/msz0/nib/releases/latest/download/Nib-Setup.exe"><b>Download Nib for Windows</b></a>
+</p>
 
 Hover the pill at the top of the screen and it opens into a grid of tools. Everything works without Claude Code.
 
@@ -18,6 +26,9 @@ The ... menu has All apps, Settings, Fold in and Quit.
 ## Spotify lyrics, synced
 Settings > Music: create an app at developer.spotify.com/dashboard, add the Redirect URI `http://127.0.0.1:47821/spotify/callback`, paste the Client ID, press Connect. Nib then reads your exact playback position through Spotify's official API. Spotify has no lyrics endpoint in that API, so the lyric text comes from LRCLIB (lrclib.net), matched to your track and length.
 
-## Running it
-- **Nib.exe** (portable zip): unzip, double-click. SmartScreen may warn because it's unsigned: More info > Run anyway.
+## Installing
+- **Installer (recommended)**: download [Nib-Setup.exe](https://github.com/msz0/nib/releases/latest/download/Nib-Setup.exe) and run it. If Windows shows "Windows protected your PC", the app isn't code-signed yet: click **More info**, then **Run anyway**. Nib updates itself and asks before installing a new version.
 - **From source**: double-click `Start Nib.bat` (installs Node.js via winget once if needed). Edit in VS Code with `code .`.
+
+## License
+MIT. See [LICENSE](LICENSE).
