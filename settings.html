@@ -1,0 +1,142 @@
+<!doctype html><meta charset="utf-8"><title>Settings</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
+<style>
+:root{--ac:#c8e38a;--bg:#0d0f13;--card:#14171d;--line:#1d212a;color-scheme:dark}*{box-sizing:border-box}
+html,body{height:100%;margin:0}body{display:flex;background:var(--bg);color:#eceef3;font:14px/1.4 "Segoe UI Variable Text","Segoe UI",sans-serif}
+#side{width:220px;flex:none;background:#0a0b0e;border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px}
+#side .brand{display:flex;gap:10px;align-items:center;padding:4px 10px 16px;font-weight:700}#side .brand small{display:block;font-weight:400;color:#7d8496;font-size:12px}
+.ni{display:flex;gap:12px;align-items:center;height:38px;padding:0 12px;border-radius:10px;background:none;border:0;color:#b4bac8;font:500 14px inherit;cursor:pointer;text-align:left}
+.ni:hover{background:#14171d;color:#fff}.ni.on{background:#1a1e26;color:#fff}.ni svg{flex:none}.gap{height:14px}.sec{padding:8px 12px 4px;color:#6b7284;font-size:11.5px}
+#main{flex:1;overflow:auto;padding:30px 40px 60px}h1{font-size:26px;margin:0 0 2px}.sub{color:#7d8496;margin:0 0 22px}h3{font-size:13px;margin:22px 0 10px;color:#dfe2ea}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.r{display:flex;align-items:center;gap:16px;padding:14px 18px;border-top:1px solid var(--line)}.r:first-child{border-top:0}.rt{flex:1;min-width:0}.rt b{display:block;font-weight:600}.rt small{color:#7d8496;font-size:12.5px;display:block;margin-top:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}.seg button,.btn{height:32px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:#101319;color:#eceef3;font:600 12.5px "Segoe UI",sans-serif;cursor:pointer}
+.seg button:hover,.btn:hover{background:#1a1e26}.seg button.on{background:var(--ac);color:#10130a;border-color:var(--ac)}
+.tg{width:46px;height:26px;border-radius:13px;border:0;background:#2a2f3a;position:relative;cursor:pointer;flex:none;transition:background .2s}.tg::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:#9aa1b2;transition:.2s}
+.tg.on{background:var(--ac)}.tg.on::after{left:23px;background:#10130a}
+.rg{display:flex;align-items:center;gap:12px;min-width:240px}.rg input{flex:1;accent-color:var(--ac)}.rg span{width:50px;text-align:right;color:#9aa1b2;font-variant-numeric:tabular-nums}
+input[type=text]{height:34px;min-width:260px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:#0e1015;color:#eceef3;font:inherit;outline:none}input[type=text]:focus{border-color:#444b60}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ac{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.ac .h{display:flex;gap:14px;align-items:center}.ac .ic{width:40px;height:40px;border-radius:10px;background:#1c2029;display:grid;place-items:center;color:#cfd3dd;flex:none}.ac b{display:block}.ac .st{font-size:12px;color:var(--ac)}.ac .st.off{color:#7d8496}.ac p{margin:10px 0 0;color:#9aa1b2;font-size:13px}.ac .h .tg{margin-left:auto}
+.hint{color:#7d8496;font-size:12.5px;margin:8px 2px}.ok{color:var(--ac);font-size:12.5px}.err{color:#ff7b86;font-size:12.5px}
+.arow{display:flex;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line)}.arow:first-child{border-top:0}.arow .h{cursor:grab;color:#566;padding:0 4px}.arow .nm{flex:1}.arow input.n{width:130px;min-width:0}.arow input.t{flex:1;min-width:0}
+.lg{width:26px;height:26px;flex:none;display:grid;place-items:center;color:#cfd3dd}.lg img{width:24px;height:24px;object-fit:contain;filter:grayscale(1) brightness(1.2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px}.mini{width:30px;padding:0}code{background:#1a1e26;padding:2px 6px;border-radius:6px;font-size:12.5px}
+</style>
+<div id="side"></div><div id="main"></div>
+<script>
+const $ = s => document.querySelector(s); let S, C, page = 'apps', dragEl = null, saveT;
+const PAGES = [['apps', 'Apps', 'apps'], ['island', 'Island', 'sliders'], ['music', 'Music', 'spotify'], ['sounds', 'Sounds', 'chat'], ['launcher', 'Launcher', 'folder'], ['connect', 'Connections', 'claude'], ['general', 'General', 'sys']];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ico = (k, sz = 18) => { const I = C.icons; if (I.fill[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="currentColor"><path d="${I.fill[k].f}"/></svg>`; if (I.stroke[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I.stroke[k]}</svg>`; return ''; };
+const queue = () => { clearTimeout(saveT); saveT = setTimeout(() => nib.setSettings(S), 250); };
+const mk = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const row = (t, d, ctl) => { const r = mk('div', 'r', `<div class="rt"><b>${t}</b><small>${d || ''}</small></div>`); if (ctl) r.appendChild(ctl); return r; };
+const card = rows => { const c = mk('div', 'card'); rows.forEach(r => c.appendChild(r)); return c; };
+const tog = (get, set) => { const b = mk('button', 'tg' + (get() ? ' on' : '')); b.onclick = () => { set(!get()); b.classList.toggle('on', get()); queue(); }; return b; };
+const seg = (opts, get, set, after) => { const w = mk('div', 'seg'); for (const [v, n] of opts) { const b = mk('button', get() === v ? 'on' : '', n); b.onclick = () => { set(v); [...w.children].forEach(c => c.classList.toggle('on', c === b)); queue(); if (after) after(v); }; w.appendChild(b); } return w; };
+const rng = (min, max, step, get, set, f, after) => { const w = mk('div', 'rg'), i = mk('input'), l = mk('span', '', f(get())); i.type = 'range'; i.min = min; i.max = max; i.step = step; i.value = get(); i.oninput = () => { set(+i.value); l.textContent = f(+i.value); queue(); }; if (after) i.onchange = after; w.append(i, l); return w; };
+const txt = (get, set, ph, w) => { const i = mk('input'); i.type = 'text'; i.value = get() || ''; i.placeholder = ph || ''; if (w) i.style.minWidth = w; i.onchange = () => { set(i.value.trim()); queue(); }; return i; };
+const head = (t, s) => [mk('h1', '', t), mk('p', 'sub', s)];
+
+function nav() {
+  $('#side').innerHTML = `<div class="brand"><div>${esc(S.name || 'Nib')}<small>Settings</small></div></div>` + PAGES.map(([id, n, ik]) => `<button class="ni ${id === page ? 'on' : ''}" data-p="${id}">${ico(ik, 17)}${n}</button>`).join('');
+  $('#side').querySelectorAll('.ni').forEach(b => b.onclick = () => { page = b.dataset.p; show(); });
+}
+function show() { nav(); const m = $('#main'); m.innerHTML = ''; PG[page]().forEach(n => m.appendChild(n)); m.scrollTop = 0; }
+
+const SLOTS = [['nothing', 'Nothing'], ['time', 'Time'], ['battery', 'Battery'], ['cpu', 'CPU'], ['ram', 'RAM'], ['event', 'Next event']];
+const STYLES = [['off', 'Off'], ['chime', 'Chime'], ['bell', 'Bell'], ['pop', 'Pop'], ['soft', 'Soft'], ['marimba', 'Marimba'], ['ping', 'Ping']];
+const PG = {
+  apps() {
+    const g = mk('div', 'cards');
+    for (const w of C.widgets) {
+      const c = mk('div', 'ac', `<div class="h"><div class="ic">${ico(w.ik, 20)}</div><div><b>${esc(w.name)}</b><span class="st"></span></div></div><p>${esc(w.desc)}</p>`);
+      const st = c.querySelector('.st'), paint = () => { const o = S.widgets.includes(w.id); st.textContent = o ? 'In your island' : 'Off'; st.className = 'st' + (o ? '' : ' off'); };
+      c.querySelector('.h').appendChild(tog(() => S.widgets.includes(w.id), v => { S.widgets = v ? [...S.widgets, w.id] : S.widgets.filter(x => x !== w.id); paint(); })); paint(); g.appendChild(c);
+    }
+    return [...head('Apps', 'Pick which tools are in your island'), g];
+  },
+  island() {
+    const I = S.island;
+    return [...head('Island', 'How it looks and what it shows'),
+      mk('h3', '', 'Look'),
+      card([row('Size', 'How big the island is', seg([['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']], () => I.size, v => I.size = v)),
+        row('Style', 'Attached to the top edge like a laptop notch, or floating just below it', seg([['attached', 'Attached'], ['float', 'Floating']], () => I.style, v => I.style = v)),
+        row('See-through', 'How much you see through the island', rng(0, 60, 5, () => I.alpha, v => I.alpha = v, v => v + '%')),
+        row('Open', 'Opens when your mouse moves over it, or only when you click it', seg([['hover', 'On hover'], ['click', 'On click']], () => I.open, v => I.open = v))]),
+      mk('h3', '', 'Resting island'),
+      card([row('Left of the eyes', 'What it shows when nothing is going on', seg(SLOTS, () => I.left, v => I.left = v)),
+        row('Eyes', 'In the middle, like a camera', tog(() => I.eyes !== false, v => I.eyes = v)),
+        row('Right of the eyes', 'What it shows when nothing is going on', seg(SLOTS, () => I.right, v => I.right = v)),
+        row('Clock', 'How the time looks, in the island', seg([['auto', 'Automatic'], ['12', '12-hour'], ['24', '24-hour']], () => I.clock, v => I.clock = v))]),
+      mk('h3', '', 'While music plays'),
+      card([row('Song on the island', 'Shows the song with its logo and the line being sung', tog(() => I.music !== false, v => I.music = v)),
+        row('Lyrics', 'Synced lyrics from lrclib.net (only the song, artist and length are sent)', tog(() => I.lyrics !== false, v => I.lyrics = v))])];
+  },
+  music() {
+    const st = mk('div', 'rt', '<b>Spotify</b><small id="sps">Checking...</small>'), b = mk('button', 'btn', 'Connect'), msg = mk('div', 'hint');
+    const paint = on => { $('#sps').textContent = on ? 'Connected. Lyrics sync to your exact position.' : 'Not connected. Lyrics still work, but sync is approximate.'; b.textContent = on ? 'Disconnect' : 'Connect'; b.onclick = async () => { if (on) { await nib.spotifyDisconnect(); paint(false); return; } await nib.setSettings({ spotifyId: S.spotifyId }); const r = await nib.spotifyConnect(); msg.className = r.ok ? 'ok' : 'err'; msg.textContent = r.ok ? 'Finish signing in in your browser.' : r.error; }; };
+    const top = mk('div', 'r'); top.append(st, b);
+    const idRow = row('Client ID', 'From your app at developer.spotify.com/dashboard', txt(() => S.spotifyId, v => S.spotifyId = v, 'paste it here', '300px'));
+    const how = mk('div', 'hint', 'How: open developer.spotify.com/dashboard, create an app, and add this Redirect URI: <code>http://127.0.0.1:47821/spotify/callback</code>. Paste the app\'s Client ID above, save, then press Connect. No secret is needed.');
+    setTimeout(async () => { const on = await nib.spotifyStatus(); paint(on); nib.onSpotify(paint); }, 0);
+    return [...head('Music', 'Spotify, lyrics and which player is controlled'),
+      card([top, idRow]), how, msg,
+      mk('h3', '', 'Player'),
+      card([row('Player app', 'Play, Pause, Next and Previous only ever control this app (default Spotify), never your browser, so Netflix or YouTube are left alone', txt(() => S.player, v => S.player = v || 'Spotify', 'Spotify', '160px')),
+        row('Lyrics timing', 'Nudge if lines come a bit early or late (+ shows them earlier)', rng(-3, 3, .1, () => +S.lyricOffset || 0, v => S.lyricOffset = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + 's'))]),
+      mk('div', 'hint', 'Spotify has no lyrics service in its public API, so lyrics come from the free LRCLIB database, matched to your exact track and length. Not every song has them.')];
+  },
+  sounds() {
+    const o = S.sounds, ev = [['ask', 'Needs you', 'When Claude wants permission or has a question'], ['done', 'Claude is done', 'When a Claude Code task finishes'], ['focus', 'Focus finished', 'When your focus timer ends'], ['event', 'Calendar event', 'When an event starts']];
+    return [...head('Sounds', 'Notification sounds and volume'),
+      card([row('Sounds', 'Turn all island sounds on or off', tog(() => o.on, v => o.on = v)),
+        row('Volume', 'How loud the sounds are', rng(0, 1, .05, () => o.vol, v => o.vol = v, v => Math.round(v * 100) + '%', () => nib.preview({ style: o.done === 'off' ? 'chime' : o.done, vol: o.vol })))]),
+      mk('h3', '', 'Sound for each event (click to hear it)'),
+      card(ev.map(([k, n, d]) => row(n, d, seg(STYLES, () => o[k], v => o[k] = v, v => v !== 'off' && nib.preview({ style: v, vol: o.vol })))))];
+  },
+  launcher() {
+    const list = mk('div', 'card'), chips = mk('div', 'card'), have = () => new Set([...list.querySelectorAll('.arow')].map(r => r.dataset.id));
+    const logo = (a, ik) => a.logo || a.icon ? `<img src="${a.logo || a.icon}">` : ik ? ico(ik, 22) : `<b>${esc((a.name || '?')[0].toUpperCase())}</b>`;
+    const commit = () => { const rows = [...list.querySelectorAll('.arow')]; S.apps = rows.map(r => r.dataset.id); S.custom = rows.filter(r => r.dataset.c === '1').map(r => ({ id: r.dataset.id, name: r.querySelector('.n').value.trim(), target: r.querySelector('.t').value.trim(), ...(r.dataset.logo ? { logo: r.dataset.logo } : {}) })).filter(a => a.name && a.target); S.apps = S.apps.filter(id => C.apps.some(a => a.id === id) || S.custom.some(c => c.id === id)); queue(); };
+    function addRow(a, custom) {
+      const r = mk('div', 'arow'); r.dataset.id = a.id; r.dataset.c = custom ? 1 : 0; r.dataset.logo = a.logo || '';
+      r.innerHTML = `<span class="h">&#8942;&#8942;</span><span class="lg">${logo(a, a.ik)}</span>` + (custom ? `<input type="text" class="n" value="${esc(a.name)}" placeholder="Name"><input type="text" class="t" value="${esc(a.target)}" placeholder="Path, link or command"><button class="btn bb">Browse</button><button class="btn bl"></button>` : `<span class="nm">${esc(a.name)}</span>`) + '<button class="btn mini u">&#9650;</button><button class="btn mini d">&#9660;</button><button class="btn mini x">x</button>';
+      const lb = r.querySelector('.bl'), lg = r.querySelector('.lg'), paint = () => { lg.innerHTML = logo({ logo: r.dataset.logo, icon: a.icon, name: (r.querySelector('.n') || {}).value || a.name }, a.ik); if (lb) lb.textContent = r.dataset.logo ? 'Remove logo' : 'Add logo (optional)'; };
+      paint();
+      r.querySelector('.x').onclick = () => { r.remove(); commit(); drawChips(); }; r.querySelector('.u').onclick = () => { r.previousElementSibling && list.insertBefore(r, r.previousElementSibling); commit(); }; r.querySelector('.d').onclick = () => { r.nextElementSibling && list.insertBefore(r.nextElementSibling, r); commit(); };
+      if (custom) { r.querySelectorAll('input').forEach(i => i.onchange = () => { paint(); commit(); }); r.querySelector('.bb').onclick = async () => { const p = await nib.pick('file'); if (p) { r.querySelector('.t').value = p; commit(); } }; lb.onclick = async () => { if (r.dataset.logo) r.dataset.logo = ''; else { const d = await nib.pickLogo(); if (d) r.dataset.logo = d; } paint(); commit(); }; }
+      list.appendChild(r); return r;
+    }
+    function drawChips() { chips.innerHTML = ''; const h = have(), c = mk('div', 'chips'); C.apps.filter(a => !h.has(a.id)).forEach(a => { const b = mk('button', 'btn', '+ ' + esc(a.name)); b.onclick = () => { addRow(a, false); commit(); drawChips(); }; c.appendChild(b); }); chips.appendChild(c.children.length ? c : mk('div', 'hint', 'Everything built in is already added.')); }
+    for (const id of S.apps) { const b = C.apps.find(a => a.id === id), c = S.custom.find(a => a.id === id); if (b) addRow(b, false); else if (c) addRow(c, true); }
+    list.addEventListener('mousedown', e => { const r = e.target.closest('.arow'); if (r) r.draggable = !!e.target.closest('.h'); });
+    list.addEventListener('dragstart', e => { dragEl = e.target.closest('.arow'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'x'); });
+    list.addEventListener('dragover', e => { e.preventDefault(); const r = e.target.closest('.arow'); if (!dragEl || !r || r === dragEl) return; const b = r.getBoundingClientRect(); list.insertBefore(dragEl, e.clientY < b.top + b.height / 2 ? r : r.nextSibling); });
+    list.addEventListener('dragend', () => { if (dragEl) dragEl.draggable = false; dragEl = null; commit(); });
+    drawChips();
+    const add = mk('button', 'btn', 'Add your own app'); add.onclick = () => { const r = addRow({ id: 'c' + Date.now(), name: '', target: '' }, true); r.querySelector('.n').focus(); };
+    return [...head('Launcher', 'The apps in your island. Drag to reorder.'), list, mk('h3', '', 'Add a built-in app'), chips, mk('div', '', ''), add,
+      mk('div', 'hint', 'Your own app: a program path, a website, an app link like spotify:, or a command like notepad. A logo is optional. If you skip it, the program\'s own icon is used when it can be found.')];
+  },
+  connect() {
+    const cl = mk('div', 'rt', '<b>Claude Code</b><small id="cls">Checking...</small>'), cb = mk('button', 'btn', '...'), top = mk('div', 'r'); top.append(cl, cb);
+    const paint = s => { $('#cls').textContent = s.connected ? 'Connected. The eyes show what Claude is doing.' : 'Not connected'; cb.textContent = s.connected ? 'Disconnect' : 'Connect'; cb.onclick = async () => paint(await nib.claudeSet({ connect: !s.connected })); };
+    setTimeout(async () => paint(await nib.claude()), 0);
+    return [...head('Connections', 'Calendar, Discord and Claude Code'),
+      mk('h3', '', 'Calendar'), card([row('Calendar link', 'Google Calendar: Settings, your calendar, Integrate calendar, Secret address in iCal format. Anyone with the link can read it, so keep it private.', txt(() => S.ics, v => S.ics = v, 'https://... .ics', '300px'))]),
+      mk('h3', '', 'Discord'), card([row('Mute hotkey', 'Add Toggle Mute in Discord > Keybinds with the same keys', txt(() => S.discord.mute, v => S.discord.mute = v, 'Ctrl+Shift+M', '160px')), row('Deafen hotkey', 'Add Toggle Deafen with the same keys', txt(() => S.discord.deafen, v => S.discord.deafen = v, 'Ctrl+Shift+D', '160px'))]),
+      mk('h3', '', 'Claude Code'), card([top])];
+  },
+  general() {
+    return [...head('General', 'Names and files'),
+      card([row('Companion name', 'What your island buddy is called', txt(() => S.name, v => S.name = v || 'Nib', 'Nib', '200px')), row('Your name', 'Used in greetings', txt(() => S.you, v => S.you = v, '', '200px'))]),
+      mk('h3', '', 'File drop zones'),
+      (() => { const z = mk('div'); const c = mk('div', 'card'); const base = row('Sort by type folder', 'Where "Sort by type" puts files (default: Documents\\Sorted)', null); const bi = txt(() => S.sortBase, v => S.sortBase = v, 'Documents\\Sorted', '260px'); bi.readOnly = true; const bb = mk('button', 'btn', 'Choose'); bb.onclick = async () => { const p = await nib.pick('folder'); if (p) { S.sortBase = p; bi.value = p; queue(); } }; base.append(bi, bb); c.appendChild(base);
+        const draw = () => { c.querySelectorAll('.zr').forEach(x => x.remove()); (S.zones || []).forEach((zn, i) => { const r = mk('div', 'r zr'); const n = txt(() => zn.name, v => zn.name = v, 'Zone name', '160px'); const p = txt(() => zn.path, () => {}, '', '260px'); p.readOnly = true; const x = mk('button', 'btn', 'Remove'); x.onclick = () => { S.zones.splice(i, 1); queue(); draw(); }; r.append(n, p, x); c.appendChild(r); }); };
+        draw(); const add = mk('button', 'btn', 'Add drop zone'); add.onclick = async () => { const p = await nib.pick('folder'); if (!p) return; S.zones = [...(S.zones || []), { name: p.split(/[\\/]/).filter(Boolean).pop() || 'Zone', path: p }]; queue(); draw(); }; z.append(c, mk('div'), add, mk('div', 'hint', 'Drag files onto the island and drop them on a zone. Nothing is overwritten, and Undo is in the Files tab.')); return z; })()];
+  }
+};
+nib.getSettings().then(r => { S = r.settings; C = r.catalog; S.island = S.island || {}; S.sounds = S.sounds || {}; S.discord = S.discord || {}; show(); });
+</script>
