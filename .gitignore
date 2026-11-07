@@ -1,2 +1,13 @@
 dist/
+dist-test/
 node_modules/
+
+# Local editor and backup artifacts
+*.backup-*
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Runtime diagnostics
+nib-errors.log
