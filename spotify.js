@@ -52,7 +52,13 @@ function create({ file, enc, dec, open, clientId, onChange }) {
     const r = await fetch(API + url, { method, headers: { Authorization: 'Bearer ' + a, 'content-length': '0' } }).catch(() => null);
     return !!r && (r.ok || r.status === 204);
   }
+  async function seek(seconds) {
+    const a = await access(); if (!a || !Number.isFinite(seconds)) return false;
+    const position = Math.max(0, Math.round(seconds * 1000));
+    const r = await fetch(API + '/v1/me/player/seek?position_ms=' + position, { method: 'PUT', headers: { Authorization: 'Bearer ' + a } }).catch(() => null);
+    return !!r && (r.ok || r.status === 204);
+  }
   load();
-  return { control, connect, callback, playing, connected: () => !!tok, disconnect: () => { tok = null; save(); onChange(false); }, REDIRECT };
+  return { control, connect, callback, playing, seek, connected: () => !!tok, disconnect: () => { tok = null; save(); onChange(false); }, REDIRECT };
 }
 module.exports = { create, REDIRECT };

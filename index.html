@@ -25,8 +25,6 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 #island.mus{width:250px;height:40px;margin-left:-125px}.mus #clip{border-radius:0 0 18px 18px}.float.mus #clip{border-radius:20px}
 #island.open{width:420px;margin-left:-210px}.open #clip{border-radius:0 0 28px 28px}.float.open #clip{border-radius:28px}
 #island.app{--tint:color-mix(in srgb,var(--app) 36%,#000)}
-#island.media-art{--tint:color-mix(in srgb,var(--media-accent,#315c42) 48%,#000);--c:var(--media-accent,#fff)}
-
 /* resting pill */
 #rest{display:flex;align-items:center;justify-content:center;gap:9px;height:100%;padding:0 12px;white-space:nowrap;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
 #full,.open #rest{display:none}.open #full{display:block}
@@ -64,7 +62,7 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 [data-theme="light"] #menuBox button{color:#1d293b;background:transparent}
 [data-theme="light"] #menuBox button:hover{background:#edf2f9}
 [data-theme="light"] #menuBox .q{color:#b42335}
-#body{padding:6px 16px 4px}#pin{max-height:236px;overflow:auto;padding:2px 0}
+#body{padding:6px 16px 4px}#pin{max-height:278px;overflow:auto;padding:2px 0}#pin:has(.media-head){overflow:hidden}
 ::-webkit-scrollbar{width:6px;height:0}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
 #nav{display:flex;gap:2px;padding:6px 14px 12px;overflow-x:auto;justify-content:safe center;scrollbar-width:none}#nav::-webkit-scrollbar{display:none}#nav .nv{flex:0 0 auto}
 .nv{height:32px;min-width:32px;padding:0 8px;border-radius:16px;background:transparent;display:flex;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.6);flex:none}
@@ -90,7 +88,7 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 .mrow{display:flex;gap:12px;align-items:center}.mrow img,.mrow .noart{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:rgba(255,255,255,.08);display:grid;place-items:center}
 .mt{font-size:15px;font-weight:700}.lyr{margin:10px 0 6px;min-height:66px;line-height:1.4}.lyr div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .3s}
 #l0,#l2{font-size:12.5px;color:rgba(255,255,255,.4)}#l1{font-size:15px;font-weight:700;margin:2px 0}
-.prog{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}.bar{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;cursor:pointer}.bar i{display:block;height:100%;background:var(--media-accent,#fff);width:0;transition:width .18s linear}
+.prog{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}.bar{position:relative;flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden;cursor:pointer;touch-action:none}.bar i{display:block;height:100%;background:var(--media-accent,#fff);width:0;transition:width .18s linear}
 .ctl{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px}.ctl button{background:transparent;width:38px;height:34px;padding:0;display:grid;place-items:center}.ctl .big{width:44px;height:44px;border-radius:22px;background:#fff;color:#000}
 .vols{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px}.volume{display:flex;align-items:center;gap:7px;color:var(--dim);font-size:12px}.volume input{width:128px;margin:0;accent-color:var(--media-accent,#fff)}
 #clog{height:80px;overflow:auto;user-select:text;font-size:13px;line-height:1.45;margin-bottom:8px}
@@ -450,7 +448,7 @@ const tier = m => TIERS.find(t => m <= t[0]);
 let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: [], widgets: [], icons: { fill: {}, stroke: {} } };
 let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false, gameMode = false;
 let snd = true, t0 = 0, idleT, leaveT, ctx, focusEnd = 0, fSel = 25, focusMin = 25, cx = 0, cy = 0, lastMove = performance.now(), dizzyUntil = 0;
-let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaVolume = 50, evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null, spOn = false;
+let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaAppVolume = 50, mediaVolumeTarget = '', mediaVolumeMessage = 'Reading app volume…', mediaVolumeAvailable = false, mediaScrubbing = false, mediaSeekBar = null, evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null, spOn = false;
 let voiceRecorder = null, voiceParts = [], voiceStream = null;
 let memoAudio = null, memoPlaying = '', currentOutput = 'default';
 function stopMemoAudio(){ if(memoAudio){memoAudio.pause();memoAudio.removeAttribute('src');memoAudio.load();memoAudio=null;} memoPlaying=''; }
@@ -488,6 +486,8 @@ const clock = () => { const c = S.island.clock; return new Date().toLocaleTimeSt
 const on = id => (S.widgets || []).includes(id);
 const playing = () => np && np.status === 'Playing';
 const isSp = () => np && /spotify/i.test(np.src || '');
+const isYouTube = () => np && !isSp() && ['chrome', 'msedge'].includes(np.source);
+const mediaBrandIcon = () => isSp() ? 'spotify' : isYouTube() ? 'youtube' : 'music';
 const mediaLabel = () => !np ? 'Media' : isSp() ? 'Spotify' : np.source === 'msedge' ? 'YouTube · Edge' : np.source === 'chrome' ? 'YouTube · Chrome' : 'Media player';
 const npPos = () => np ? np.pos + (playing() ? (performance.now() - npAt) / 1000 : 0) : 0;
 const lyrIdx = () => { if (!np || !np.lyrics) return -1; const p = npPos() + .25 + (+S.lyricOffset || 0); let i = -1; for (let k = 0; k < np.lyrics.length; k++) { if (np.lyrics[k].t <= p) i = k; else break; } return i; };
@@ -615,11 +615,11 @@ async function loadCurrentReleaseNotes(){
 const TPL = {
   home: () => `<div class="home-intro"><div><h2>My workspace</h2><p>Your essentials, one click away</p></div><span class="home-tag"><i class="home-dot"></i>Ready</span></div>` + statusCard() + (!releaseSeen() ? releaseCard() : '') + `<div class="tiles">${order().filter(on).slice(0, 6).map(id => TILES[id]()).join('')}</div>`,
   whatsnew: releasePage,
-  music: () => `<div class="media-head"><span class="media-title">Listening from</span><select id="mediaPlayer" aria-label="Select media player">${mediaPlayers.length ? mediaPlayers.map(p => `<option value="${esc(p.sourceId)}" ${p.sourceId === (selectedMediaId || np?.sourceId) ? 'selected' : ''}>${esc(p.label)}${p.title ? ' · ' + esc(p.title.slice(0, 20)) : ''}</option>`).join('') : '<option>Detecting players…</option>'}</select></div><div class="mrow">${art ? `<img src="${art}">` : `<div class="noart">${ico('music', 24)}</div>`}<div style="min-width:0"><div class="mt" id="n1"></div><div class="muted" id="n2"></div><div class="muted media-source">${esc(mediaLabel())}</div></div></div>
-    <div class="lyr"><div id="l0"></div><div id="l1"></div><div id="l2"></div></div>
-    <div class="prog"><span id="pt">0:00</span><div class="bar" id="mediaProgress" title="Seek"><i id="pf"></i></div><span id="pr">0:00</span></div>
+  music: () => `<div class="media-head" style="position:sticky;top:0;z-index:8;display:flex;align-items:center;gap:8px;padding:4px 0 8px;background:transparent"><span class="media-title" style="white-space:nowrap">Listening from</span><div style="position:relative;flex:1;min-width:0"><select id="mediaPlayer" aria-label="Select media player" style="appearance:none;display:block;width:100%;min-width:0;height:32px;padding:0 28px 0 11px;border:1px solid rgba(255,255,255,.16);border-radius:11px;background:#171a22;color:#eceef3;font:500 11px 'Segoe UI',sans-serif;text-overflow:ellipsis">${mediaPlayers.length ? mediaPlayers.map(p => `<option value="${esc(p.sourceId)}" ${p.sourceId === (selectedMediaId || np?.sourceId) ? 'selected' : ''}>${esc(p.label)}${p.title ? ' · ' + esc(p.title.slice(0, 20)) : ''}</option>`).join('') : '<option>Detecting players…</option>'}</select><span aria-hidden="true" style="position:absolute;right:9px;top:7px;pointer-events:none;color:rgba(255,255,255,.65);font-size:12px">⌄</span></div><details style="position:relative;flex:none"><summary style="list-style:none;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.16);border-radius:11px;background:rgba(255,255,255,.08)" title="App volume (not system volume)" aria-label="App volume">🔊</summary><aside style="position:absolute;z-index:10;right:0;top:38px;width:190px;max-width:calc(100vw - 32px);padding:10px 12px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:#171a22;box-shadow:0 8px 24px rgba(0,0,0,.4)"><div id="appVolumeName" style="font-size:11px;margin-bottom:6px">App volume</div><input id="appVolume" type="range" min="0" max="100" step="1" value="${mediaAppVolume}" ${mediaVolumeAvailable ? '' : 'disabled'} aria-label="Selected app volume" style="width:100%"><div id="appVolumeStatus" class="muted" style="font-size:10px;margin-top:4px">${esc(mediaVolumeMessage)}</div></aside></details></div><div class="mrow">${art ? `<img src="${art}">` : `<div class="noart">${ico('music', 24)}</div>`}<div style="min-width:0"><div class="mt" id="n1"></div><div class="muted" id="n2"></div><div class="muted media-source">${esc(mediaLabel())}</div></div></div>
+    <div class="lyr" style="max-height:34px;overflow:hidden;font-size:10px;line-height:1.15"><div id="l0"></div><div id="l1"></div><div id="l2"></div></div>
+    <div class="prog"><span id="pt">0:00</span><div class="bar" id="mediaProgress" title="Seek" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="${np?.dur || 0}" aria-valuenow="${Math.round(npPos())}"><i id="pf"></i></div><span id="pr">0:00</span></div>
     <div class="ctl"><button data-a="mctl" data-k="prev">${ico('prev', 20)}</button><button class="big" data-a="mctl" data-k="play" id="pp">${ico('play', 20)}</button><button data-a="mctl" data-k="next">${ico('next', 20)}</button></div>
-    <div class="vols"><label class="volume" title="System volume">🔊 <input id="mediaVolume" type="range" min="0" max="100" step="5" value="${mediaVolume}" aria-label="System volume"></label>${spOn || !isSp() ? '' : '<button class="s" data-a="settings">Connect Spotify</button>'}</div>`,
+    <div class="vols">${spOn || !isSp() ? '' : '<button class="s" data-a="settings">Connect Spotify</button>'}</div>`,
   screen: () => `<div class="muted" style="margin-bottom:10px">Choose a screen tool</div><div class="row"><button class="s pri" data-a="screenTool" data-k="color">Pick HEX</button><button class="s" data-a="screenTool" data-k="ocr">Text OCR</button><button class="s" data-a="screenTool" data-k="draw">Draw</button></div>`,
   voice: () => `<div class="muted" id="voiceStatus">Recordings are stored privately in Nib.</div>
   <label class="vm-select">Microphone <select id="vmInput" data-a="voiceDevice"></select></label>
@@ -655,7 +655,30 @@ function openTab(t) { if(tab==='voice' && t!=='voice')stopMemoAudio(); if (tab =
 function paintNP() {
   const a = $('#n1'); if (!a) return;
   a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in ' + mediaLabel();
+  paintMediaArtwork();
   const pp = $('#pp'); if (pp) pp.innerHTML = ico(playing() ? 'pause' : 'play', 20);
+}
+function paintMediaArtwork() {
+  const row = $('.mrow');
+  if (!row) return;
+  const current = row.firstElementChild;
+  if (art && !isYouTube()) {
+    if (current && current.tagName === 'IMG') {
+      if (current.src !== art) current.src = art;
+      return;
+    }
+    const image = new Image();
+    image.src = art;
+    current ? current.replaceWith(image) : row.prepend(image);
+    return;
+  }
+  const icon = mediaBrandIcon();
+  if (current && current.classList.contains('noart') && current.dataset.icon === icon) return;
+  const placeholder = document.createElement('div');
+  placeholder.className = 'noart';
+  placeholder.dataset.icon = icon;
+  placeholder.innerHTML = ico(icon, 24);
+  current ? current.replaceWith(placeholder) : row.prepend(placeholder);
 }
 function paintLyr() {
   if (!$('#l1')) return; const i = lyrIdx();
@@ -693,8 +716,18 @@ function setScrollingMusicLine(id, value) {
 }
 function paintMus() {
   const m = $('#mus'); if (!m || !isl.classList.contains('mus') || !np) return;
-  const l = curLine(), k = 'music';
-  if ($('#mlogo').dataset.k !== k) { $('#mlogo').innerHTML = ico(k, 20); $('#mlogo').dataset.k = k; }
+  const l = curLine(), logo = $('#mlogo'), k = isSp() && art ? 'album' : mediaBrandIcon();
+  if (logo.dataset.k !== k || (k === 'album' && logo.dataset.art !== artUrl)) {
+    if (k === 'album') {
+      const image = new Image();
+      image.src = art;
+      image.alt = '';
+      image.style.cssText = 'width:20px;height:20px;object-fit:cover;border-radius:4px;display:block';
+      logo.replaceChildren(image);
+    } else logo.innerHTML = ico(k, 20);
+    logo.dataset.k = k;
+    logo.dataset.art = artUrl;
+  }
   const a = l || np.title;
   const b = l ? np.title + (np.artist ? ' \u00B7 ' + np.artist : '') : np.artist;
   setScrollingMusicLine('#m1', a);
@@ -703,15 +736,23 @@ function paintMus() {
 window.addEventListener('resize', () => { if (isl.classList.contains('mus')) paintMus(); });
 setInterval(() => {
   const i = lyrIdx(); if (i !== lastIdx) { paintLyr(); paintMus(); }
-  if (tab === 'music' && wasOpen && np) { const p = npPos(), d = np.dur || 0; if ($('#pf')) { $('#pf').style.width = d ? Math.min(100, p / d * 100) + '%' : '0'; $('#pt').textContent = tm(p); $('#pr').textContent = d ? '-' + tm(d - p) : ''; } }
+  if (tab === 'music' && wasOpen && np && !mediaScrubbing) { const p = npPos(), d = np.dur || 0; if ($('#pf')) { $('#pf').style.width = d ? Math.min(100, p / d * 100) + '%' : '0'; $('#pt').textContent = tm(p); $('#pr').textContent = d ? '-' + tm(d - p) : ''; } }
 }, 250);
 
 // ---------- data
-function clearMediaArtwork() { isl.classList.remove('media-art'); root.style.removeProperty('--media-accent'); }
+function clearMediaArtwork() { root.style.removeProperty('--media-accent'); }
+function applyMediaBrandColor() {
+  const accent = isSp() ? '#1DB954' : isYouTube() ? '#FF0000' : '';
+  if (!accent) return false;
+  root.style.setProperty('--media-accent', accent);
+  return true;
+}
 function applyMediaArtworkColor(url) {
+  if (applyMediaBrandColor()) return;
   if (!url || !url.startsWith('data:image/')) { clearMediaArtwork(); return; }
   const image = new Image();
   image.onload = () => {
+    if (url !== art || isSp() || isYouTube()) return;
     try {
       const canvas = document.createElement('canvas'); canvas.width = canvas.height = 8;
       const ctx = canvas.getContext('2d', { willReadFrequently: true }); ctx.drawImage(image, 0, 0, 8, 8);
@@ -719,12 +760,22 @@ function applyMediaArtworkColor(url) {
       for (let i = 0; i < data.length; i += 4) { if (data[i + 3] < 32) continue; r += data[i]; g += data[i + 1]; b += data[i + 2]; n++; }
       if (!n) return clearMediaArtwork();
       const accent = `rgb(${Math.round(r / n)} ${Math.round(g / n)} ${Math.round(b / n)})`;
-      root.style.setProperty('--media-accent', accent); isl.classList.add('media-art');
+      root.style.setProperty('--media-accent', accent);
     } catch { clearMediaArtwork(); }
   };
   image.src = url;
 }
-async function loadArt(u) { if (!u || u === artUrl) return; artUrl = u; art = u.startsWith('data:image/') ? u : await nib.art(u) || ''; applyMediaArtworkColor(art); if (wasOpen && (tab === 'home' || tab === 'music')) paintPin(); }
+async function loadArt(u) {
+  if (!u || u === artUrl) return;
+  artUrl = u;
+  const image = u.startsWith('data:image/') ? u : await nib.art(u) || '';
+  if (artUrl !== u) return;
+  art = image;
+  applyMediaArtworkColor(art);
+  if (wasOpen && tab === 'home') paintPin();
+  else if (wasOpen && tab === 'music') paintNP();
+  paintMus();
+}
 async function refreshMediaPlayers() {
   if (mediaPlayersLoading || Date.now() - mediaPlayersAt < 4000) return;
   mediaPlayersLoading = true; mediaPlayersAt = Date.now();
@@ -735,7 +786,7 @@ async function refreshMediaPlayers() {
 }
 async function pollNP() {
   if (on('music') || S.island.music !== false) {
-    const was = playing(), r = await nib.np(); np = r; npAt = performance.now(); if (r && r.artUrl) loadArt(r.artUrl); else if (!r || !r.artUrl) { art = ''; artUrl = ''; clearMediaArtwork(); }
+    const was = playing(), r = await nib.np(); np = r; npAt = performance.now(); applyMediaBrandColor(); if (r && r.artUrl) loadArt(r.artUrl); else if (!r || !r.artUrl) { art = ''; artUrl = ''; clearMediaArtwork(); applyMediaBrandColor(); }
     refreshMediaPlayers();
     paintNP(); paintMus(); if (was !== playing() || (wasOpen && tab === 'home')) { layout(); if (wasOpen && tab === 'home') paintPin(); }
   }
@@ -866,24 +917,83 @@ const ACT = {
   cof: async d => { coffee = await nib.coffee(+d.m); paintPin(); },
   clc: async () => { const r = await nib.claudeSet({ connect: !cl.connected }); if (!r.error) cl = r; paintPin(); }, clg: async () => { cl = await nib.claudeSet({ gate: !cl.gate }); paintPin(); }
 };
-let pollBusy = false; const pollNP2 = async () => { pollBusy = true; np = await nib.np(); npAt = performance.now(); if (np?.artUrl) loadArt(np.artUrl); else { art = ''; artUrl = ''; clearMediaArtwork(); } refreshMediaPlayers(); paintNP(); paintMus(); layout(); pollBusy = false; };
+async function refreshMediaVolume() {
+  const source = np?.sourceId;
+  if (!source || source === mediaVolumeTarget) return;
+  mediaVolumeTarget = source;
+  mediaVolumeAvailable = false;
+  mediaVolumeMessage = 'Reading app volume…';
+  const status = $('#appVolumeStatus');
+  if (status) status.textContent = mediaVolumeMessage;
+  const result = await nib.mediaVolumeGet(source);
+  if (source !== np?.sourceId) return;
+  const input = $('#appVolume');
+  if (result.available) {
+    mediaVolumeAvailable = true;
+    mediaAppVolume = Math.round(result.volume * 100);
+    if (input) input.value = mediaAppVolume;
+    const name = $('#appVolumeName');
+    if (name) name.textContent = (np.source || 'Selected app') + ' volume';
+    mediaVolumeMessage = 'Changes this app only';
+  } else mediaVolumeMessage = result.error || 'App volume is unavailable.';
+  if (status) status.textContent = mediaVolumeMessage;
+}
+let pollBusy = false; const pollNP2 = async () => { pollBusy = true; np = await nib.np(); npAt = performance.now(); applyMediaBrandColor(); if (np?.artUrl) loadArt(np.artUrl); else { art = ''; artUrl = ''; clearMediaArtwork(); applyMediaBrandColor(); } refreshMediaPlayers(); paintNP(); paintMus(); refreshMediaVolume(); layout(); pollBusy = false; };
 document.addEventListener('change', e => {
   if(e.target.id==='vmInput')localStorage.setItem('nib:mic',e.target.value);
   if(e.target.id==='vmOutput')localStorage.setItem('nib:output',e.target.value);
   if(e.target.id==='mediaPlayer' && e.target.value && !e.target.value.startsWith('Detecting')) {
     selectedMediaId = e.target.value; nib.mediaSelect(selectedMediaId); pollNP2();
   }
-  if(e.target.id==='mediaVolume') {
-    const next = Number(e.target.value), delta = Math.round((next - mediaVolume) / 5), key = delta >= 0 ? 'vup' : 'vdn';
-    for (let i = 0; i < Math.min(20, Math.abs(delta)); i++) nib.key(key);
-    mediaVolume = next;
+  if(e.target.id==='appVolume') {
+    const source = np?.sourceId, next = Number(e.target.value), status = $('#appVolumeStatus');
+    if (!source || !Number.isFinite(next)) return;
+    nib.mediaVolumeSet(source, next / 100).then(result => {
+      if (source !== np?.sourceId) return;
+      if (result.available) { mediaAppVolume = next; mediaVolumeMessage = 'Changes this app only'; if (status) status.textContent = mediaVolumeMessage; }
+      else { e.target.value = mediaAppVolume; mediaVolumeMessage = result.error || 'Could not change app volume.'; if (status) status.textContent = mediaVolumeMessage; }
+    }).catch(error => {
+      e.target.value = mediaAppVolume;
+      mediaVolumeMessage = 'Could not change app volume: ' + error.message;
+      if (status) status.textContent = mediaVolumeMessage;
+    });
   }
 });
-document.addEventListener('click', e => {
+function mediaSeekFromPointer(e) {
+  if (!mediaSeekBar || !np?.dur) return null;
+  const rect = mediaSeekBar.getBoundingClientRect(), ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const seconds = ratio * np.dur, fill = $('#pf');
+  if (fill) fill.style.width = ratio * 100 + '%';
+  if ($('#pt')) $('#pt').textContent = tm(seconds);
+  if ($('#pr')) $('#pr').textContent = '-' + tm(np.dur - seconds);
+  mediaSeekBar.setAttribute('aria-valuenow', String(Math.round(seconds)));
+  return seconds;
+}
+document.addEventListener('pointerdown', e => {
   const bar = e.target.closest('#mediaProgress'); if (!bar || !np?.dur) return;
-  const rect = bar.getBoundingClientRect(), ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  const seconds = ratio * np.dur; np.pos = seconds; npAt = performance.now(); paintNP();
-  nib.mediaSeek(seconds);
+  mediaScrubbing = true; mediaSeekBar = bar;
+  if (bar.setPointerCapture) bar.setPointerCapture(e.pointerId);
+  e.preventDefault(); mediaSeekFromPointer(e);
+});
+document.addEventListener('pointermove', e => { if (mediaScrubbing) mediaSeekFromPointer(e); });
+document.addEventListener('pointerup', e => {
+  if (!mediaScrubbing) return;
+  const bar = mediaSeekBar, seconds = mediaSeekFromPointer(e);
+  mediaScrubbing = false; mediaSeekBar = null;
+  if (seconds === null) return;
+  np.pos = seconds; npAt = performance.now();
+  if (bar) bar.title = 'Seeking…';
+  nib.mediaSeek(seconds).then(ok => {
+    if (bar) bar.title = ok ? 'Seek' : 'Seeking is unavailable for this player';
+    if (!ok) pollNP2();
+  }).catch(error => {
+    if (bar) bar.title = 'Seek failed: ' + error.message;
+    pollNP2();
+  });
+});
+document.addEventListener('pointercancel', () => {
+  if (!mediaScrubbing) return;
+  mediaScrubbing = false; mediaSeekBar = null; paintNP();
 });
 document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && ACT[b.dataset.a]) ACT[b.dataset.a](b.dataset); else if (!e.target.closest('#menuBox')) menuOff(); });
 const answer = d => { const id = pend; if (!id) return; nib.decide(id, d); set('work', d === 'allow' ? 'Working' : 'Denied', ''); };

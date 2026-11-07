@@ -354,9 +354,15 @@ else app.whenReady().then(async () => {
     return true;
   });
   ipcMain.handle('media:seek', async (_, seconds) => {
+    const position = Number(seconds);
+    if (!Number.isFinite(position)) return false;
     const active = await media.nowPlaying(selectedMediaId);
-    return media.seek(Number(seconds), active && active.sourceId);
+    if (active && active.source === 'spotify' && spotify.connected() && await spotify.seek(position)) return true;
+    if (active) return media.seek(position, active.sourceId);
+    return spotify.connected() ? spotify.seek(position) : false;
   });
+  ipcMain.handle('media:volume:get', (_, sourceId) => require('./app-volume').get(sourceId));
+  ipcMain.handle('media:volume:set', (_, sourceId, value) => require('./app-volume').set(sourceId, value));
   ipcMain.handle('pick:logo', async e => {
     const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { properties: ['openFile'], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'ico', 'svg', 'webp'] }] });
     if (r.canceled) return ''; const p = r.filePaths[0];
