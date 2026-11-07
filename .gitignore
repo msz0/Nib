@@ -1,2 +1,15 @@
 dist/
+dist-test/
 node_modules/
+target/
+src-tauri/gen/
+
+# Local editor and backup artifacts
+*.backup-*
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Runtime diagnostics
+nib-errors.log

@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld('nib', {
   openSettings: () => ipc.send('settings:open'), checkUpdates: inv('updates:check'),
   releaseNotes: inv('nib:releaseNotes'), releaseHistory: inv('nib:releaseHistory'),
   getSettings: inv('settings:get'), setSettings: inv('settings:set'), pick: inv('pick'), pickLogo: inv('pick:logo'),
-  youtubeGet: inv('youtube:get'), youtubeControl: inv('youtube:control'), np: inv('media:np'), cal: inv('cal:get'), tidy: inv('files:tidy'), undo: inv('files:undo'),
+  np: inv('media:np'), cal: inv('cal:get'), tidy: inv('files:tidy'), undo: inv('files:undo'),
   spotifyStatus: inv('spotify:status'), spotifyConnect: inv('spotify:connect'), spotifyDisconnect: inv('spotify:disconnect'), onSpotify: cb => ipc.on('spotify', (_, v) => cb(v)),
   discordVoiceStatus: inv('discord:voice:status'), discordVoiceConnect: inv('discord:voice:connect'), discordVoiceEnable: inv('discord:voice:enable'),
   discordVoiceDisconnect: inv('discord:voice:disconnect'), discordVoiceForget: inv('discord:voice:forget'),

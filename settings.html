@@ -188,7 +188,7 @@ const PG = {
       card([row('Custom accent color','Choose a HEX color for buttons and highlights (separate from the notch).',themeColorEditor())]),
       mk('h3', '', 'Custom profiles'),
       card([row('Save and manage profiles','Save your current widgets, theme and island settings. Load, rename or delete them later.',customProfilesEditor())]),
-      card([combinedThemeEditor(),row('Profile','Optimized widget presets for different activities',seg([['normal','Normal'],['gamer','Gamer'],['working','Working'],['streamer','Streamer']],()=>S.profile||'normal',v=>{S.profile=v; const p={gamer:['music','discord','sys','focus','apps','youtube'],working:['focus','notes','calendar','files','clip','apps'],streamer:['music','discord','sys','voice','youtube','apps']};if(p[v]){S.widgets=[...new Set([...p[v],...S.widgets.filter(id=>!p[v].includes(id))])];S.widgetOrder=[...p[v],...C.widgets.map(w=>w.id).filter(id=>!p[v].includes(id))];} })),row('Friendly greetings','Greet you based on time of day',tog(()=>S.greetings!==false,v=>S.greetings=v))]),
+      card([combinedThemeEditor(),row('Profile','Optimized widget presets for different activities',seg([['normal','Normal'],['gamer','Gamer'],['working','Working'],['streamer','Streamer']],()=>S.profile||'normal',v=>{S.profile=v; const p={gamer:['music','discord','sys','focus','apps'],working:['focus','notes','calendar','files','clip','apps'],streamer:['music','discord','sys','voice','apps']};if(p[v]){S.widgets=[...new Set([...p[v],...S.widgets.filter(id=>!p[v].includes(id))])];S.widgetOrder=[...p[v],...C.widgets.map(w=>w.id).filter(id=>!p[v].includes(id))];} })),row('Friendly greetings','Greet you based on time of day',tog(()=>S.greetings!==false,v=>S.greetings=v))]),
       card([row('Size', 'How big the island is', seg([['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']], () => I.size, v => I.size = v)),
         row('Style', 'Attached to the top edge like a laptop notch, or floating just below it', seg([['attached', 'Attached'], ['float', 'Floating']], () => I.style, v => I.style = v)),
         row('See-through', 'How much you see through the island', rng(0, 60, 5, () => I.alpha, v => I.alpha = v, v => v + '%')),
@@ -219,36 +219,10 @@ const PG = {
     const idRow = row('Client ID', 'From your app at developer.spotify.com/dashboard', txt(() => S.spotifyId, v => S.spotifyId = v, 'paste it here', '300px'));
     const how = mk('div', 'hint', 'How: open developer.spotify.com/dashboard, create an app, and add this Redirect URI: <code>http://127.0.0.1:47821/spotify/callback</code>. Paste the app\'s Client ID above, save, then press Connect. No secret is needed.');
     setTimeout(async () => { const on = await nib.spotifyStatus(); paint(on); nib.onSpotify(paint); }, 0);
-    const ytStatus = mk('div', 'rt', '<b>YouTube / YouTube Music</b><small></small>'), ytButton = mk('button', 'btn');
-    const browser = txt(() => S.youtubeBrowser || 'chrome', v => { S.youtubeBrowser = v || 'chrome'; if (S.youtubeConnected) S.player = S.youtubeBrowser; paintYoutube(); }, 'chrome, msedge, firefox, brave...', '230px');
-    const paintYoutube = () => {
-      ytStatus.querySelector('small').textContent = S.youtubeConnected
-        ? 'Connected to ' + (S.youtubeBrowser || 'chrome') + '. The Music panel follows this browser.'
-        : 'Not connected. Choose a browser, then connect it to Nib.';
-      ytButton.textContent = S.youtubeConnected ? 'Disconnect' : 'Connect';
-    };
-    const ytRow = row('Browser', 'Browser process name (for example chrome, msedge, firefox or brave). Uses the browser’s Windows media session; it does not sign in or identify a specific tab.', browser);
-    const ytConnectRow = mk('div', 'r'); ytConnectRow.append(ytStatus, ytButton);
-    ytButton.onclick = async () => {
-      if (S.youtubeConnected) {
-        S.youtubeConnected = false;
-        if (S.player === (S.youtubeBrowser || 'chrome')) S.player = S.youtubePreviousPlayer || 'Spotify';
-      } else {
-        S.youtubePreviousPlayer = S.player || 'Spotify';
-        S.youtubeConnected = true;
-        S.player = S.youtubeBrowser || 'chrome';
-      }
-      paintYoutube();
-      await nib.setSettings({ youtubeConnected: S.youtubeConnected, youtubePreviousPlayer: S.youtubePreviousPlayer, player: S.player });
-    };
-    paintYoutube();
-    return [...head('Music', 'Spotify, lyrics and which player is controlled'),
+    return [...head('Media', 'One set of controls for Spotify and YouTube'),
       card([top, idRow]), how, msg,
-      mk('h3', '', 'YouTube browser playback'), card([ytConnectRow, ytRow]), mk('div', 'hint', 'Connect selects this browser as the player for Nib’s Music panel and controls. The browser must publish a Windows media session; its active media session is controlled, not a particular YouTube tab.'),
-      mk('h3', '', 'Player'),
-      card([row('Player app', 'Play, Pause, Next and Previous control only the selected app. Connecting YouTube temporarily selects its browser; disconnecting restores the previous player.', txt(() => S.player, v => S.player = v || 'Spotify', 'Spotify', '160px')),
-        row('Lyrics timing', 'Nudge if lines come a bit early or late (+ shows them earlier)', rng(-3, 3, .1, () => +S.lyricOffset || 0, v => S.lyricOffset = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + 's'))]),
-      mk('div', 'hint', 'Spotify has no lyrics service in its public API, so lyrics come from the free LRCLIB database, matched to your exact track and length. Not every song has them.')];
+      card([row('Lyrics timing', 'Nudge if lines come a bit early or late (+ shows them earlier)', rng(-3, 3, .1, () => +S.lyricOffset || 0, v => S.lyricOffset = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + 's'))]),
+      mk('div', 'hint', 'Nib automatically detects active Spotify, Chrome, Edge, or Firefox media sessions through Windows Media Session. Controls follow the currently playing source.')];
   },
   sounds() {
     const o = S.sounds, ev = [['ask', 'Needs you', 'When Claude wants permission or has a question'], ['done', 'Claude is done', 'When a Claude Code task finishes'], ['focus', 'Focus finished', 'When your focus timer ends'], ['event', 'Calendar event', 'When an event starts']];

@@ -450,8 +450,8 @@ const DEF = { island: { size: 'normal', style: 'attached', alpha: 0, open: 'hove
 const COL = { idle: '#ffffff', sleep: '#8a90a2', work: '#b8d0ff', ask: '#ffc48a', done: '#b6f5d8', dizzy: '#ffa0ab', focus: '#ffd166' };
 const VERB = { Read:'Reading', Edit:'Editing', MultiEdit:'Editing', NotebookEdit:'Editing', Write:'Writing', Bash:'Running', Grep:'Searching', Glob:'Searching', WebFetch:'Browsing', WebSearch:'Browsing', Task:'Delegating', TodoWrite:'Planning' };
 const APPCOL = { music: '#1DB954', notes: '#f5c542', clip: '#4cc9f0', files: '#f5b942', calendar: '#4285F4', apps: '#8b93a7', discord: '#5865F2', chat: '#e6cf72', coffee: '#c98a5a', sys: '#7aa2ff', claude: '#ff8a3d' };
-const ORDER = ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'discord', 'chat', 'coffee', 'sys', 'claude', 'youtube', 'screen', 'voice'];
-const LBL = { home: 'Home', music: 'Music', focus: 'Focus', notes: 'Notes', clip: 'Clipboard', files: 'Files', calendar: 'Calendar', apps: 'Apps', discord: 'Discord', chat: 'Chat', coffee: 'Coffee', sys: 'System', claude: 'Claude', youtube:'YouTube', screen:'Screen tools', voice:'Voice memo', phone:'Phone Link' };
+const ORDER = ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'discord', 'chat', 'coffee', 'sys', 'claude', 'screen', 'voice'];
+const LBL = { home: 'Home', music: 'Media', focus: 'Focus', notes: 'Notes', clip: 'Clipboard', files: 'Files', calendar: 'Calendar', apps: 'Apps', discord: 'Discord', chat: 'Chat', coffee: 'Coffee', sys: 'System', claude: 'Claude', screen:'Screen tools', voice:'Voice memo', phone:'Phone Link' };
 const TIERS = [[15, 'Light', '#6fe3b4'], [30, 'Steady', '#ffd166'], [60, 'Deep', '#ff8a3d'], [1e9, 'Intense', '#ff5d6c']];
 const tier = m => TIERS.find(t => m <= t[0]);
 let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: [], widgets: [], icons: { fill: {}, stroke: {} } };
@@ -496,6 +496,7 @@ const clock = () => { const c = S.island.clock; return new Date().toLocaleTimeSt
 const on = id => (S.widgets || []).includes(id);
 const playing = () => np && np.status === 'Playing';
 const isSp = () => np && /spotify/i.test(np.src || '');
+const mediaLabel = () => !np ? 'Media' : isSp() ? 'Spotify' : np.source === 'msedge' ? 'YouTube · Edge' : np.source === 'chrome' ? 'YouTube · Chrome' : 'Media player';
 const npPos = () => np ? np.pos + (playing() ? (performance.now() - npAt) / 1000 : 0) : 0;
 const lyrIdx = () => { if (!np || !np.lyrics) return -1; const p = npPos() + .25 + (+S.lyricOffset || 0); let i = -1; for (let k = 0; k < np.lyrics.length; k++) { if (np.lyrics[k].t <= p) i = k; else break; } return i; };
 const curLine = () => { const i = lyrIdx(); return i >= 0 ? np.lyrics[i].x : ''; };
@@ -573,7 +574,7 @@ function buildChrome() {
 }
 const tile = (id, t, body, extra = '') => `<div class="tl" data-a="tab" data-t="${id}" style="--t:${t}"><div class="tt">${LBL[id] === 'Chat' ? esc(NAME()) : LBL[id]}</div>${body}${extra}</div>`;
 const TILES = {
-  music: () => tile('music', '#1DB954', (art ? `<img class="art" src="${art}">` : `<span class="tic">${ico('spotify', 22)}</span>`) + `<div class="tb">${np ? esc(np.title) : 'Not playing'}<small>${np ? esc(np.artist || (playing() ? 'Playing' : 'Paused')) : 'Open Spotify'}</small></div>`, np ? `<button class="pb" data-a="mctl" data-k="play">${ico(playing() ? 'pause' : 'play', 14)}</button>` : ''),
+  music: () => tile('music', isSp() ? '#1DB954' : '#f43131', (art ? `<img class="art" src="${art}">` : `<span class="tic">${isSp() ? ico('spotify', 22) : '▶'}</span>`) + `<div class="tb">${np ? esc(np.title) : 'Not playing'}<small>${np ? esc(np.artist || (playing() ? 'Playing' : 'Paused')) : 'Open ' + esc(mediaLabel())}</small></div>`, np ? `<button class="pb" data-a="mctl" data-k="play">${ico(playing() ? 'pause' : 'play', 14)}</button>` : ''),
   focus: () => { const m = focusEnd ? focusMin : fSel; return tile('focus', tier(m)[2], `<div class="tb big" id="tfocus">${focusEnd ? mmss(focusEnd - Date.now()) : String(m).padStart(2, '0') + ':00'}<small>${focusEnd ? 'In progress' : 'Ready to start'}</small></div>`, `<button class="pb" data-a="${focusEnd ? 'fstop' : 'fstart'}">${ico(focusEnd ? 'pause' : 'play', 14)}</button>`); },
   notes: () => tile('notes', '#f5c542', `<span class="tic">${ico('notepad', 20)}</span><div class="tb">${esc(((notes[0] || {}).text || '').split('\n')[0] || 'New note').slice(0, 40)}<small>${notes.length} note${notes.length === 1 ? '' : 's'}</small></div>`),
   clip: () => tile('clip', '#4cc9f0', `<span class="tic">${ico('clip', 20)}</span><div class="tb">${clips.length ? esc(clips[0].slice(0, 36)) : 'Copy something'}<small>${clips.length} saved</small></div>`),
@@ -588,7 +589,6 @@ const TILES = {
   chat: () => tile('chat', '#e6cf72', `<span class="tic">${ico('chat', 20)}</span><div class="tb">Ask ${esc(NAME())}<small>anything</small></div>`),
   coffee: () => { const cur = !coffee.on ? 0 : coffee.until < 0 ? -1 : 1; return `<div class="tb" style="font-size:16px;margin-bottom:8px">${coffee.on ? 'Keeping your PC awake' : 'Your PC sleeps normally'}</div><div class="row">${[['Off', 0], ['30 min', 30], ['1 hour', 60], ['2 hours', 120], ['Always', -1]].map(([n, m]) => `<button class="s ${m === cur && m <= 0 ? 'pri' : ''}" data-a="cof" data-m="${m}">${n}</button>`).join('')}</div>`; },
   sys: () => tile('sys', '#7aa2ff', `<span class="tic">${ico('sys', 20)}</span><div class="tb">GPU ${sys.temp == null ? 'N/A' : sys.temp+'°C'}<small>${sys.load == null ? 'Usage N/A' : sys.load+'% usage'} · CPU ${sys.cpu}% · RAM ${sys.ram}%</small></div>`),
-  youtube: () => tile('youtube','#f43131',`<span class="tic">▶</span><div class="tb">YouTube<small>${S.youtubeConnected ? 'Connected · ' + esc(S.youtubeBrowser || 'chrome') : 'Browser playback'}</small></div>`),
   screen: () => tile('screen','#a38bff',`<span class="tic">${ico('screen', 23)}</span><div class="tb">Screen tools<small>OCR, color, draw</small></div>`),
   voice: () => tile('voice','#fa7ea8',`<span class="tic">🎙</span><div class="tb">Voice memo<small>Record locally</small></div>`),
   claude: () => tile('claude', '#ff8a3d', `<span class="tic">${ico('claude', 20)}</span><div class="tb">${cl.connected ? (state === 'idle' ? 'Ready' : esc(stTitle)) : 'Connect'}<small>${cl.connected ? 'Claude Code' : 'in this tab'}</small></div>`)
@@ -636,12 +636,11 @@ async function loadCurrentReleaseNotes(){
 const TPL = {
   home: () => `<div class="home-intro"><div><h2>My workspace</h2><p>Your essentials, one click away</p></div><span class="home-tag"><i class="home-dot"></i>Ready</span></div>` + statusCard() + (!releaseSeen() ? releaseCard() : '') + `<div class="tiles">${order().filter(on).slice(0, 6).map(id => TILES[id]()).join('')}</div>`,
   whatsnew: releasePage,
-  music: () => `<div class="mrow">${art ? `<img src="${art}">` : `<div class="noart">${ico(isSp() ? 'spotify' : S.youtubeConnected ? 'youtube' : 'note', 24)}</div>`}<div style="min-width:0"><div class="mt" id="n1"></div><div class="muted" id="n2"></div></div></div>
+  music: () => `<div class="mrow">${art ? `<img src="${art}">` : `<div class="noart">${isSp() ? ico('spotify', 24) : '▶'}</div>`}<div style="min-width:0"><div class="mt" id="n1"></div><div class="muted" id="n2"></div><div class="muted media-source">${esc(mediaLabel())}</div></div></div>
     <div class="lyr"><div id="l0"></div><div id="l1"></div><div id="l2"></div></div>
     <div class="prog"><span id="pt">0:00</span><div class="bar"><i id="pf"></i></div><span id="pr">0:00</span></div>
     <div class="ctl"><button data-a="mctl" data-k="prev">${ico('prev', 20)}</button><button class="big" data-a="mctl" data-k="play" id="pp">${ico('play', 20)}</button><button data-a="mctl" data-k="next">${ico('next', 20)}</button></div>
-    <div class="vols"><button class="s" data-a="key" data-k="vdn">Vol -</button><button class="s" data-a="key" data-k="vup">Vol +</button><button class="s" data-a="key" data-k="mute">Mute</button>${spOn ? '' : '<button class="s" data-a="settings">Connect Spotify</button>'}</div>`,
-  youtube: () => `<div class="muted" id="ytStatus">${S.youtubeConnected ? 'Connected to ' + esc(S.youtubeBrowser || 'chrome') : 'Not connected'}</div><div class="row"><button class="s ${S.youtubeConnected ? '' : 'pri'}" data-a="ytconnect">${S.youtubeConnected ? 'Disconnect' : 'Connect'}</button><button class="s" data-a="ytctl" data-k="prev">⏮</button><button class="s pri" data-a="ytctl" data-k="play">▶ / ⏸</button><button class="s" data-a="ytctl" data-k="next">⏭</button><button class="s" data-a="ytrefresh">Refresh</button><button class="s" data-a="launch" data-t="https://www.youtube.com">Open</button></div><div class="muted">Uses the selected browser’s Windows media session for YouTube or YouTube Music. Browser support and media-session availability vary.</div>`,
+    <div class="vols"><button class="s" data-a="key" data-k="vdn">Vol -</button><button class="s" data-a="key" data-k="vup">Vol +</button><button class="s" data-a="key" data-k="mute">Mute</button>${spOn || !isSp() ? '' : '<button class="s" data-a="settings">Connect Spotify</button>'}</div>`,
   screen: () => `<div class="muted" style="margin-bottom:10px">Choose a screen tool</div><div class="row"><button class="s pri" data-a="screenTool" data-k="color">Pick HEX</button><button class="s" data-a="screenTool" data-k="ocr">Text OCR</button><button class="s" data-a="screenTool" data-k="draw">Draw</button></div>`,
   voice: () => `<div class="muted" id="voiceStatus">Recordings are stored privately in Nib.</div>
   <label class="vm-select">Microphone <select id="vmInput" data-a="voiceDevice"></select></label>
@@ -676,33 +675,14 @@ function paintPin() {
   buildChrome(); pin.classList.toggle('nib-home', tab === 'home'); pin.innerHTML = (TPL[tab] || TPL.home)();
   if (tab === 'home') pin.scrollTop = 0;
   if (tab === 'music') { paintNP(); lastIdx = -2; paintLyr(); }
-  if (tab === 'youtube') refreshYoutube();
   if (tab === 'voice') { loadMemos(); fillVoiceDevices(); } if (tab === 'calendar') loadCal(); if (tab === 'chat') startChat(); if (tab === 'notes') startNotes();
   fit();
 }
 function openTab(t) { if(tab==='voice' && t!=='voice')stopMemoAudio(); if (tab === 'notes') flushNotes(); tab = t; if (t === 'claude') nib.claude().then(r => { cl = r; if (tab === 'claude') paintPin(); }); if (tab !== 'chat' && tab !== 'notes') { nib.focusable(false); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } paintPin(); layout(); }
 function paintNP() {
   const a = $('#n1'); if (!a) return;
-  a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in ' + (S.youtubeConnected ? 'YouTube' : 'Spotify');
+  a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in ' + mediaLabel();
   const pp = $('#pp'); if (pp) pp.innerHTML = ico(playing() ? 'pause' : 'play', 20);
-}
-async function refreshYoutube() {
-  const m = await nib.youtubeGet(), el = $('#ytStatus'); if (!el) return;
-  el.textContent = m ? m.title + ' — ' + m.status
-    : S.youtubeConnected ? 'Connected to ' + (S.youtubeBrowser || 'chrome') + '. No browser media session found; start playback and refresh.'
-      : 'Not connected. Connect a browser in Settings to use it as the Music player.';
-}
-async function setYoutubeConnected(on) {
-  if (on) {
-    S.youtubePreviousPlayer = S.player || 'Spotify';
-    S.youtubeConnected = true;
-    S.player = S.youtubeBrowser || 'chrome';
-  } else {
-    S.youtubeConnected = false;
-    if (S.player === (S.youtubeBrowser || 'chrome')) S.player = S.youtubePreviousPlayer || 'Spotify';
-  }
-  await nib.setSettings({ youtubeConnected: S.youtubeConnected, youtubePreviousPlayer: S.youtubePreviousPlayer, player: S.player });
-  if (tab === 'youtube') { paintPin(); layout(); }
 }
 function paintLyr() {
   if (!$('#l1')) return; const i = lyrIdx();
@@ -754,7 +734,7 @@ setInterval(() => {
 }, 250);
 
 // ---------- data
-async function loadArt(u) { if (!u || u === artUrl) return; artUrl = u; art = await nib.art(u) || ''; if (wasOpen && (tab === 'home' || tab === 'music')) paintPin(); }
+async function loadArt(u) { if (!u || u === artUrl) return; artUrl = u; art = u.startsWith('data:image/') ? u : await nib.art(u) || ''; if (wasOpen && (tab === 'home' || tab === 'music')) paintPin(); }
 async function pollNP() {
   if (on('music') || S.island.music !== false) {
     const was = playing(), r = await nib.np(); np = r; npAt = performance.now(); if (r && r.artUrl) loadArt(r.artUrl); else if (!r) { art = ''; artUrl = ''; }
@@ -851,9 +831,6 @@ const ACT = {
   cpy: async d => { await nib.clipCopy(clips[+d.i]); const b = document.querySelector(`[data-i="${d.i}"]`); if (b) b.textContent = 'Copied'; },
   clipRemove: async () => {const ids=[...pin.querySelectorAll('.clip-select:checked')].map(x=>+x.dataset.i); clips=await nib.clipRemove(ids); paintPin();},
   clipExport: async () => {const ids=[...pin.querySelectorAll('.clip-select:checked')].map(x=>+x.dataset.i); await nib.clipExport(ids);},
-  ytconnect: async () => setYoutubeConnected(!S.youtubeConnected),
-  ytrefresh: refreshYoutube,
-  ytctl: async d => {await nib.youtubeControl(d.k);await refreshYoutube();},
   screenTool: d => nib.extrasOverlay(d.k),
   voiceRefresh: async () => {await fillVoiceDevices(); voiceMsg('Audio device list updated.');},
   voiceStart: async () => {if(!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder==='undefined'){voiceMsg('Microphone recording is not available in this Electron session.');return;} if(voiceRecorder && voiceRecorder.state!=='inactive') {voiceMsg('A recording is already in progress.');return;}
@@ -890,7 +867,7 @@ const ACT = {
   cof: async d => { coffee = await nib.coffee(+d.m); paintPin(); },
   clc: async () => { const r = await nib.claudeSet({ connect: !cl.connected }); if (!r.error) cl = r; paintPin(); }, clg: async () => { cl = await nib.claudeSet({ gate: !cl.gate }); paintPin(); }
 };
-let pollBusy = false; const pollNP2 = async () => { pollBusy = true; np = await nib.np(); npAt = performance.now(); paintNP(); paintMus(); layout(); pollBusy = false; };
+let pollBusy = false; const pollNP2 = async () => { pollBusy = true; np = await nib.np(); npAt = performance.now(); if (np?.artUrl) loadArt(np.artUrl); paintNP(); paintMus(); layout(); pollBusy = false; };
 document.addEventListener('change', e => {if(e.target.id==='vmInput')localStorage.setItem('nib:mic',e.target.value);if(e.target.id==='vmOutput')localStorage.setItem('nib:output',e.target.value);});
 document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && ACT[b.dataset.a]) ACT[b.dataset.a](b.dataset); else if (!e.target.closest('#menuBox')) menuOff(); });
 const answer = d => { const id = pend; if (!id) return; nib.decide(id, d); set('work', d === 'allow' ? 'Working' : 'Denied', ''); };
