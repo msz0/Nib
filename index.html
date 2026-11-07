@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data: https://cdn.discordapp.com; media-src data: blob:">
 <style>
 @property --bg{syntax:'<color>';inherits:true;initial-value:#000}
 @property --tint{syntax:'<color>';inherits:true;initial-value:#000}
@@ -28,6 +28,9 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 
 /* resting pill */
 #rest{display:flex;align-items:center;justify-content:center;gap:9px;height:100%;padding:0 12px;white-space:nowrap;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
+#vcAvatars{display:none;align-items:center;gap:2px;max-width:76px;overflow:hidden;flex:none}
+.vc-avatar{width:17px;height:17px;flex:none;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.55)}
+.mus #vcAvatars{display:none!important}
 #full,.open #rest{display:none}.open #full{display:block}
 .slot{overflow:hidden;text-overflow:ellipsis;color:#fff;transition:color .4s}#L{text-align:right}#R{text-align:left}
 #mini{flex:none;cursor:pointer;filter:drop-shadow(0 0 3px var(--c));animation:fin .4s ease both}#island.noeyes #mini{display:none}
@@ -78,6 +81,11 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 .tl .art{position:absolute;right:9px;top:9px;width:36px;height:36px;border-radius:8px;object-fit:cover}.tl .tic{position:absolute;right:10px;top:9px;color:rgba(255,255,255,.55)}
 .stc{border-radius:18px;padding:12px 14px;margin-bottom:8px;background:linear-gradient(180deg,rgba(255,255,255,.05),color-mix(in srgb,var(--st,#7aa2ff) 38%,#000))}
 .stc b{font-size:15px}.stc .sb{color:var(--dim);font:11.5px/1.4 "Cascadia Mono",Consolas,monospace;margin:4px 0 8px;max-height:34px;overflow:hidden}.row{display:flex;gap:8px;flex-wrap:wrap}
+.vc-notice{margin:8px 0;padding:8px 10px;border-radius:10px;background:rgba(88,101,242,.18);color:#e8eaff}
+.vc-users{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;max-height:116px;overflow:auto}
+.vc-user{display:flex;align-items:center;gap:7px;min-width:0;padding:5px 7px;border-radius:9px;background:rgba(255,255,255,.06)}
+.vc-user img{width:24px;height:24px;border-radius:50%;object-fit:cover;flex:none}
+.vc-user span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .muted{color:var(--dim);font-size:12.5px}.s{height:30px;padding:0 12px;font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .tile{height:72px;padding:6px 4px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:10.5px;font-weight:500;color:#cfd3dd}
@@ -406,6 +414,7 @@ svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:va
     <svg id="mini" viewBox="0 0 34 16" width="34" height="16">
       <rect class="eye" id="mA"/><rect class="eye" id="mB"/><path class="hp" d="M3 12Q9 3 15 12M19 12Q25 3 31 12"/><path class="xx" d="M4 3l10 10M14 3L4 13M20 3l10 10M30 3L20 13"/>
     </svg>
+    <span id="vcAvatars" aria-hidden="true"></span>
     <span id="R" class="slot"></span>
     <div id="mus"><span id="mlogo"></span><div id="mtx"><div id="m1"></div><div id="m2"></div></div></div>
   </div>
@@ -436,7 +445,7 @@ const $ = s => document.querySelector(s);
 const isl = $('#island'), pin = $('#pin'), full = $('#full'), root = document.documentElement;
 let moving = false, posInfo = { free: false, up: false, attached: false };
 let overSince = 0, lastDom = performance.now(), stuckAt = 0;   // detects clicks that no longer reach the island   // dragging the island / where it sits
-const DEF = { island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true },
+const DEF = { island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true, discordAvatars: false },
   sounds: { on: true, vol: .7, done: 'chime', ask: 'bell', focus: 'marimba', event: 'soft' } };
 const COL = { idle: '#ffffff', sleep: '#8a90a2', work: '#b8d0ff', ask: '#ffc48a', done: '#b6f5d8', dizzy: '#ffa0ab', focus: '#ffd166' };
 const VERB = { Read:'Reading', Edit:'Editing', MultiEdit:'Editing', NotebookEdit:'Editing', Write:'Writing', Bash:'Running', Grep:'Searching', Glob:'Searching', WebFetch:'Browsing', WebSearch:'Browsing', Task:'Delegating', TodoWrite:'Planning' };
@@ -449,6 +458,7 @@ let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: 
 let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false, gameMode = false;
 let snd = true, t0 = 0, idleT, leaveT, ctx, focusEnd = 0, fSel = 25, focusMin = 25, cx = 0, cy = 0, lastMove = performance.now(), dizzyUntil = 0;
 let np = null, npAt = 0, art = '', artUrl = '', evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null, spOn = false;
+let discordVoiceState = { status: 'Disconnected', enabled: false, configured: false, connected: false, users: [], lastJoin: null };
 let voiceRecorder = null, voiceParts = [], voiceStream = null;
 let memoAudio = null, memoPlaying = '', currentOutput = 'default';
 function stopMemoAudio(){ if(memoAudio){memoAudio.pause();memoAudio.removeAttribute('src');memoAudio.load();memoAudio=null;} memoPlaying=''; }
@@ -493,6 +503,13 @@ const nextEv = () => { const n = Date.now(), e = evs.find(e => !e.allDay && e.en
 const focusCol = () => tier(focusMin)[2];
 const typing = () => ['inp', 'ntxt'].includes((document.activeElement || {}).id);
 const slotText = k => k === 'gpuTemp' ? ('GPU ' + (sys.temp == null ? 'N/A' : sys.temp + '°C')) : k === 'time' ? clock() : k === 'battery' ? (bat ? Math.round(bat.level * 100) + '%' + (bat.charging ? '+' : '') : '') : k === 'cpu' ? 'CPU ' + sys.cpu + '%' : k === 'ram' ? 'RAM ' + sys.ram + '%' : k === 'event' ? nextEv() : '';
+function paintDiscordAvatars(show) {
+  const box = $('#vcAvatars'); if (!box) return 0;
+  const people = show ? (discordVoiceState.users || []).filter(u => u.avatar).slice(0, 4) : [];
+  box.innerHTML = people.map(u => `<img class="vc-avatar" src="${esc(u.avatar)}" alt="">`).join('');
+  box.style.display = people.length ? 'flex' : 'none';
+  return people.length;
+}
 
 // ---------- sounds (synthesised, no files)
 const SND = { chime: [[523, 659, 784], 'sine', .11, .3], bell: [[880, 1320], 'triangle', .14, .6], pop: [[420, 640], 'sine', .07, .14], soft: [[392, 523], 'sine', .16, .45], marimba: [[659, 784, 988], 'triangle', .09, .25], ping: [[1046], 'sine', 0, .5] };
@@ -513,12 +530,14 @@ function layout() {
   const I = S.island, o = !gameMode && ((I.open === 'click' ? pinned : hover) || dragging || state === 'ask' || typing());
   if (o !== wasOpen) { wasOpen = o; if (!o) { tab = 'home'; pinned=false; flushNotes(); menuOff(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); nib.focusable(false); } paintPin(); }
   const mus = !o && state === 'idle' && !focusEnd && I.music !== false && playing();
+  const vcCount = paintDiscordAvatars(!o && !mus && state === 'idle' && !focusEnd && I.discordAvatars === true && discordVoiceState.inVoice);
   isl.className = [o && 'open', mus && 'mus', (I.style === 'float' || (posInfo.free && !posInfo.attached)) && 'float', posInfo.up && 'up', moving && 'moving', S.island.lock && 'locked', I.eyes === false && 'noeyes', o && tab !== 'home' && 'app'].filter(Boolean).join(' ');
   if (o && tab !== 'home') isl.style.setProperty('--app', appColor(tab));
   if (!o && !mus) {
     const L = state === 'idle' ? (slotText(I.left)) : '', R = state === 'idle' ? (focusEnd ? mmss(focusEnd - Date.now()) : slotText(I.right)) : stTitle.slice(0, 16);
     $('#L').textContent = L; $('#R').textContent = R; $('#R').style.color = focusEnd && state === 'idle' ? focusCol() : '';
-    const sw = Math.max(L.length, state === 'idle' ? R.length : 0) * 7.4, w = Math.max(92, 24 + (I.eyes === false ? 0 : 42) + (L || R ? 2 * 9 : 0) + (state === 'idle' ? 2 * sw : (R ? 9 + R.length * 7.4 : 0)));
+    const sw = Math.max(L.length, state === 'idle' ? R.length : 0) * 7.4, avatarWidth = vcCount ? vcCount * 17 + (vcCount - 1) * 2 + 8 : 0;
+    const w = Math.max(92, 24 + (I.eyes === false ? 0 : 42) + avatarWidth + (L || R ? 2 * 9 : 0) + (state === 'idle' ? 2 * sw : (R ? 9 + R.length * 7.4 : 0)));
     $('#L').style.width = state === 'idle' && (L || R) ? sw + 'px' : '0'; $('#R').style.width = state === 'idle' && (L || R) ? sw + 'px' : '';
     isl.style.width = w + 'px'; isl.style.marginLeft = -w / 2 + 'px';
   } else { isl.style.width = ''; isl.style.marginLeft = ''; }
@@ -561,11 +580,15 @@ const TILES = {
   files: () => tile('files', '#f5b942', `<span class="tic">${ico('folder', 20)}</span><div class="tb">Drop files<small>to sort them</small></div>`),
   calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', '#4285F4', `<span class="tic">${ico('googlecalendar', 20)}</span><div class="tb">${e ? esc(e.title.slice(0, 28)) : S.ics ? 'Nothing soon' : 'Add a link'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'in Settings'}</small></div>`); },
   apps: () => tile('apps', '#8b93a7', `<span class="tic">${ico('apps', 20)}</span><div class="tb">Apps<small>${appList().length} ready</small></div>`),
-  discord: () => tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>mute / deafen</small></div>`),
+  discord: () => {
+    const d = discordVoiceState, note = d.lastJoin && d.lastJoin.name;
+    const sub = note ? 'Joined: ' + esc(note) : d.connected ? d.inVoice ? (d.users.length + 1) + ' in voice' : 'Connected · join a voice channel' : d.configured ? 'Disconnected · open to reconnect' : 'Set up in Settings';
+    return tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>${sub}</small></div>`);
+  },
   chat: () => tile('chat', '#e6cf72', `<span class="tic">${ico('chat', 20)}</span><div class="tb">Ask ${esc(NAME())}<small>anything</small></div>`),
   coffee: () => { const cur = !coffee.on ? 0 : coffee.until < 0 ? -1 : 1; return `<div class="tb" style="font-size:16px;margin-bottom:8px">${coffee.on ? 'Keeping your PC awake' : 'Your PC sleeps normally'}</div><div class="row">${[['Off', 0], ['30 min', 30], ['1 hour', 60], ['2 hours', 120], ['Always', -1]].map(([n, m]) => `<button class="s ${m === cur && m <= 0 ? 'pri' : ''}" data-a="cof" data-m="${m}">${n}</button>`).join('')}</div>`; },
   sys: () => tile('sys', '#7aa2ff', `<span class="tic">${ico('sys', 20)}</span><div class="tb">GPU ${sys.temp == null ? 'N/A' : sys.temp+'°C'}<small>${sys.load == null ? 'Usage N/A' : sys.load+'% usage'} · CPU ${sys.cpu}% · RAM ${sys.ram}%</small></div>`),
-  youtube: () => tile('youtube','#f43131',`<span class="tic">▶</span><div class="tb">YouTube<small>Browser playback</small></div>`),
+  youtube: () => tile('youtube','#f43131',`<span class="tic">▶</span><div class="tb">YouTube<small>${S.youtubeConnected ? 'Connected · ' + esc(S.youtubeBrowser || 'chrome') : 'Browser playback'}</small></div>`),
   screen: () => tile('screen','#a38bff',`<span class="tic">${ico('screen', 23)}</span><div class="tb">Screen tools<small>OCR, color, draw</small></div>`),
   voice: () => tile('voice','#fa7ea8',`<span class="tic">🎙</span><div class="tb">Voice memo<small>Record locally</small></div>`),
   claude: () => tile('claude', '#ff8a3d', `<span class="tic">${ico('claude', 20)}</span><div class="tb">${cl.connected ? (state === 'idle' ? 'Ready' : esc(stTitle)) : 'Connect'}<small>${cl.connected ? 'Claude Code' : 'in this tab'}</small></div>`)
@@ -613,12 +636,12 @@ async function loadCurrentReleaseNotes(){
 const TPL = {
   home: () => `<div class="home-intro"><div><h2>My workspace</h2><p>Your essentials, one click away</p></div><span class="home-tag"><i class="home-dot"></i>Ready</span></div>` + statusCard() + (!releaseSeen() ? releaseCard() : '') + `<div class="tiles">${order().filter(on).slice(0, 6).map(id => TILES[id]()).join('')}</div>`,
   whatsnew: releasePage,
-  music: () => `<div class="mrow">${art ? `<img src="${art}">` : `<div class="noart">${ico(isSp() ? 'spotify' : 'note', 24)}</div>`}<div style="min-width:0"><div class="mt" id="n1"></div><div class="muted" id="n2"></div></div></div>
+  music: () => `<div class="mrow">${art ? `<img src="${art}">` : `<div class="noart">${ico(isSp() ? 'spotify' : S.youtubeConnected ? 'youtube' : 'note', 24)}</div>`}<div style="min-width:0"><div class="mt" id="n1"></div><div class="muted" id="n2"></div></div></div>
     <div class="lyr"><div id="l0"></div><div id="l1"></div><div id="l2"></div></div>
     <div class="prog"><span id="pt">0:00</span><div class="bar"><i id="pf"></i></div><span id="pr">0:00</span></div>
     <div class="ctl"><button data-a="mctl" data-k="prev">${ico('prev', 20)}</button><button class="big" data-a="mctl" data-k="play" id="pp">${ico('play', 20)}</button><button data-a="mctl" data-k="next">${ico('next', 20)}</button></div>
     <div class="vols"><button class="s" data-a="key" data-k="vdn">Vol -</button><button class="s" data-a="key" data-k="vup">Vol +</button><button class="s" data-a="key" data-k="mute">Mute</button>${spOn ? '' : '<button class="s" data-a="settings">Connect Spotify</button>'}</div>`,
-  youtube: () => `<div class="muted" id="ytStatus">Browser media playback (Chrome by default)</div><div class="row"><button class="s" data-a="ytctl" data-k="prev">⏮</button><button class="s pri" data-a="ytctl" data-k="play">▶ / ⏸</button><button class="s" data-a="ytctl" data-k="next">⏭</button><button class="s" data-a="ytrefresh">Refresh</button><button class="s" data-a="launch" data-t="https://www.youtube.com">Open</button></div>`,
+  youtube: () => `<div class="muted" id="ytStatus">${S.youtubeConnected ? 'Connected to ' + esc(S.youtubeBrowser || 'chrome') : 'Not connected'}</div><div class="row"><button class="s ${S.youtubeConnected ? '' : 'pri'}" data-a="ytconnect">${S.youtubeConnected ? 'Disconnect' : 'Connect'}</button><button class="s" data-a="ytctl" data-k="prev">⏮</button><button class="s pri" data-a="ytctl" data-k="play">▶ / ⏸</button><button class="s" data-a="ytctl" data-k="next">⏭</button><button class="s" data-a="ytrefresh">Refresh</button><button class="s" data-a="launch" data-t="https://www.youtube.com">Open</button></div><div class="muted">Uses the selected browser’s Windows media session for YouTube or YouTube Music. Browser support and media-session availability vary.</div>`,
   screen: () => `<div class="muted" style="margin-bottom:10px">Choose a screen tool</div><div class="row"><button class="s pri" data-a="screenTool" data-k="color">Pick HEX</button><button class="s" data-a="screenTool" data-k="ocr">Text OCR</button><button class="s" data-a="screenTool" data-k="draw">Draw</button></div>`,
   voice: () => `<div class="muted" id="voiceStatus">Recordings are stored privately in Nib.</div>
   <label class="vm-select">Microphone <select id="vmInput" data-a="voiceDevice"></select></label>
@@ -628,7 +651,13 @@ const TPL = {
   calendar: () => `<div id="cal" class="muted"></div>`,
   files: () => `<div class="zones"><div class="zone" data-zone="type"><b>Sort by type</b><div class="muted">Images, Documents...</div></div>${(S.zones || []).slice(0, 5).map((z, i) => `<div class="zone" data-zone="${i}"><b>${esc(z.name)}</b><div class="muted">drop here</div></div>`).join('')}</div><div class="row" style="margin-top:10px"><button class="s" data-a="tidy">Tidy Downloads</button><button class="s" data-a="undo">Undo last</button><button class="s" data-a="settings">Zones...</button></div><div id="fm" class="muted" style="margin-top:8px">Drag files onto a zone.</div>`,
   apps: () => { const l = appList(); return l.length ? `<div class="grid">${l.map(a => `<button class="tile" data-a="launch" data-t="${esc(a.target)}">${tileIcon(a)}<span>${esc(a.name)}</span></button>`).join('')}</div>` : '<div class="muted">Pick apps in Settings.</div>'; },
-  discord: () => { const d = S.discord || {}; return `<div class="row"><button class="pri s" data-a="discord" data-k="mute">Mute</button><button class="pri s" data-a="discord" data-k="deafen">Deafen</button><button class="s" data-a="launch" data-t="discord:">Open Discord</button></div>` + (d.mute || d.deafen ? '' : `<p class="muted">Set your Discord keybinds, then enter the same keys in Settings.</p><button class="s" data-a="settings">Open Settings</button>`); },
+  discord: () => {
+    const d = S.discord || {}, v = discordVoiceState, users = v.users || [];
+    const status = v.error || (v.connected ? v.inVoice ? 'You are in a voice channel.' : 'Connected. Join a voice channel to see participants.' : v.enabled ? 'Connecting to Discord…' : 'Not connected. Configure the bot in Settings > Connections.');
+    const ping = v.lastJoin ? `<div class="vc-notice">🔔 ${esc(v.lastJoin.name)} joined your voice channel</div>` : '';
+    const roster = users.length ? `<div class="vc-users">${users.map(u => `<div class="vc-user"><img src="${esc(u.avatar)}" alt=""><span>${esc(u.name)}</span></div>`).join('')}</div>` : `<p class="muted">${v.inVoice ? 'You are alone in this voice channel.' : 'The roster appears here only while you are in a voice channel.'}</p>`;
+    return `<div class="row"><button class="pri s" data-a="discord" data-k="mute">Mute</button><button class="pri s" data-a="discord" data-k="deafen">Deafen</button><button class="s" data-a="launch" data-t="discord:">Open Discord</button></div><p class="muted">${esc(status)}</p>${ping}${roster}<p class="muted">Names and join pings are shown only in this Discord panel. No voice audio is accessed or recorded.</p>`;
+  },
   chat: () => `<div id="clog"></div><input id="inp" autocomplete="off" spellcheck="false">`,
   notes: () => `<div class="ntabs" id="ntabs"></div><textarea id="ntxt" spellcheck="false" placeholder="Write something..."></textarea><div class="row" style="margin-top:8px"><button class="s" data-a="nnew">New note</button><button class="s" data-a="ndel">Delete note</button></div>`,
   clip: () => clips.length ? clips.map((c,i)=>`<div class="row" style="align-items:center"><input type="checkbox" class="clip-select" data-i="${i}"><button class="clip" data-a="cpy" data-i="${i}">${esc(c.replace(/\s+/g,' ').slice(0,90))}</button></div>`).join('') + `<div class="row"><button class="s" data-a="clipRemove">Remove selected</button><button class="s" data-a="clipExport">Export selected</button><button class="s" data-a="cclear">Clear all</button></div>` : '<div class="muted">No clipboard items. Kept in memory only.</div>',
@@ -647,14 +676,33 @@ function paintPin() {
   buildChrome(); pin.classList.toggle('nib-home', tab === 'home'); pin.innerHTML = (TPL[tab] || TPL.home)();
   if (tab === 'home') pin.scrollTop = 0;
   if (tab === 'music') { paintNP(); lastIdx = -2; paintLyr(); }
+  if (tab === 'youtube') refreshYoutube();
   if (tab === 'voice') { loadMemos(); fillVoiceDevices(); } if (tab === 'calendar') loadCal(); if (tab === 'chat') startChat(); if (tab === 'notes') startNotes();
   fit();
 }
 function openTab(t) { if(tab==='voice' && t!=='voice')stopMemoAudio(); if (tab === 'notes') flushNotes(); tab = t; if (t === 'claude') nib.claude().then(r => { cl = r; if (tab === 'claude') paintPin(); }); if (tab !== 'chat' && tab !== 'notes') { nib.focusable(false); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } paintPin(); layout(); }
 function paintNP() {
   const a = $('#n1'); if (!a) return;
-  a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in Spotify';
+  a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in ' + (S.youtubeConnected ? 'YouTube' : 'Spotify');
   const pp = $('#pp'); if (pp) pp.innerHTML = ico(playing() ? 'pause' : 'play', 20);
+}
+async function refreshYoutube() {
+  const m = await nib.youtubeGet(), el = $('#ytStatus'); if (!el) return;
+  el.textContent = m ? m.title + ' — ' + m.status
+    : S.youtubeConnected ? 'Connected to ' + (S.youtubeBrowser || 'chrome') + '. No browser media session found; start playback and refresh.'
+      : 'Not connected. Connect a browser in Settings to use it as the Music player.';
+}
+async function setYoutubeConnected(on) {
+  if (on) {
+    S.youtubePreviousPlayer = S.player || 'Spotify';
+    S.youtubeConnected = true;
+    S.player = S.youtubeBrowser || 'chrome';
+  } else {
+    S.youtubeConnected = false;
+    if (S.player === (S.youtubeBrowser || 'chrome')) S.player = S.youtubePreviousPlayer || 'Spotify';
+  }
+  await nib.setSettings({ youtubeConnected: S.youtubeConnected, youtubePreviousPlayer: S.youtubePreviousPlayer, player: S.player });
+  if (tab === 'youtube') { paintPin(); layout(); }
 }
 function paintLyr() {
   if (!$('#l1')) return; const i = lyrIdx();
@@ -803,8 +851,9 @@ const ACT = {
   cpy: async d => { await nib.clipCopy(clips[+d.i]); const b = document.querySelector(`[data-i="${d.i}"]`); if (b) b.textContent = 'Copied'; },
   clipRemove: async () => {const ids=[...pin.querySelectorAll('.clip-select:checked')].map(x=>+x.dataset.i); clips=await nib.clipRemove(ids); paintPin();},
   clipExport: async () => {const ids=[...pin.querySelectorAll('.clip-select:checked')].map(x=>+x.dataset.i); await nib.clipExport(ids);},
-  ytrefresh: async () => {const m=await nib.youtubeGet();const el=$('#ytStatus');if(el)el.textContent=m?(m.title+' — '+m.status):'No supported browser media session found';},
-  ytctl: async d => {await nib.youtubeControl(d.k);const m=await nib.youtubeGet();const el=$('#ytStatus');if(el)el.textContent=m?(m.title+' — '+m.status):'No supported browser media session found';},
+  ytconnect: async () => setYoutubeConnected(!S.youtubeConnected),
+  ytrefresh: refreshYoutube,
+  ytctl: async d => {await nib.youtubeControl(d.k);await refreshYoutube();},
   screenTool: d => nib.extrasOverlay(d.k),
   voiceRefresh: async () => {await fillVoiceDevices(); voiceMsg('Audio device list updated.');},
   voiceStart: async () => {if(!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder==='undefined'){voiceMsg('Microphone recording is not available in this Electron session.');return;} if(voiceRecorder && voiceRecorder.state!=='inactive') {voiceMsg('A recording is already in progress.');return;}
@@ -1048,9 +1097,10 @@ function apply(s) {
   pollCal(); pollSys(); wasOpen ? paintPin() : null; layout();
 }
 nib.onSettings(apply); nib.onSpotify(v => { spOn = v; if (wasOpen && tab === 'music') paintPin(); });
+nib.onDiscordVoice(v => { discordVoiceState = v || discordVoiceState; if (wasOpen && (tab === 'discord' || tab === 'home')) paintPin(); layout(); });
 (async () => {
   const r = await nib.getSettings(); CAT = r.catalog; apply(r.settings);
-  [notes, clips, coffee, cl, spOn] = await Promise.all([nib.notesGet(), nib.clipGet(), nib.coffeeGet(), nib.claude(), nib.spotifyStatus()]);
+  [notes, clips, coffee, cl, spOn, discordVoiceState] = await Promise.all([nib.notesGet(), nib.clipGet(), nib.coffeeGet(), nib.claude(), nib.spotifyStatus(), nib.discordVoiceStatus()]);
   pollNP(); layout();
   loadCurrentReleaseNotes();
 })();
