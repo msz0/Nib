@@ -26,7 +26,7 @@ const CATALOG = {
     ['zoom', 'Zoom', 'https://zoom.us', 'zoom'], ['drive', 'Google Drive', 'https://drive.google.com', 'googledrive'], ['obsidian', 'Obsidian', 'obsidian:', 'obsidian']].map(([id, name, target, ik]) => ({ id, name, target, ik })),
   icons: ICONS
 };
-const DEF = { v: 3, name: 'Nib', you: '', spotifyId: '', player: 'Spotify', lyricOffset: 0,
+const DEF = { v: 3, name: 'Nib', you: '', spotifyId: '', player: 'Spotify', youtubeBrowser: 'chrome', youtubeConnected: false, youtubePreviousPlayer: 'Spotify', lyricOffset: 0,
   widgets: ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'chat', 'coffee', 'claude'], widgetOrder: [], theme: 'dark', profile: 'normal', greetings: true,
   apps: ['spotify', 'discord', 'gcal', 'browser', 'vscode', 'explorer', 'calc', 'settings'], custom: [], zones: [], sortBase: '', ics: '', discord: { mute: '', deafen: '' },
   island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true, pos: null, lock: false },
@@ -91,6 +91,14 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else app.whenReady().then(async () => {
   if (process.argv.includes('--at-login')) await new Promise(r => setTimeout(r, 5000));   // let Windows finish loading the desktop first
   load();
+  const legacyDiscordToken = path.join(app.getPath('userData'), 'discord-bot.bin');
+  try { fs.rmSync(legacyDiscordToken, { force: true }); }
+  catch (e) { console.error('[discord] Could not remove the previously saved bot token:', e); }
+  const hadLegacyDiscordSettings = 'discordVoiceUserId' in S || 'discordVoiceEnabled' in S || 'discordAvatars' in S.island;
+  delete S.discordVoiceUserId;
+  delete S.discordVoiceEnabled;
+  delete S.island.discordAvatars;
+  if (hadLegacyDiscordSettings) save();
   position = require('./position')({ screen, getS: () => S, W, H });
   if (app.isPackaged && loginOn() && !app.getLoginItemSettings({ args: LOGIN_ARGS }).openAtLogin) setLogin(true);   // upgrade an older startup entry
   let ignoring = true;   // what the page last asked for: true = clicks pass through, false = island takes clicks

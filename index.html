@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data: https://cdn.discordapp.com; media-src data: blob:">
 <style>
 @property --bg{syntax:'<color>';inherits:true;initial-value:#000}
 @property --tint{syntax:'<color>';inherits:true;initial-value:#000}
@@ -496,7 +496,6 @@ const nextEv = () => { const n = Date.now(), e = evs.find(e => !e.allDay && e.en
 const focusCol = () => tier(focusMin)[2];
 const typing = () => ['inp', 'ntxt'].includes((document.activeElement || {}).id);
 const slotText = k => k === 'gpuTemp' ? ('GPU ' + (sys.temp == null ? 'N/A' : sys.temp + '°C')) : k === 'time' ? clock() : k === 'battery' ? (bat ? Math.round(bat.level * 100) + '%' + (bat.charging ? '+' : '') : '') : k === 'cpu' ? 'CPU ' + sys.cpu + '%' : k === 'ram' ? 'RAM ' + sys.ram + '%' : k === 'event' ? nextEv() : '';
-
 // ---------- sounds (synthesised, no files)
 const SND = { chime: [[523, 659, 784], 'sine', .11, .3], bell: [[880, 1320], 'triangle', .14, .6], pop: [[420, 640], 'sine', .07, .14], soft: [[392, 523], 'sine', .16, .45], marimba: [[659, 784, 988], 'triangle', .09, .25], ping: [[1046], 'sine', 0, .5] };
 function tone(style, vol) {
@@ -521,7 +520,8 @@ function layout() {
   if (!o && !mus) {
     const L = state === 'idle' ? (slotText(I.left)) : '', R = state === 'idle' ? (focusEnd ? mmss(focusEnd - Date.now()) : slotText(I.right)) : stTitle.slice(0, 16);
     $('#L').textContent = L; $('#R').textContent = R; $('#R').style.color = focusEnd && state === 'idle' ? focusCol() : '';
-    const sw = Math.max(L.length, state === 'idle' ? R.length : 0) * 7.4, w = Math.max(92, 24 + (I.eyes === false ? 0 : 42) + (L || R ? 2 * 9 : 0) + (state === 'idle' ? 2 * sw : (R ? 9 + R.length * 7.4 : 0)));
+    const sw = Math.max(L.length, state === 'idle' ? R.length : 0) * 7.4;
+    const w = Math.max(92, 24 + (I.eyes === false ? 0 : 42) + (L || R ? 2 * 9 : 0) + (state === 'idle' ? 2 * sw : (R ? 9 + R.length * 7.4 : 0)));
     $('#L').style.width = state === 'idle' && (L || R) ? sw + 'px' : '0'; $('#R').style.width = state === 'idle' && (L || R) ? sw + 'px' : '';
     isl.style.width = w + 'px'; isl.style.marginLeft = -w / 2 + 'px';
   } else { isl.style.width = ''; isl.style.marginLeft = ''; }
@@ -564,7 +564,7 @@ const TILES = {
   files: () => tile('files', '#f5b942', `<span class="tic">${ico('folder', 20)}</span><div class="tb">Drop files<small>to sort them</small></div>`),
   calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', '#4285F4', `<span class="tic">${ico('googlecalendar', 20)}</span><div class="tb">${e ? esc(e.title.slice(0, 28)) : S.ics ? 'Nothing soon' : 'Add a link'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'in Settings'}</small></div>`); },
   apps: () => tile('apps', '#8b93a7', `<span class="tic">${ico('apps', 20)}</span><div class="tb">Apps<small>${appList().length} ready</small></div>`),
-  discord: () => tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>mute / deafen</small></div>`),
+  discord: () => tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>Mute and deafen controls</small></div>`),
   chat: () => tile('chat', '#e6cf72', `<span class="tic">${ico('chat', 20)}</span><div class="tb">Ask ${esc(NAME())}<small>anything</small></div>`),
   coffee: () => { const cur = !coffee.on ? 0 : coffee.until < 0 ? -1 : 1; return `<div class="tb" style="font-size:16px;margin-bottom:8px">${coffee.on ? 'Keeping your PC awake' : 'Your PC sleeps normally'}</div><div class="row">${[['Off', 0], ['30 min', 30], ['1 hour', 60], ['2 hours', 120], ['Always', -1]].map(([n, m]) => `<button class="s ${m === cur && m <= 0 ? 'pri' : ''}" data-a="cof" data-m="${m}">${n}</button>`).join('')}</div>`; },
   sys: () => tile('sys', '#7aa2ff', `<span class="tic">${ico('sys', 20)}</span><div class="tb">GPU ${sys.temp == null ? 'N/A' : sys.temp+'°C'}<small>${sys.load == null ? 'Usage N/A' : sys.load+'% usage'} · CPU ${sys.cpu}% · RAM ${sys.ram}%</small></div>`),
@@ -629,7 +629,7 @@ const TPL = {
   calendar: () => `<div id="cal" class="muted"></div>`,
   files: () => `<div class="zones"><div class="zone" data-zone="type"><b>Sort by type</b><div class="muted">Images, Documents...</div></div>${(S.zones || []).slice(0, 5).map((z, i) => `<div class="zone" data-zone="${i}"><b>${esc(z.name)}</b><div class="muted">drop here</div></div>`).join('')}</div><div class="row" style="margin-top:10px"><button class="s" data-a="tidy">Tidy Downloads</button><button class="s" data-a="undo">Undo last</button><button class="s" data-a="settings">Zones...</button></div><div id="fm" class="muted" style="margin-top:8px">Drag files onto a zone.</div>`,
   apps: () => { const l = appList(); return l.length ? `<div class="grid">${l.map(a => `<button class="tile" data-a="launch" data-t="${esc(a.target)}">${tileIcon(a)}<span>${esc(a.name)}</span></button>`).join('')}</div>` : '<div class="muted">Pick apps in Settings.</div>'; },
-  discord: () => { const d = S.discord || {}; return `<div class="row"><button class="pri s" data-a="discord" data-k="mute">Mute</button><button class="pri s" data-a="discord" data-k="deafen">Deafen</button><button class="s" data-a="launch" data-t="discord:">Open Discord</button></div>` + (d.mute || d.deafen ? '' : `<p class="muted">Set your Discord keybinds, then enter the same keys in Settings.</p><button class="s" data-a="settings">Open Settings</button>`); },
+  discord: () => `<div class="row"><button class="pri s" data-a="discord" data-k="mute">Mute</button><button class="pri s" data-a="discord" data-k="deafen">Deafen</button><button class="s" data-a="launch" data-t="discord:">Open Discord</button></div><p class="muted">Mute and deafen use your configured Discord keybinds. Voice participant lists require a bot token, so Nib does not connect to Discord for them.</p>`,
   chat: () => `<div id="clog"></div><input id="inp" autocomplete="off" spellcheck="false">`,
   notes: () => `<div class="ntabs" id="ntabs"></div><textarea id="ntxt" spellcheck="false" placeholder="Write something..."></textarea><div class="row" style="margin-top:8px"><button class="s" data-a="nnew">New note</button><button class="s" data-a="ndel">Delete note</button></div>`,
   clip: () => clips.length ? clips.map((c,i)=>`<div class="row" style="align-items:center"><input type="checkbox" class="clip-select" data-i="${i}"><button class="clip" data-a="cpy" data-i="${i}">${esc(c.replace(/\s+/g,' ').slice(0,90))}</button></div>`).join('') + `<div class="row"><button class="s" data-a="clipRemove">Remove selected</button><button class="s" data-a="clipExport">Export selected</button><button class="s" data-a="cclear">Clear all</button></div>` : '<div class="muted">No clipboard items. Kept in memory only.</div>',
@@ -654,7 +654,7 @@ function paintPin() {
 function openTab(t) { if(tab==='voice' && t!=='voice')stopMemoAudio(); if (tab === 'notes') flushNotes(); tab = t; if (t === 'claude') nib.claude().then(r => { cl = r; if (tab === 'claude') paintPin(); }); if (tab !== 'chat' && tab !== 'notes') { nib.focusable(false); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } paintPin(); layout(); }
 function paintNP() {
   const a = $('#n1'); if (!a) return;
-  a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in Spotify';
+  a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in ' + mediaLabel();
   const pp = $('#pp'); if (pp) pp.innerHTML = ico(playing() ? 'pause' : 'play', 20);
 }
 function paintLyr() {

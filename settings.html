@@ -262,6 +262,7 @@ const PG = {
     return [...head('Connections', 'Calendar, Discord and Claude Code'),
       mk('h3', '', 'Calendar'), card([row('Calendar link', 'Google Calendar: Settings, your calendar, Integrate calendar, Secret address in iCal format. Anyone with the link can read it, so keep it private.', txt(() => S.ics, v => S.ics = v, 'https://... .ics', '300px'))]),
       mk('h3', '', 'Discord'), card([row('Mute hotkey', 'Click Record and press the keys, combinations work. Add Toggle Mute in Discord > Keybinds with the same keys', keyrec(() => S.discord.mute, v => S.discord.mute = v, 'Ctrl+Shift+M')), row('Deafen hotkey', 'Click Record and press the keys. Add Toggle Deafen in Discord > Keybinds with the same keys', keyrec(() => S.discord.deafen, v => S.discord.deafen = v, 'Ctrl+Shift+D'))]),
+      mk('div', 'hint', 'No Discord bot token is used or stored. Discord does not expose voice-channel participants through its local desktop connection, so Nib keeps the mute/deafen hotkeys but does not show participant lists, join alerts, or avatars.'),
       mk('h3', '', 'Claude Code'), card([top])];
   },
   general() {
