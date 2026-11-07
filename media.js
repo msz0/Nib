@@ -1,5 +1,5 @@
-// One persistent PowerShell. Play/Pause/Next/Prev and "now playing" talk ONLY to the player you chose (Spotify by default),
-// through that app's own Windows media session, so browsers (Netflix, YouTube...) are never touched.
+// One persistent PowerShell bridge to Windows SMTC. Playback commands and now-playing data
+// use the selected player's media session, without stealing focus or sending keys to other apps.
 const { spawn } = require('child_process');
 const INIT = [
   '[Console]::OutputEncoding=[Text.Encoding]::UTF8',
@@ -12,9 +12,10 @@ const INIT = [
   "$at=([System.WindowsRuntimeSystemExtensions].GetMethods()|?{$_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'})[0]",
   'function NzAw($x,$r){$n=$at.MakeGenericMethod($r).Invoke($null,@($x));$n.Wait(-1)|Out-Null;$n.Result}',
   'try{[Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager,Windows.Media.Control,ContentType=WindowsRuntime]|Out-Null;$m=NzAw ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]::RequestAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager])}catch{}',
-  'function NzSess($pat){foreach($x in $m.GetSessions()){if($x.SourceAppUserModelId -match $pat){return $x}}}',
-  "function NzMedia($pat){try{$s=NzSess $pat;if(!$s){'-';return};$i=NzAw ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties]);$t=$s.GetTimelineProperties();$st=[string]$s.GetPlaybackInfo().PlaybackStatus;$p=$t.Position.TotalSeconds;if($st -eq 'Playing'){$p+=([DateTimeOffset]::UtcNow-$t.LastUpdatedTime).TotalSeconds};ConvertTo-Json -Compress @{t=$i.Title;a=$i.Artist;s=$st;p=[math]::Round($p,1);d=[math]::Round(($t.EndTime-$t.StartTime).TotalSeconds,1);src=$s.SourceAppUserModelId}}catch{'-'}}",
-  "function NzCtl($pat,$c){try{$s=NzSess $pat;if(!$s){'-';return};if($c -eq 'play'){$r=NzAw ($s.TryTogglePlayPauseAsync()) ([bool])}elseif($c -eq 'next'){$r=NzAw ($s.TrySkipNextAsync()) ([bool])}else{$r=NzAw ($s.TrySkipPreviousAsync()) ([bool])};'ok'}catch{'-'}}",
+  'function NzPat($pat){$p=([string]$pat).ToLowerInvariant();$a=@($p);if($p -match "^(chrome|googlechrome)$"){$a+=@("chrome","googlechrome")};if($p -match "^(edge|msedge|microsoftedge)$"){$a+=@("edge","msedge","microsoftedge")};if($p -match "^firefox$"){$a+=@("firefox")};if($p -match "^spotify$"){$a+=@("spotify")};$a}',
+  'function NzSess($pat){if(!$m){return $null};$a=NzPat $pat;foreach($x in $m.GetSessions()){ $id=([string]$x.SourceAppUserModelId).ToLowerInvariant(); foreach($p in $a){if($id.Contains($p)){return $x}}};$null}',
+  "function NzMedia($pat){try{$s=NzSess $pat;if(!$s){'-';return};$i=NzAw ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties]);$t=$s.GetTimelineProperties();$st=[string]$s.GetPlaybackInfo().PlaybackStatus;$p=[math]::Max(0,$t.Position.TotalSeconds);if($st -eq 'Playing'){$p+=([DateTimeOffset]::UtcNow-$t.LastUpdatedTime).TotalSeconds};$d=[math]::Max(0,($t.EndTime-$t.StartTime).TotalSeconds);if(!$i.Title){'-';return};ConvertTo-Json -Compress @{t=[string]$i.Title;a=[string]$i.Artist;s=$st;p=[math]::Round($p,1);d=[math]::Round($d,1);src=[string]$s.SourceAppUserModelId}}catch{'-'}}",
+  "function NzCtl($pat,$c){try{$s=NzSess $pat;if(!$s){'-';return};$r=$false;if($c -eq 'play'){$r=NzAw ($s.TryTogglePlayPauseAsync()) ([bool])}elseif($c -eq 'next'){$r=NzAw ($s.TrySkipNextAsync()) ([bool])}elseif($c -eq 'prev'){$r=NzAw ($s.TrySkipPreviousAsync()) ([bool])};if($r){'ok'}else{'-'}}catch{'-'}}",
   "function NzTitle{$p=Get-Process Spotify -ErrorAction SilentlyContinue|Where-Object{$_.MainWindowTitle}|Select-Object -First 1;if($p){$p.MainWindowTitle}else{'-'}}"
 ];
 const VK = { mute: 173, vdn: 174, vup: 175 };   // system volume keys only (never play/pause)
@@ -72,12 +73,21 @@ const ask1 = cmd => new Promise(res => {
 });
 async function nowPlaying(player) {   // {title, artist, status, pos(sec), dur, src} or null
   const pat = safe(player), r = await ask1(`NzMedia '${pat}'`);
-  if (r && r !== '-') { try { const j = JSON.parse(r); if (j.t) return { title: j.t, artist: j.a || '', status: j.s, pos: j.p || 0, dur: j.d || 0, src: j.src || '' }; } catch {} }
+  if (r && r !== '-') {
+    try {
+      const j = JSON.parse(r);
+      if (j.t && ['Playing', 'Paused', 'Stopped', 'Opened'].includes(j.s))
+        return { title: j.t, artist: j.a || '', status: j.s === 'Playing' ? 'Playing' : 'Paused', pos: Math.max(0, Number(j.p) || 0), dur: Math.max(0, Number(j.d) || 0), src: j.src || '' };
+    } catch {}
+  }
   if (!/spotify/i.test(pat)) return null;
   const n = await ask1('NzTitle'); if (!n || n === '-') return null;   // fallback: Spotify's window title
   const m = n.match(/^(.*?) - (.*)$/);
   return /^spotify/i.test(n) ? { title: 'Spotify', artist: '', status: 'Paused', pos: 0, dur: 0, src: 'Spotify' }
     : { title: m ? m[2] : n, artist: m ? m[1] : '', status: 'Playing', pos: 0, dur: 0, src: 'Spotify', nopos: true };
 }
-const control = (cmd, player) => ['play', 'next', 'prev'].includes(cmd) ? ask1(`NzCtl '${safe(player)}' ${cmd}`) : Promise.resolve(null);
+const control = async (cmd, player) => {
+  if (!['play', 'next', 'prev'].includes(cmd)) return false;
+  return (await ask1(`NzCtl '${safe(player)}' ${cmd}`)) === 'ok';
+};
 module.exports = { key, keys, press, comboCmd, reset, nowPlaying, control, stop: () => { try { ps && ps.kill(); } catch {} } };

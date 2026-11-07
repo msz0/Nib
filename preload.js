@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('nib', {
   onNativeHover: cb => ipc.on('nib:native-hover', (_, over) => cb(over)),
   setHitbox: b => ipc.send('nib:hitbox', b),
   onCollapse: cb => ipc.on('nib:collapse', cb),
+  onGameMode: cb => ipc.on('nib:game-mode', (_, enabled) => cb(!!enabled)),
   onForceOpen: cb => ipc.on('nib:force-open', cb),
   onRegionInit: cb => ipc.on('screen:region-init', (_, data) => cb(data)),
   regionSelection: (id, data) => ipc.send('screen:region-result', id, data),

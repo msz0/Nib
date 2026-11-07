@@ -446,7 +446,7 @@ const LBL = { home: 'Home', music: 'Music', focus: 'Focus', notes: 'Notes', clip
 const TIERS = [[15, 'Light', '#6fe3b4'], [30, 'Steady', '#ffd166'], [60, 'Deep', '#ff8a3d'], [1e9, 'Intense', '#ff5d6c']];
 const tier = m => TIERS.find(t => m <= t[0]);
 let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: [], widgets: [], icons: { fill: {}, stroke: {} } };
-let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false;
+let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false, gameMode = false;
 let snd = true, t0 = 0, idleT, leaveT, ctx, focusEnd = 0, fSel = 25, focusMin = 25, cx = 0, cy = 0, lastMove = performance.now(), dizzyUntil = 0;
 let np = null, npAt = 0, art = '', artUrl = '', evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null, spOn = false;
 let voiceRecorder = null, voiceParts = [], voiceStream = null;
@@ -510,7 +510,7 @@ nib.onPreview(o => tone(o.style, o.vol)); nib.onSound(v => snd = v);
 
 // ---------- layout / render
 function layout() {
-  const I = S.island, o = (I.open === 'click' ? pinned : hover) || dragging || state === 'ask' || typing();
+  const I = S.island, o = !gameMode && ((I.open === 'click' ? pinned : hover) || dragging || state === 'ask' || typing());
   if (o !== wasOpen) { wasOpen = o; if (!o) { tab = 'home'; pinned=false; flushNotes(); menuOff(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); nib.focusable(false); } paintPin(); }
   const mus = !o && state === 'idle' && !focusEnd && I.music !== false && playing();
   isl.className = [o && 'open', mus && 'mus', (I.style === 'float' || (posInfo.free && !posInfo.attached)) && 'float', posInfo.up && 'up', moving && 'moving', S.island.lock && 'locked', I.eyes === false && 'noeyes', o && tab !== 'home' && 'app'].filter(Boolean).join(' ');
@@ -772,6 +772,12 @@ if (typeof nib.onCollapse === 'function') nib.onCollapse(() => {
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   tab='home'; menuOff(); layout();
 });
+if (typeof nib.onGameMode === 'function') nib.onGameMode(enabled => {
+  gameMode = enabled;
+  clearTimeout(leaveT); leaveT = 0;
+  if (enabled) { pinned = false; hover = false; dragging = false; tab = 'home'; menuOff(); }
+  layout();
+});
 document.addEventListener('keydown', e => {
   if(e.key==='Escape' && !typing()) { pinned=false;hover=false;tab='home';menuOff();layout(); }
 });
@@ -787,7 +793,7 @@ const ACT = {
   whatsnew: () => { menuOff(); selectedRelease=NIB_RELEASE; openTab('whatsnew'); }, releaseSelect: d => { selectedRelease=d.v; paintPin(); }, whatsnewDone: () => { markReleaseSeen(); openTab('home'); },
   update: async () => { menuOff(); try { const r=await nib.checkUpdates(); if(r && !r.ok) alert(r.message||'Update check unavailable'); } catch(e){alert('Update check failed: '+e.message);} },
   quit: () => nib.quit(), settings: () => { menuOff(); nib.openSettings(); }, launch: d => nib.launch(d.t), discord: d => nib.discord(d.k), key: d => nib.key(d.k),
-  mctl: async d => { if (d.k === 'play' && np) { np.status = playing() ? 'Paused' : 'Playing'; npAt = performance.now(); paintNP(); layout(); } await nib.music(d.k); setTimeout(() => { if (!pollBusy) pollNP2(); }, 500); },
+  mctl: async d => { await nib.music(d.k); setTimeout(() => { if (!pollBusy) pollNP2(); }, 500); },
   tidy: async () => fm(await nib.tidy()), undo: async () => fm(await nib.undo()),
   fmin: d => setSel(+d.m), fstart: () => { focusMin = fSel; focusEnd = Date.now() + focusMin * 60000; paintPin(); layout(); }, fstop: () => { focusEnd = 0; paintPin(); layout(); }, fadd: () => { focusEnd += 5 * 60000; focusMin += 5; paintPin(); },
   allow: () => answer('allow'), deny: () => answer('deny'), dismiss: () => goIdle(),
@@ -835,7 +841,7 @@ const ACT = {
   cof: async d => { coffee = await nib.coffee(+d.m); paintPin(); },
   clc: async () => { const r = await nib.claudeSet({ connect: !cl.connected }); if (!r.error) cl = r; paintPin(); }, clg: async () => { cl = await nib.claudeSet({ gate: !cl.gate }); paintPin(); }
 };
-let pollBusy = false; const pollNP2 = async () => { pollBusy = true; np = await nib.np(); npAt = performance.now(); paintNP(); layout(); pollBusy = false; };
+let pollBusy = false; const pollNP2 = async () => { pollBusy = true; np = await nib.np(); npAt = performance.now(); paintNP(); paintMus(); layout(); pollBusy = false; };
 document.addEventListener('change', e => {if(e.target.id==='vmInput')localStorage.setItem('nib:mic',e.target.value);if(e.target.id==='vmOutput')localStorage.setItem('nib:output',e.target.value);});
 document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && ACT[b.dataset.a]) ACT[b.dataset.a](b.dataset); else if (!e.target.closest('#menuBox')) menuOff(); });
 const answer = d => { const id = pend; if (!id) return; nib.decide(id, d); set('work', d === 'allow' ? 'Working' : 'Denied', ''); };
@@ -912,13 +918,13 @@ nib.onCursor((x, y) => {
 });
 window.addEventListener('mousemove', () => { lastDom = performance.now(); }, true);
 setInterval(() => nib.beat(), 2000);   // tells Nib the page is alive
-isl.addEventListener('click', e => { if (S.island.open === 'click' && !wasOpen && !e.target.closest('#mini')) { pinned = true; layout(); } });
+isl.addEventListener('click', e => { if (!gameMode && S.island.open === 'click' && !wasOpen && !e.target.closest('#mini')) { pinned = true; layout(); } });
 // ---------- drag the island anywhere on screen (it remembers the spot; Settings can lock it)
 let dragSt = null, noClick = false;
 nib.onPos(p => { if (p.free !== posInfo.free || p.up !== posInfo.up || p.attached !== posInfo.attached) { posInfo = p; layout(); } });
 $('#nav').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
 isl.addEventListener('pointerdown', e => {
-  if (e.button !== 0 || (S.island && S.island.lock) || e.target.closest('button,input,textarea,select,a,#menuBox,[data-a]')) return;
+  if (gameMode || e.button !== 0 || (S.island && S.island.lock) || e.target.closest('button,input,textarea,select,a,#menuBox,[data-a]')) return;
   dragSt = { id: e.pointerId, x: e.screenX, y: e.screenY };
 });
 isl.addEventListener('pointermove', e => {

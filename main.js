@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, safeStorage, dialog, shell, clipboard, powerSaveBlocker, powerMonitor } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, safeStorage, dialog, shell, clipboard, powerSaveBlocker, powerMonitor, globalShortcut } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const os = require('os');
 const path = require('path'), fs = require('fs'), { execFile } = require('child_process');
@@ -30,6 +30,10 @@ const DEF = { v: 3, name: 'Nib', you: '', spotifyId: '', player: 'Spotify', lyri
   widgets: ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'chat', 'coffee', 'claude'], widgetOrder: [], theme: 'dark', profile: 'normal', greetings: true,
   apps: ['spotify', 'discord', 'gcal', 'browser', 'vscode', 'explorer', 'calc', 'settings'], custom: [], zones: [], sortBase: '', ics: '', discord: { mute: '', deafen: '' },
   island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true, pos: null, lock: false },
+  gameModeShortcut: 'Ctrl+Alt+G',
+  openShortcut: '',
+  collapseShortcut: '',
+  gameModeAuto: false,
   sounds: { on: true, vol: .7, done: 'chime', ask: 'bell', focus: 'marimba', event: 'soft' } };
 let win, sw, tray, server, spotify, S = { ...DEF }, gateOn = true, history = [];
 
@@ -90,12 +94,13 @@ else app.whenReady().then(async () => {
   position = require('./position')({ screen, getS: () => S, W, H });
   if (app.isPackaged && loginOn() && !app.getLoginItemSettings({ args: LOGIN_ARGS }).openAtLogin) setLogin(true);   // upgrade an older startup entry
   let ignoring = true;   // what the page last asked for: true = clicks pass through, false = island takes clicks
+  let gameMode = false, gameModeSource = '', registeredShortcuts = [], autoGameTimer = null, autoGameHits = 0, autoGameMisses = 0;
   let recoveryUntil = 0;
   // Native mouse hit-test survives dropped renderer cursor messages and delayed capture cleanup.
   let nativeOver = false, nativeHit = {left:170, top:0, width:180, height:44}, nativeInputAt = 0;
   const applyIgnore = () => {
     if (!win || win.isDestroyed()) return;
-    const takeInput = Date.now() < recoveryUntil || nativeOver ;
+    const takeInput = !gameMode && (Date.now() < recoveryUntil || nativeOver);
     // A visible, expanded notch must be focusable to receive reliable Windows clicks.
     // Do not change it every timer tick: Windows may reject/lose input on repeated toggles.
     // Keep the island focusable. Flipping focusability while hovering can discard clicks.
@@ -114,7 +119,7 @@ else app.whenReady().then(async () => {
       webPreferences: { preload: path.join(__dirname, 'preload.js'), autoplayPolicy: 'no-user-gesture-required', backgroundThrottling: false } });
     w.setAlwaysOnTop(true, 'screen-saver'); w.setIgnoreMouseEvents(true, { forward: true }); applyIgnore.lastInput = false;
     // a freshly loaded page starts with clicks passing through, like the page itself assumes
-    w.webContents.on('did-finish-load', () => { if (w !== win) return; ignoring = true; applyIgnore(); lastPosKey = ''; place(); beatAt = Date.now(); });
+    w.webContents.on('did-finish-load', () => { if (w !== win) return; ignoring = true; applyIgnore(); lastPosKey = ''; place(); beatAt = Date.now(); w.webContents.send('nib:game-mode', gameMode); });
     w.webContents.on('render-process-gone', () => { if (w === win) rebuild('page crashed'); });
     w.on('session-end', () => { try { media.stop(); } catch {} app.quit(); });
     w.loadFile(path.join(__dirname, 'index.html')); w.once('ready-to-show', () => { if (!w.isDestroyed()) { w.setSkipTaskbar(true); w.showInactive(); w.setSkipTaskbar(true); } });
@@ -160,6 +165,65 @@ else app.whenReady().then(async () => {
      recoveryUntil=0; nativeOver=false; ignoring=true;
      try { win.webContents.send('nib:collapse'); applyIgnore(); } catch(e) {logCrash('collapse-existing',e);}
    };
+
+  const setGameMode = (on, source = 'manual') => {
+    gameMode = !!on;
+    gameModeSource = gameMode ? source : '';
+    recoveryUntil = 0;
+    nativeOver = false;
+    ignoring = true;
+    if (gameMode && win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
+      win.webContents.send('nib:collapse');
+    }
+    if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
+      win.webContents.send('nib:game-mode', gameMode);
+    }
+    applyIgnore();
+    if (gameModeItem) gameModeItem.checked = gameMode;
+  };
+  const registerShortcuts = () => {
+    registeredShortcuts.forEach(accelerator => globalShortcut.unregister(accelerator));
+    registeredShortcuts = [];
+    const shortcuts = [
+      ['gameModeShortcut', () => setGameMode(!gameMode, 'manual')],
+      ['openShortcut', () => { setGameMode(false, 'manual'); repairNotch(true); }],
+      ['collapseShortcut', () => collapseExisting()]
+    ];
+    for (const [key, action] of shortcuts) {
+      const accelerator = String(S[key] || '').trim();
+      if (!accelerator) continue;
+      if (globalShortcut.register(accelerator, action)) registeredShortcuts.push(accelerator);
+      else console.error('[shortcuts] Could not register shortcut:', accelerator);
+    }
+  };
+  let gameModeItem;
+  const detectFullscreenWindow = () => {
+    if (process.platform !== 'win32' || !S.gameModeAuto) return;
+    const script = [
+      'Add-Type \'using System; using System.Runtime.InteropServices; public static class NibWin { [StructLayout(LayoutKind.Sequential)] public struct R { public int L; public int T; public int Rr; public int B; } [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow(); [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out R r); [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint p); }\';',
+      '$h=[NibWin]::GetForegroundWindow(); $r=New-Object NibWin+R; [uint32]$p=0; [NibWin]::GetWindowRect($h,[ref]$r)|Out-Null; [NibWin]::GetWindowThreadProcessId($h,[ref]$p)|Out-Null;',
+      '[pscustomobject]@{left=$r.L;top=$r.T;right=$r.Rr;bottom=$r.B;pid=$p}|ConvertTo-Json -Compress'
+    ].join(' ');
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 1200, maxBuffer: 4096 }, (err, stdout) => {
+      if (err || !stdout.trim() || !win || win.isDestroyed() || !S.gameModeAuto) return;
+      try {
+        const r = JSON.parse(stdout.trim()), own = r.pid === process.pid;
+        const full = !own && screen.getAllDisplays().some(d => {
+          const b = d.bounds, t = 8;
+          return Math.abs(r.left - b.x) <= t && Math.abs(r.top - b.y) <= t &&
+            Math.abs(r.right - (b.x + b.width)) <= t && Math.abs(r.bottom - (b.y + b.height)) <= t;
+        });
+        if (full) {
+          autoGameMisses = 0;
+          if (++autoGameHits >= 3 && (!gameMode || gameModeSource === 'auto')) setGameMode(true, 'auto');
+        } else {
+          autoGameHits = 0;
+          if (++autoGameMisses >= 2 && gameMode && gameModeSource === 'auto') setGameMode(false, 'auto');
+        }
+      } catch (e) { console.error('[game-mode] fullscreen detection failed:', e.message); }
+    });
+  };
+  if (process.platform === 'win32') autoGameTimer = setInterval(detectFullscreenWindow, 1500);
 
   let screenSelectionActive = false;
   const keepAlive = (repaint) => {
@@ -212,6 +276,7 @@ else app.whenReady().then(async () => {
   tray = new Tray(catIcon()); tray.setToolTip(S.name || 'Nib');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Settings...', click: openSettings },
+    gameModeItem = { label: 'Game Mode', type: 'checkbox', checked: false, click: m => setGameMode(m.checked, 'manual') },
     { label: 'Sounds', type: 'checkbox', checked: true, click: m => win.webContents.send('sound', m.checked) },
     { label: 'Check for updates', click: () => { if (app.isPackaged) autoUpdater.checkForUpdates().catch(() => {}); } },
     { label: 'Repair / open Nib notch', click: () => repairNotch(true) },
@@ -229,9 +294,11 @@ else app.whenReady().then(async () => {
     { label: 'Forget my API key', click: () => fs.rmSync(keyFile(), { force: true }) },
     { label: 'Quit', click: () => { media.stop(); app.quit(); } }
   ]));
+  registerShortcuts();
 
   ipcMain.on('ignore', (e, b) => {
     if (!win || e.sender !== win.webContents) return;
+    if (gameMode) return;
     // Never let a stale renderer event put a visible hovered notch into click-through.
     // Renderer may be stale after DXGI/fullscreen; native hit-testing is authoritative.
     // Never allow renderer cursor messages to override the main-process hit test.
@@ -257,8 +324,13 @@ else app.whenReady().then(async () => {
   ipcMain.on('media:key', (_, k) => media.key(k));
   ipcMain.on('discord:key', (_, k) => { const c = S.discord && S.discord[k]; console.log('[discord]', k, 'key:', c || '(not set)'); if (!media.press(c)) media.keys(c); });
   ipcMain.handle('media:np', async () => {
-    let m = spotify.connected() && /spotify/i.test(S.player || 'Spotify') ? await spotify.playing() : null;
-    if (!m) m = await media.nowPlaying(S.player || 'Spotify');
+    let m = await media.nowPlaying(S.player || 'Spotify');
+    if (m && spotify.connected() && /spotify/i.test(m.src || '') && /spotify/i.test(S.player || 'Spotify')) {
+      const api = await spotify.playing();
+      if (api && api.title === m.title) m = { ...api, status: m.status, pos: m.pos, dur: m.dur, src: m.src };
+    } else if (!m && spotify.connected() && /spotify/i.test(S.player || 'Spotify')) {
+      m = await spotify.playing();
+    }
     if (!m) return null;
     if (S.island.lyrics !== false && m.artist && !m.nopos) {
       const k = m.artist + '|' + m.title, l = lyrics.peek(k);
@@ -321,7 +393,10 @@ else app.whenReady().then(async () => {
   ipcMain.handle('settings:get', () => ({ settings: S, catalog: CATALOG }));
   ipcMain.handle('settings:set', async (_, s) => {
     if (s && s.island) s = { ...s, island: { ...s.island, pos: S.island.pos } };   // the Settings page never overwrites where you dragged it
+    const oldShortcuts = [S.gameModeShortcut, S.openShortcut, S.collapseShortcut].join('\0');
     S = { ...S, ...s };
+    if ([S.gameModeShortcut, S.openShortcut, S.collapseShortcut].join('\0') !== oldShortcuts) registerShortcuts();
+    if (!S.gameModeAuto && gameMode && gameModeSource === 'auto') setGameMode(false, 'auto');
     for (const a of S.custom || []) {   // no logo chosen: use the program's own icon when the target is a file
       delete a.icon;
       if (!a.logo && a.target && fs.existsSync(a.target)) { try { a.icon = (await app.getFileIcon(a.target, { size: 'large' })).resize({ width: 64, height: 64 }).toDataURL(); } catch {} }
@@ -377,7 +452,7 @@ else app.whenReady().then(async () => {
     const p = screen.getCursorScreenPoint();
     const b = win.getBounds(), x=p.x-b.x, y=p.y-b.y;
     const h=nativeHit, margin=10;
-    const inside = !screenSelectionActive && x >= h.left-margin && x <= h.left+h.width+margin && y >= h.top-margin && y <= h.top+h.height+margin;
+    const inside = !gameMode && !screenSelectionActive && x >= h.left-margin && x <= h.left+h.width+margin && y >= h.top-margin && y <= h.top+h.height+margin;
     const expired = recoveryUntil && Date.now() >= recoveryUntil;
     if (expired) recoveryUntil = 0;
     if (inside !== nativeOver) {
@@ -398,7 +473,7 @@ else app.whenReady().then(async () => {
   ipcMain.handle('youtube:control', async (_, cmd) => { if(!['play','prev','next'].includes(cmd))return false; const browser=S.youtubeBrowser||'chrome';return media.control(cmd,browser); });
   ipcMain.handle('music:ctl', async (_, cmd) => {
     const r = await media.control(cmd, S.player || 'Spotify');
-    return r === 'ok' ? true : spotify.connected() ? spotify.control(cmd) : false;
+    return r || (spotify.connected() && /spotify/i.test(S.player || 'Spotify') ? spotify.control(cmd) : false);
   });
   const artCache = new Map();
   ipcMain.handle('art:get', async (_, url) => {
@@ -472,6 +547,7 @@ else app.whenReady().then(async () => {
   ipcMain.handle('claude:set', (_, o) => { try { if ('connect' in o) { if (o.connect) hooks.connect(); else hooks.disconnect(); } } catch (e) { return { error: e.message }; } if ('gate' in o) gateOn = !!o.gate; return { connected: hooks.isConnected(), gate: gateOn }; });
   ipcMain.on('sound:preview', (_, o) => win.webContents.send('preview', o));
   ipcMain.on('app:quit', () => { media.stop(); app.quit(); });
+  app.on('will-quit', () => { globalShortcut.unregisterAll(); if (autoGameTimer) clearInterval(autoGameTimer); });
   const enc = t => safeStorage.encryptString(t), dec = b => safeStorage.decryptString(b);
   spotify = spotifyApi.create({ file: path.join(app.getPath('userData'), 'spotify.bin'), enc, dec, open: u => shell.openExternal(u), clientId: () => S.spotifyId,
     onChange: v => { if (sw && !sw.isDestroyed()) sw.webContents.send('spotify', v); win.webContents.send('spotify', v); } });
