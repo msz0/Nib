@@ -13,7 +13,7 @@ const files = require('./files'), calendar = require('./calendar'), media = requ
 const W = 520, H = 400;
 const GATE = new Set(['Bash', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
 const CATALOG = {
-  widgets: [['youtube', 'YouTube controls', 'Control browser media when supported', 'youtube'], ['music', 'Music', 'What is playing, with synced lyrics and controls', 'spotify'], ['focus', 'Focus timer', 'A timer for focused work, in the island', 'focus'], ['notes', 'Notes', 'A quick notepad, always at hand', 'notepad'],
+  widgets: [['music', 'Media controls', 'Control Spotify or YouTube from one place', 'spotify'], ['focus', 'Focus timer', 'A timer for focused work, in the island', 'focus'], ['notes', 'Notes', 'A quick notepad, always at hand', 'notepad'],
     ['clip', 'Clipboard', 'Your last copies. Click one to copy it again', 'clip'], ['files', 'Files', 'Drop files to sort them, tidy Downloads', 'folder'], ['calendar', 'Calendar', 'Your next events, with a chime when one starts', 'googlecalendar'],
     ['apps', 'Apps', 'A launcher with your favourite apps', 'apps'], ['chat', 'Chat', 'Ask your companion anything (your own API key)', 'chat'], ['coffee', 'Coffee', 'Keep the PC awake for a while', 'coffee'],
     ['discord', 'Discord', 'Mute and deafen with your keybinds', 'discord'], ['sys', 'System', 'CPU, memory, battery and GPU', 'sys'], ['screen', 'Screen tools', 'Color picker, text OCR and draw on screen', 'apps'], ['voice', 'Voice memo', 'Record a private audio note', 'chat'], ['claude', 'Claude Code', 'See what Claude is doing, approve things from the island', 'claude']].map(([id, name, desc, ik]) => ({ id, name, desc, ik })),
@@ -324,11 +324,11 @@ else app.whenReady().then(async () => {
   ipcMain.on('media:key', (_, k) => media.key(k));
   ipcMain.on('discord:key', (_, k) => { const c = S.discord && S.discord[k]; console.log('[discord]', k, 'key:', c || '(not set)'); if (!media.press(c)) media.keys(c); });
   ipcMain.handle('media:np', async () => {
-    let m = await media.nowPlaying(S.player || 'Spotify');
-    if (m && spotify.connected() && /spotify/i.test(m.src || '') && /spotify/i.test(S.player || 'Spotify')) {
+    let m = await media.nowPlaying();
+    if (m && spotify.connected() && m.source === 'spotify') {
       const api = await spotify.playing();
-      if (api && api.title === m.title) m = { ...api, status: m.status, pos: m.pos, dur: m.dur, src: m.src };
-    } else if (!m && spotify.connected() && /spotify/i.test(S.player || 'Spotify')) {
+      if (api && api.title === m.title) m = { ...api, status: m.status, pos: m.pos, dur: m.dur, src: m.src, source: m.source, sourceId: m.sourceId, artUrl: m.artUrl || api.artUrl };
+    } else if (!m && spotify.connected()) {
       m = await spotify.playing();
     }
     if (!m) return null;
@@ -469,11 +469,10 @@ else app.whenReady().then(async () => {
   }, 66);
 
   // ---- extra tools: music control (chosen player only), album art, system stats, clipboard history, keep-awake, Claude Code link
-  ipcMain.handle('youtube:get', async () => { const browser = S.youtubeBrowser || 'chrome'; return media.nowPlaying(browser); });
-  ipcMain.handle('youtube:control', async (_, cmd) => { if(!['play','prev','next'].includes(cmd))return false; const browser=S.youtubeBrowser||'chrome';return media.control(cmd,browser); });
   ipcMain.handle('music:ctl', async (_, cmd) => {
-    const r = await media.control(cmd, S.player || 'Spotify');
-    return r || (spotify.connected() && /spotify/i.test(S.player || 'Spotify') ? spotify.control(cmd) : false);
+    const active = await media.nowPlaying();
+    const r = await media.control(cmd, active && active.sourceId);
+    return r || (active && active.source === 'spotify' && spotify.connected() ? spotify.control(cmd) : false);
   });
   const artCache = new Map();
   ipcMain.handle('art:get', async (_, url) => {

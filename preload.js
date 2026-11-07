@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld('nib', {
   openSettings: () => ipc.send('settings:open'), checkUpdates: inv('updates:check'),
   releaseNotes: inv('nib:releaseNotes'), releaseHistory: inv('nib:releaseHistory'),
   getSettings: inv('settings:get'), setSettings: inv('settings:set'), pick: inv('pick'), pickLogo: inv('pick:logo'),
-  youtubeGet: inv('youtube:get'), youtubeControl: inv('youtube:control'), np: inv('media:np'), cal: inv('cal:get'), tidy: inv('files:tidy'), undo: inv('files:undo'),
+  np: inv('media:np'), cal: inv('cal:get'), tidy: inv('files:tidy'), undo: inv('files:undo'),
   spotifyStatus: inv('spotify:status'), spotifyConnect: inv('spotify:connect'), spotifyDisconnect: inv('spotify:disconnect'), onSpotify: cb => ipc.on('spotify', (_, v) => cb(v)),
   notesGet: inv('notes:get'), notesSet: inv('notes:set'),
   music: inv('music:ctl'), art: inv('art:get'), sys: inv('sys:get'), clipGet: inv('clip:get'), clipCopy: inv('clip:copy'), clipClear: inv('clip:clear'), clipRemove: inv('clip:remove'), clipExport: inv('clip:export'), onClip: cb => ipc.on('clip', (_, v) => cb(v)),

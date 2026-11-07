@@ -188,7 +188,7 @@ const PG = {
       card([row('Custom accent color','Choose a HEX color for buttons and highlights (separate from the notch).',themeColorEditor())]),
       mk('h3', '', 'Custom profiles'),
       card([row('Save and manage profiles','Save your current widgets, theme and island settings. Load, rename or delete them later.',customProfilesEditor())]),
-      card([combinedThemeEditor(),row('Profile','Optimized widget presets for different activities',seg([['normal','Normal'],['gamer','Gamer'],['working','Working'],['streamer','Streamer']],()=>S.profile||'normal',v=>{S.profile=v; const p={gamer:['music','discord','sys','focus','apps','youtube'],working:['focus','notes','calendar','files','clip','apps'],streamer:['music','discord','sys','voice','youtube','apps']};if(p[v]){S.widgets=[...new Set([...p[v],...S.widgets.filter(id=>!p[v].includes(id))])];S.widgetOrder=[...p[v],...C.widgets.map(w=>w.id).filter(id=>!p[v].includes(id))];} })),row('Friendly greetings','Greet you based on time of day',tog(()=>S.greetings!==false,v=>S.greetings=v))]),
+      card([combinedThemeEditor(),row('Profile','Optimized widget presets for different activities',seg([['normal','Normal'],['gamer','Gamer'],['working','Working'],['streamer','Streamer']],()=>S.profile||'normal',v=>{S.profile=v; const p={gamer:['music','discord','sys','focus','apps'],working:['focus','notes','calendar','files','clip','apps'],streamer:['music','discord','sys','voice','apps']};if(p[v]){S.widgets=[...new Set([...p[v],...S.widgets.filter(id=>!p[v].includes(id))])];S.widgetOrder=[...p[v],...C.widgets.map(w=>w.id).filter(id=>!p[v].includes(id))];} })),row('Friendly greetings','Greet you based on time of day',tog(()=>S.greetings!==false,v=>S.greetings=v))]),
       card([row('Size', 'How big the island is', seg([['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']], () => I.size, v => I.size = v)),
         row('Style', 'Attached to the top edge like a laptop notch, or floating just below it', seg([['attached', 'Attached'], ['float', 'Floating']], () => I.style, v => I.style = v)),
         row('See-through', 'How much you see through the island', rng(0, 60, 5, () => I.alpha, v => I.alpha = v, v => v + '%')),
@@ -218,12 +218,10 @@ const PG = {
     const idRow = row('Client ID', 'From your app at developer.spotify.com/dashboard', txt(() => S.spotifyId, v => S.spotifyId = v, 'paste it here', '300px'));
     const how = mk('div', 'hint', 'How: open developer.spotify.com/dashboard, create an app, and add this Redirect URI: <code>http://127.0.0.1:47821/spotify/callback</code>. Paste the app\'s Client ID above, save, then press Connect. No secret is needed.');
     setTimeout(async () => { const on = await nib.spotifyStatus(); paint(on); nib.onSpotify(paint); }, 0);
-    return [...head('Music', 'Spotify, lyrics and which player is controlled'),
+    return [...head('Media', 'One set of controls for Spotify and YouTube'),
       card([top, idRow]), how, msg,
-      mk('h3', '', 'YouTube browser playback'),card([row('Browser','Set process name to chrome or msedge (not a particular tab)',txt(()=>S.youtubeBrowser||'chrome',v=>S.youtubeBrowser=v==='msedge'?'msedge':'chrome','chrome', '160px'))]),mk('h3', '', 'Player'),
-      card([row('Player app', 'Play, Pause, Next and Previous only ever control this app (default Spotify), never your browser, so Netflix or YouTube are left alone', txt(() => S.player, v => S.player = v || 'Spotify', 'Spotify', '160px')),
-        row('Lyrics timing', 'Nudge if lines come a bit early or late (+ shows them earlier)', rng(-3, 3, .1, () => +S.lyricOffset || 0, v => S.lyricOffset = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + 's'))]),
-      mk('div', 'hint', 'Spotify has no lyrics service in its public API, so lyrics come from the free LRCLIB database, matched to your exact track and length. Not every song has them.')];
+      card([row('Lyrics timing', 'Nudge if lines come a bit early or late (+ shows them earlier)', rng(-3, 3, .1, () => +S.lyricOffset || 0, v => S.lyricOffset = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + 's'))]),
+      mk('div', 'hint', 'Nib automatically detects active Spotify, Chrome, Edge, or Firefox media sessions through Windows Media Session. Controls follow the currently playing source.')];
   },
   sounds() {
     const o = S.sounds, ev = [['ask', 'Needs you', 'When Claude wants permission or has a question'], ['done', 'Claude is done', 'When a Claude Code task finishes'], ['focus', 'Focus finished', 'When your focus timer ends'], ['event', 'Calendar event', 'When an event starts']];

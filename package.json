@@ -7,6 +7,8 @@
   "scripts": {
     "start": "electron .",
     "demo": "node demo.js",
+    "tauri:dev": "tauri dev --config src-tauri/tauri.conf.json",
+    "tauri:build": "tauri build --config src-tauri/tauri.conf.json",
     "dist": "node scripts/prepare-ocr.js && electron-builder",
     "release": "node scripts/prepare-ocr.js && electron-builder --publish always"
   },
@@ -16,7 +18,8 @@
   },
   "devDependencies": {
     "electron": "45.2.1",
-    "electron-builder": "^26.18.0"
+    "electron-builder": "^26.18.0",
+    "@tauri-apps/cli": "^2.8.4"
   },
   "build": {
     "appId": "com.nib.app",
