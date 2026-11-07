@@ -1,0 +1,62 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Nib Screen Tools</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'unsafe-inline'">
+<style>
+:root{color-scheme:dark;font:14px Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;background:#10141c;color:#e9effa}
+header{display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#181e29;padding:12px;position:sticky;top:0;z-index:4}
+button{border:1px solid #3b4554;background:#293346;color:white;border-radius:9px;padding:9px 12px;cursor:pointer}button:hover{background:#3d4e65}button:disabled{opacity:.5;cursor:default}
+#status{color:#b4c7dd;font-size:12px;flex:1}main{padding:16px}#help{color:#a6b6ca;margin:0 0 12px}
+#stage{position:relative;margin:0 auto;max-width:100%;width:fit-content;background:#080b11;border:1px solid #303846;border-radius:10px;overflow:hidden;line-height:0;touch-action:none}
+#shot{display:none;max-width:100%;max-height:58vh;user-select:none;pointer-events:none}
+#ink{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}
+#selection{position:absolute;display:none;border:2px solid #99e9ff;background:#67d1f92b;pointer-events:none}
+#result{display:block;width:100%;min-height:155px;resize:vertical;margin-top:16px;padding:12px;border-radius:10px;background:#181e29;color:white;border:1px solid #3b4554}
+#empty{padding:65px 25px;text-align:center;color:#98a9bf}input[type=color]{width:38px;height:33px;border:0;background:none}
+</style></head><body>
+<header><strong id="title">Nib</strong><button id="capture">Capture area</button><button id="paste" hidden>Import screenshot</button><button id="openImage" hidden>Open image</button><button id="extract">Read selection</button><button id="clear">Clear drawing</button><input id="color" type="color" value="#ff4757" title="Pen color"><button id="save">Save annotated PNG</button><button id="copy">Copy text</button><span id="status">Ready</span></header>
+<main><p id="help"></p><div id="stage"><div id="empty">Click Select area to capture text; this window will return automatically after selection.</div><img id="shot" alt="Screenshot"><canvas id="ink"></canvas><div id="selection"></div></div><textarea id="result" placeholder="Recognized text will appear here. You can edit and copy it."></textarea></main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),mode=new URLSearchParams(location.search).get('mode')==='draw'?'draw':'ocr';
+const shot=$('shot'),ink=$('ink'),stage=$('stage'),ctx=ink.getContext('2d');
+let raw=null,drag=null,selected=null,active=false;
+$('title').textContent=mode==='ocr'?'Nib Text Extractor':'Nib Draw & Annotate';
+$('help').textContent=mode==='ocr'?'Select an area using Windows Snipping Tool. Nib automatically imports the screenshot and reads its text.':'Choose a desktop area, then annotate the captured selection with your mouse. This separate window does not cover or intercept your desktop.';
+$('copy').textContent='Copy text';$('paste').hidden=mode!=='ocr';$('openImage').hidden=mode!=='ocr';if(mode==='ocr')$('capture').textContent='✂ Select area';
+$('extract').hidden=true;$('clear').hidden=mode!=='draw';$('color').hidden=mode!=='draw';$('save').hidden=mode!=='draw';$('copy').hidden=mode!=='ocr';$('result').hidden=mode!=='ocr';
+function status(s){$('status').textContent=s}
+function position(e){const r=ink.getBoundingClientRect();return {x:Math.max(0,Math.min(ink.width,(e.clientX-r.left)*ink.width/r.width)),y:Math.max(0,Math.min(ink.height,(e.clientY-r.top)*ink.height/r.height))}}
+function selectionRect(a,b){return {x:Math.round(Math.min(a.x,b.x)),y:Math.round(Math.min(a.y,b.y)),w:Math.round(Math.abs(a.x-b.x)),h:Math.round(Math.abs(a.y-b.y))}}
+function drawSelection(){const r=selected;if(!r)return;const x=ink.clientWidth/ink.width,y=ink.clientHeight/ink.height;const b=$('selection');Object.assign(b.style,{display:'block',left:(r.x*x)+'px',top:(r.y*y)+'px',width:(r.w*x)+'px',height:(r.h*y)+'px'});}
+async function displayScreenshot(result){
+ if(!result || !result.ok || !result.data)throw Error(result&&result.error||'Screenshot unavailable');
+ const img=new Image();img.src=result.data;await img.decode();raw=img;
+ $('empty').hidden=true;shot.style.display='block';shot.src=img.src;shot.width=img.naturalWidth;shot.height=img.naturalHeight;
+ const scale=Math.min(1,Math.min((window.innerWidth-45)/img.naturalWidth,(window.innerHeight*.55)/img.naturalHeight));
+ const w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
+ stage.style.width=w+'px';stage.style.height=h+'px';shot.style.width=w+'px';shot.style.height=h+'px';
+ ink.width=img.naturalWidth;ink.height=img.naturalHeight;ink.style.pointerEvents=mode==='draw'?'auto':'none';selected=null;$('selection').style.display='none';
+ status(mode==='ocr'?'Screenshot ready — reading text…':'Screenshot ready — draw on it');
+}
+async function performOcr(work,label){
+ if(active)return;active=true;$('capture').disabled=true;$('paste').disabled=true;$('openImage').disabled=true;
+ try{status(label);const r=await work();if(!r||!r.ok){if(r&&r.canceled){status('Selection canceled — try again');return}throw Error(r&&r.error||'OCR failed')}
+   if(r.data) await displayScreenshot(r);
+   $('result').value=r.text||'';status(r.text?'✓ Text ready — click Copy text':'No text detected — select a larger area');
+ }catch(e){status('OCR failed: '+e.message)}
+ finally{active=false;$('capture').disabled=false;$('paste').disabled=false;$('openImage').disabled=false}
+}
+$('capture').onclick=()=> mode==='draw'
+ ? (async()=>{try{await displayScreenshot(await nib.extrasCaptureRegion())}catch(e){status(e.message)}})()
+ : performOcr(()=>nib.extrasSnipAndOcr(),'Select the text on screen…');
+$('paste').onclick=()=>performOcr(()=>nib.extrasOcrClipboard(),'Reading screenshot from clipboard…');
+$('openImage').onclick=()=>performOcr(()=>nib.extrasOpenOcrImage(),'Choose an image…');
+ink.onpointerdown=e=>{if(!raw)return;ink.setPointerCapture(e.pointerId);drag=position(e);if(mode==='draw'){ctx.beginPath();ctx.strokeStyle=$('color').value;ctx.lineWidth=Math.max(2,ink.width/450);ctx.lineCap='round';ctx.moveTo(drag.x,drag.y)}else{selected={x:drag.x,y:drag.y,w:0,h:0};drawSelection()}};
+ink.onpointermove=e=>{if(!drag)return;const p=position(e);if(mode==='draw'){ctx.lineTo(p.x,p.y);ctx.stroke()}else{selected=selectionRect(drag,p);drawSelection()}};
+ink.onpointerup=()=>drag=null;ink.onpointercancel=()=>drag=null;
+$('clear').onclick=()=>ctx.clearRect(0,0,ink.width,ink.height);
+$('extract').onclick=()=>{};
+$('copy').onclick=async()=>{try{$('result').select();const ok=document.execCommand('copy');if(!ok)throw Error('Clipboard unavailable');status('✓ Text copied')}catch(e){status('Copy unavailable: select text and press Ctrl+C')}};
+$('save').onclick=()=>{if(!raw)return;const c=document.createElement('canvas');c.width=raw.naturalWidth;c.height=raw.naturalHeight;const x=c.getContext('2d');x.drawImage(raw,0,0);x.drawImage(ink,0,0);const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='Nib-annotated-'+Date.now()+'.png';a.click();status('PNG saved')};
+window.addEventListener('keydown',e=>{if(e.key==='Escape')window.close()});
+})();
+</script></body></html>

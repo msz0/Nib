@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:">
 <style>
 @property --bg{syntax:'<color>';inherits:true;initial-value:#000}
 @property --tint{syntax:'<color>';inherits:true;initial-value:#000}
@@ -18,6 +18,8 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 #island::before{right:100%;background:radial-gradient(circle at 0 100%,transparent 11.4px,var(--bg) 12px)}
 #island::after{left:100%;background:radial-gradient(circle at 100% 100%,transparent 11.4px,var(--bg) 12px)}
 #island.float{top:10px}#island.float::before,#island.float::after{display:none}
+#island.up{top:auto;bottom:10px}#island.up::before,#island.up::after{display:none}
+#island:not(.moving):not(.locked) #rest,#island:not(.moving):not(.locked) #hdr{cursor:grab}#island.moving,#island.moving *{cursor:grabbing!important}
 #clip{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,var(--bg) 0,var(--bg) 32%,var(--tint) 100%);border-radius:0 0 14px 14px;transition:border-radius .5s var(--e)}
 .float #clip{border-radius:16px}
 #island.mus{width:250px;height:40px;margin-left:-125px}.mus #clip{border-radius:0 0 18px 18px}.float.mus #clip{border-radius:20px}
@@ -31,7 +33,13 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 #mini{flex:none;cursor:pointer;filter:drop-shadow(0 0 3px var(--c));animation:fin .4s ease both}#island.noeyes #mini{display:none}
 @keyframes fin{from{opacity:0}}
 #mus{display:none;align-items:center;gap:10px;width:100%}.mus #mus{display:flex}.mus #mini,.mus .slot{display:none}
-#mus svg{flex:none;color:#fff}#mtx{min-width:0;text-align:left;flex:1}#m1{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis}#m2{font-size:10px;color:var(--dim);overflow:hidden;text-overflow:ellipsis}
+#mus svg{flex:none;color:#fff}#mtx{min-width:0;text-align:left;flex:1}#m1{font-size:12px;font-weight:600;overflow:hidden}#m2{font-size:10px;color:var(--dim);overflow:hidden}
+#m1,#m2{white-space:nowrap;position:relative}
+.nib-music-scroll{display:inline-block;white-space:nowrap;will-change:transform}
+.nib-music-scroll.is-scrolling{animation:nib-read-full-line var(--scroll-time,9s) ease-in-out infinite alternate}
+@keyframes nib-read-full-line{0%,12%{transform:translateX(0)}88%,100%{transform:translateX(calc(-1 * var(--scroll-distance,0px)))}}
+@media(prefers-reduced-motion:reduce){.nib-music-scroll.is-scrolling{animation:none}#m1,#m2{overflow-x:auto;scrollbar-width:none}}
+
 
 /* open layout */
 #full{position:absolute;left:0;right:0;top:0;animation:fin .35s ease both}
@@ -39,12 +47,25 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 #hdr .nm{font-weight:700;font-size:13px;flex:none}#hdr .dt{flex:1;display:flex;justify-content:center}
 .pill{background:rgba(255,255,255,.08);border-radius:12px;padding:3px 12px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 #menu{width:28px;height:28px;padding:0;display:grid;place-items:center;background:transparent}
-#menuBox{display:none;position:absolute;right:12px;top:42px;z-index:5;background:#16181e;border-radius:14px;padding:6px;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-#menuBox.on{display:block}#menuBox button{display:flex;gap:10px;align-items:center;width:100%;height:34px;background:transparent;border-radius:9px;justify-content:flex-start;font-weight:500}
-#menuBox button:hover{background:rgba(255,255,255,.08)}#menuBox .q{color:#ff6b78}
+#pinbtn{width:28px;height:28px;padding:0;display:grid;place-items:center;background:transparent;opacity:.6;transition:opacity .15s,color .15s}#pinbtn:hover{opacity:1}
+#pinbtn.on{opacity:1;color:#9fe870}#pinbtn.on svg{fill:currentColor}
+/* compact overlay: 4 items fit fully inside the island, without clipping */
+#menuBox{display:none;position:absolute;right:14px;top:42px;z-index:20;width:200px;max-width:calc(100% - 28px);background:#171a22;border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:5px;box-shadow:0 12px 32px rgba(0,0,0,.55)}
+#menuBox.on{display:block}
+#menuBox button{display:flex;align-items:center;gap:11px;width:100%;height:33px;padding:0 11px;background:transparent;border-radius:9px;justify-content:flex-start;white-space:nowrap;font:500 12px "Segoe UI",sans-serif;color:#e9ecf3}
+#menuBox button svg{flex:none;width:16px;height:16px;opacity:.8}
+#menuBox button:hover{background:rgba(255,255,255,.09)}
+#menuBox .q{color:#fb8793}
+#menuBox .sep{height:1px;background:rgba(255,255,255,.1);margin:4px 7px}
+/* Ensure the dropdown fits, even on the shortest tab. */
+#island.open:has(#menuBox.on){min-height:218px}
+[data-theme="light"] #menuBox{background:#fff;border-color:#d9e1ed;box-shadow:0 10px 30px #192c4329}
+[data-theme="light"] #menuBox button{color:#1d293b;background:transparent}
+[data-theme="light"] #menuBox button:hover{background:#edf2f9}
+[data-theme="light"] #menuBox .q{color:#b42335}
 #body{padding:6px 16px 4px}#pin{max-height:236px;overflow:auto;padding:2px 0}
 ::-webkit-scrollbar{width:6px;height:0}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
-#nav{display:flex;gap:2px;padding:6px 14px 12px;overflow-x:auto;justify-content:center}
+#nav{display:flex;gap:2px;padding:6px 14px 12px;overflow-x:auto;justify-content:safe center;scrollbar-width:none}#nav::-webkit-scrollbar{display:none}#nav .nv{flex:0 0 auto}
 .nv{height:32px;min-width:32px;padding:0 8px;border-radius:16px;background:transparent;display:flex;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.6);flex:none}
 .nv span{display:none;font-size:12px}.nv.on{background:rgba(255,255,255,.12);color:#fff}.nv.on span{display:inline}.nv:hover{color:#fff}
 
@@ -61,7 +82,7 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .tile{height:72px;padding:6px 4px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:10.5px;font-weight:500;color:#cfd3dd}
 .tile:hover{color:#fff}.tile img{width:24px;height:24px;object-fit:contain;filter:grayscale(1) brightness(1.25);opacity:.9}.tile b{font-size:18px}
-.tile span{max-width:100%;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:center}
+.tile span{max-width:100%;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:center}
 .zones{display:flex;flex-wrap:wrap;gap:8px}.zone{flex:1 1 100px;border:1.5px dashed rgba(255,255,255,.2);border-radius:14px;padding:12px;font-size:12px;text-align:center;transition:.15s}.zone.over{border-color:#fff;background:rgba(255,255,255,.08)}
 .ev{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12.5px}.ev b{flex:none;width:84px}.ev span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mrow{display:flex;gap:12px;align-items:center}.mrow img,.mrow .noart{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:rgba(255,255,255,.08);display:grid;place-items:center}
@@ -80,7 +101,303 @@ input[type=range]{width:100%;margin:12px 0 2px;accent-color:var(--app)}
 .legend{display:flex;gap:12px;font-size:11px;color:var(--dim);margin-top:8px}.dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:5px}
 .meter{margin:8px 0}.meter .bar{height:8px;margin-top:5px}.meter .bar i{background:var(--app)}
 svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:var(--c);stroke-width:2.4;stroke-linecap:round}
+/* Separate face and eye colors: the mini eyes sit on the island, the full eyes on the cat's face. */
+#nib{--cat-face:#2a2f3c;--cat-ear:#2a2f3c;--cat-eyes:#f8fafc;--cat-expression:#f8fafc;--cat-nose:#c96f86}
+#nib .cat-face{fill:var(--cat-face)}
+#nib .cat-ear{fill:var(--cat-ear);stroke:var(--cat-face)}
+#nib .cat-nose{fill:var(--cat-nose)}
+#nib .eye{fill:var(--cat-eyes)}
+#nib .hp,#nib .xx{stroke:var(--cat-expression)}
+/* Preserve the existing requestAnimationFrame eye/blink/hop/ear animations. */
+[data-theme="light"] #nib{--cat-face:#263448;--cat-ear:#263448;--cat-eyes:#fff;--cat-expression:#fff;--cat-nose:#eb8199;filter:drop-shadow(0 1px 1px rgba(15,23,42,.12))}
+[data-theme="light"] #mini{filter:drop-shadow(0 0 1px rgba(15,23,42,.16))}
+[data-theme="light"] #mini .eye{fill:#25364e}
+#mini .eye{fill:var(--mini-eyes-custom,var(--c))}
+[data-theme="light"] #mini .eye{fill:var(--mini-eyes-custom,#25364e)}
+[data-theme="light"] #mini .hp,[data-theme="light"] #mini .xx{stroke:#25364e}
 .v-done .hp,.v-dizzy .xx{display:inline}.v-done .eye,.v-dizzy .eye{display:none}
+[data-theme="light"]{--fg:#111827;--dim:#4b5563}
+[data-theme="light"] #island{--bg:rgba(248,250,252,var(--a));--tint:rgba(219,230,245,var(--a));--c:#172033}
+[data-theme="light"] #clip{background:linear-gradient(180deg,rgba(248,250,252,var(--a)),rgba(230,237,246,var(--a)))}
+[data-theme="light"] #full,[data-theme="light"] #rest{color:#132033}
+[data-theme="light"] button,[data-theme="light"] .pill,[data-theme="light"] .nv{color:#132033;background:rgba(15,23,42,.07)}
+[data-theme="light"] button.pri,[data-theme="light"] .ctl .big{color:#fff;background:#203653}
+[data-theme="light"] .tl{background:linear-gradient(180deg,#ffffff,color-mix(in srgb,var(--t) 17%,white))}
+[data-theme="light"] .tt,[data-theme="light"] .tb,[data-theme="light"] .tb small,[data-theme="light"] .tl .tic,[data-theme="light"] .nv.on,[data-theme="light"] .slot{color:#172033}
+[data-theme="light"] .muted,[data-theme="light"] .legend,[data-theme="light"] #m2{color:#475569}
+[data-theme="light"] #menuBox{background:#fff;color:#132033}
+[data-theme="light"] #inp,[data-theme="light"] #ntxt{background:#f0f4fa;color:#132033}
+[data-theme="light"] .bar{background:rgba(15,23,42,.13)}
+/* Custom notch: separate from the accent. Preserve the See-through slider. */
+[data-theme="custom"] #island{--bg:rgb(var(--notch-rgb,121 72 200)/var(--a));--tint:rgb(var(--notch-tint-rgb,89 42 171)/var(--a));--c:var(--notch-fg,#fff)}
+[data-theme="custom"]{--fg:var(--notch-fg,#fff);--dim:var(--notch-dim,rgba(255,255,255,.68))}
+[data-theme="custom"] #full,[data-theme="custom"] #rest,[data-theme="custom"] .slot{color:var(--notch-fg,#fff)}
+[data-theme="custom"] #clip{background:linear-gradient(180deg,var(--bg),var(--tint))}
+[data-theme="custom"] .nv,[data-theme="custom"] .tile{color:var(--notch-fg,#fff)}
+[data-theme="custom"] button,[data-theme="custom"] .pill{color:var(--notch-fg,#fff)}
+[data-theme="night"]{--fg:#b9c5d3;--dim:#798597}
+[data-theme="night"] #clip{opacity:.86}
+.memo-row{display:flex;align-items:center;gap:5px;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ffffff19}.memo-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:175px}.memo-row .s{flex:none}.memo-row{flex-wrap:wrap}.memo-row span{flex:1 1 145px}.vm-select{display:flex;align-items:center;gap:5px;margin:5px 0;color:var(--dim);font-size:11px}.vm-select select{flex:1;min-width:0;max-width:260px;background:#252d3a;color:#fff;border:1px solid #46546b;border-radius:8px;padding:6px}.vm-hint{font-size:11px;color:var(--dim);margin:5px 0}.vm-error{color:#ff909d;font-size:12px}
+
+/* Cat companion: lightweight SVG-only accessories and expressive feedback. */
+#nib .cat-accessory{display:none;pointer-events:none}
+#nib[data-accessory="headphones"] #cat-headphones,
+#nib[data-accessory="glasses"] #cat-glasses,
+#nib[data-accessory="bow"] #cat-bow,
+#nib[data-accessory="crown"] #cat-crown{display:inline}
+#nib .cat-accessory{stroke-linecap:round;stroke-linejoin:round}
+#nib #cat-hearts{opacity:0;transition:opacity .15s;pointer-events:none}
+#nib.petted #cat-hearts{opacity:1}
+#nib.petted #cat-hearts path{animation:heartRise .65s ease-out both}
+@keyframes heartRise{from{transform:translateY(3px);opacity:0}40%{opacity:1}to{transform:translateY(-8px);opacity:0}}
+#nib .cat-sleep{display:none;font:700 12px Segoe UI,sans-serif;fill:#8bb8ea;pointer-events:none}
+#nib.sleeping .cat-sleep{display:block;animation:catSleepPulse 2.4s ease-in-out infinite}
+@keyframes catSleepPulse{50%{opacity:.35;transform:translateY(-3px)}}
+#nib.cat-grumpy #cat-mouth{transform:translateY(2px)}
+#nib.cat-playful #cat-mouth{transform:translateY(-1px)}
+@media (prefers-reduced-motion:reduce){#nib #cat-hearts path,#nib .cat-sleep{animation:none!important}}
+
+/* Custom theme: derive every island tile surface from the chosen notch color.
+   Transparent white or black blends retain a consistent color across all six presets. */
+[data-theme="custom"] #full .tl {
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--notch-fg) 9%, var(--notch-color) 91%),
+    color-mix(in srgb, var(--notch-fg) 3%, var(--notch-color) 97%));
+  border: 1px solid color-mix(in srgb, var(--notch-fg) 12%, transparent);
+  color: var(--notch-fg);
+}
+[data-theme="custom"] #full .tl:hover {
+  background: color-mix(in srgb, var(--notch-fg) 14%, var(--notch-color) 86%);
+}
+[data-theme="custom"] #full .tt,
+[data-theme="custom"] #full .tb,
+[data-theme="custom"] #full .tb small,
+[data-theme="custom"] #full .tl .tic,
+[data-theme="custom"] #full .tile,
+[data-theme="custom"] #full .tile:hover,
+[data-theme="custom"] #full .stc,
+[data-theme="custom"] #full .stc b { color:var(--notch-fg); }
+[data-theme="custom"] #full .tb small,
+[data-theme="custom"] #full .tt { opacity:.83; }
+[data-theme="custom"] #full .stc {
+  background:linear-gradient(160deg,
+    color-mix(in srgb, var(--notch-fg) 10%, var(--notch-color) 90%),
+    color-mix(in srgb, var(--notch-fg) 3%, var(--notch-color) 97%));
+  border:1px solid color-mix(in srgb,var(--notch-fg) 10%, transparent);
+}
+[data-theme="custom"] #full .tile {
+  background:color-mix(in srgb,var(--notch-fg) 8%,var(--notch-color) 92%);
+  border:1px solid color-mix(in srgb,var(--notch-fg) 9%,transparent);
+}
+[data-theme="custom"] #full .tile:hover {background:color-mix(in srgb,var(--notch-fg) 16%,var(--notch-color) 84%)}
+[data-theme="custom"] #full .nv.on {background:color-mix(in srgb,var(--notch-fg) 16%,transparent);color:var(--notch-fg)}
+[data-theme="custom"] #full .tl .pb {background:var(--notch-fg);color:var(--notch-color)}
+
+
+/* v0.3.8 — in-dashboard release notes */
+.release-card{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;margin-bottom:9px;border:1px solid color-mix(in srgb,var(--app,#a58bfa) 40%,transparent);border-radius:12px;background:linear-gradient(120deg,rgba(166,122,255,.20),rgba(89,190,255,.08));color:inherit}
+.release-card b{display:block;font-size:12px;line-height:1.4}.release-card small{display:block;font-size:10px;opacity:.75;margin-top:2px}.release-view{white-space:nowrap;flex:none}
+.release-page{color:inherit;max-height:325px;overflow:auto;padding:0 4px 8px;scrollbar-width:thin}
+.release-head{text-align:center;padding:8px 0 11px}.release-tag{display:inline-block;padding:4px 9px;border-radius:999px;background:rgba(156,123,255,.22);font-size:10px;font-weight:700;letter-spacing:.4px}
+.release-head h2{font-size:19px;line-height:1.2;margin:8px 0 4px}.release-head p{font-size:11px;opacity:.75;margin:0}
+.release-items{display:grid;gap:6px}.release-item{display:flex;gap:9px;padding:9px;border-radius:10px;background:rgba(133,142,166,.12);border:1px solid rgba(140,149,175,.16)}
+.release-emoji{font-size:17px;line-height:1.4;flex:none}.release-item b{display:block;font-size:12px}.release-item small{display:block;font-size:10px;opacity:.78;line-height:1.4;margin-top:3px}
+.release-actions{display:flex;justify-content:center;gap:7px;margin-top:11px}
+
+/* Nib dashboard refresh: home-only, preserves existing tile handlers and themes. */
+#pin.nib-home{padding:0 1px 5px;scrollbar-width:thin}
+.home-intro{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:1px 2px 9px}
+.home-intro h2{font-size:14px;letter-spacing:-.3px;line-height:1.2;margin:0;font-weight:750;color:var(--fg)}
+.home-intro p{font-size:10.5px;margin:3px 0 0;color:var(--dim)}
+.home-intro .home-dot{width:8px;height:8px;border-radius:50%;background:#75ddb1;box-shadow:0 0 0 4px rgba(117,221,177,.12);flex:none;margin-right:7px}
+.home-intro .home-tag{display:flex;align-items:center;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:5px 9px;font-size:10px;color:var(--dim);background:rgba(255,255,255,.035);white-space:nowrap}
+#pin.nib-home .tiles{gap:7px;grid-template-columns:repeat(3,minmax(0,1fr))}
+#pin.nib-home .tl{height:92px;min-width:0;padding:11px 11px 10px;border-radius:15px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(150deg,rgba(255,255,255,.09),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.035);transition:background .18s,transform .18s,border-color .18s}
+#pin.nib-home .tl::before{content:'';position:absolute;left:11px;top:12px;height:6px;width:6px;border-radius:50%;background:var(--t);box-shadow:0 0 0 3px color-mix(in srgb,var(--t) 15%,transparent);opacity:.9}
+#pin.nib-home .tl:hover{transform:translateY(-2px);background:linear-gradient(145deg,rgba(255,255,255,.145),rgba(255,255,255,.065));border-color:rgba(255,255,255,.17)}
+#pin.nib-home .tt{padding-left:13px;font-size:10px;letter-spacing:.1px;font-weight:650;color:var(--dim)}
+#pin.nib-home .tb{font-size:13px;letter-spacing:-.15px;line-height:1.16;font-weight:700;padding-right:24px;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical}
+#pin.nib-home .tb small{font-size:10px;margin-top:5px;color:var(--dim);font-weight:450;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pin.nib-home .tl .tic{right:10px;top:10px;opacity:.65}
+#pin.nib-home .tl .art{width:28px;height:28px;right:9px;top:10px;border-radius:8px}
+#pin.nib-home .tl .pb{width:27px;height:27px;right:9px;bottom:9px;border-radius:10px;box-shadow:0 3px 11px #0002}
+#pin.nib-home .tl .pb:hover{transform:scale(1.05)}
+#pin.nib-home .release-card{margin-bottom:9px;padding:9px 11px;border-radius:13px;background:color-mix(in srgb,var(--app) 10%,transparent);border:1px solid color-mix(in srgb,var(--app) 25%,transparent)}
+#pin.nib-home .release-card b{font-size:11.5px}#pin.nib-home .release-card small{font-size:10px}#pin.nib-home .release-view{height:27px;font-size:11px;padding:0 9px;background:color-mix(in srgb,var(--app) 21%,transparent)}
+[data-theme="light"] #pin.nib-home .tl{background:linear-gradient(150deg,rgba(255,255,255,.76),rgba(226,234,248,.5));border-color:rgba(29,51,82,.12);box-shadow:0 2px 9px rgba(27,48,74,.04)}
+[data-theme="light"] #pin.nib-home .tl:hover{background:rgba(255,255,255,.9);border-color:rgba(29,51,82,.23)}
+[data-theme="light"] #pin.nib-home .tt,[data-theme="light"] #pin.nib-home .tb small{color:#536275;opacity:1}
+[data-theme="light"] #pin.nib-home .home-tag{border-color:#ced7e4;background:#ffffff7d}
+[data-theme="custom"] #pin.nib-home .tl{background:linear-gradient(140deg,color-mix(in srgb,var(--notch-fg) 10%,var(--notch-color) 90%),color-mix(in srgb,var(--notch-fg) 4%,var(--notch-color) 96%));border-color:color-mix(in srgb,var(--notch-fg) 15%,transparent)}
+[data-theme="custom"] #pin.nib-home .tl:hover{background:color-mix(in srgb,var(--notch-fg) 17%,var(--notch-color) 83%)}
+[data-theme="custom"] #pin.nib-home .tt,[data-theme="custom"] #pin.nib-home .tb small{color:var(--notch-fg);opacity:.75}
+[data-theme="custom"] #pin.nib-home .home-tag{border-color:color-mix(in srgb,var(--notch-fg) 15%,transparent);background:color-mix(in srgb,var(--notch-fg) 8%,transparent)}
+[data-theme="custom"] #pin.nib-home .home-intro h2{color:var(--notch-fg)}
+@media(prefers-reduced-motion:reduce){#pin.nib-home .tl{transition:none}}
+
+
+/* Dashboard polish: hide the scrollbar, preserve wheel/touchpad scrolling. */
+#pin.nib-home { scrollbar-width:none !important; -ms-overflow-style:none; }
+#pin.nib-home::-webkit-scrollbar { display:none !important; width:0 !important; height:0 !important; }
+
+/* Restored soft-glass pastel cards, following the user's earlier dashboard reference.
+   Three built-in themes only. Custom theme keeps its dynamic color surfaces. */
+#pin.nib-home .tiles { gap:6px; }
+[data-theme="light"] #pin.nib-home .tl,
+[data-theme="dark"] #pin.nib-home .tl,
+[data-theme="night"] #pin.nib-home .tl {
+  height:83px;
+  padding:9px 10px 8px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.36);
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
+}
+/* Nearly-white tiles with soft color across the whole surface (not colored corners). */
+[data-theme="light"] #pin.nib-home .tl {
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--t) 24%,#ffffff 76%) 0%,
+    color-mix(in srgb,var(--t) 10%,#fafcff 90%) 52%,
+    color-mix(in srgb,var(--t) 20%,#edf4fa 80%) 100%);
+  border-color:rgba(255,255,255,.72);
+  box-shadow:0 3px 12px rgba(57,74,117,.10),inset 0 1px 0 rgba(255,255,255,.65);
+}
+/* Deep mode keeps white text while maintaining visible color, rather than black cards. */
+[data-theme="dark"] #pin.nib-home .tl {
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--t) 48%,#454358 52%) 0%,
+    color-mix(in srgb,var(--t) 28%,#36384d 72%) 58%,
+    color-mix(in srgb,var(--t) 25%,#252b3b 75%) 100%);
+  border-color:rgba(255,255,255,.17);
+  box-shadow:0 4px 14px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.15);
+}
+/* Night mode: cool, blue-violet tinted glass. */
+[data-theme="night"] #pin.nib-home .tl {
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--t) 42%,#374764 58%) 0%,
+    color-mix(in srgb,var(--t) 24%,#293955 76%) 56%,
+    color-mix(in srgb,var(--t) 18%,#1c2940 82%) 100%);
+  border-color:rgba(204,226,255,.19);
+  box-shadow:0 4px 15px rgba(2,8,24,.24),inset 0 1px 0 rgba(255,255,255,.12);
+}
+[data-theme="light"] #pin.nib-home .tl:hover,
+[data-theme="dark"] #pin.nib-home .tl:hover,
+[data-theme="night"] #pin.nib-home .tl:hover {
+  transform:translateY(-1px);
+  filter:brightness(1.07);
+}
+/* The older design used low-contrast miniature icons and clean compact text. */
+[data-theme="light"] #pin.nib-home .tl .tt,
+[data-theme="light"] #pin.nib-home .tl .tb small {color:#566175;opacity:1}
+[data-theme="light"] #pin.nib-home .tl .tb,
+[data-theme="light"] #pin.nib-home .tl .tic {color:#25314a}
+[data-theme="dark"] #pin.nib-home .tl .tt,
+[data-theme="dark"] #pin.nib-home .tl .tb small,
+[data-theme="night"] #pin.nib-home .tl .tt,
+[data-theme="night"] #pin.nib-home .tl .tb small {color:rgba(255,255,255,.77);opacity:1}
+[data-theme="dark"] #pin.nib-home .tl .tb,
+[data-theme="night"] #pin.nib-home .tl .tb {color:#fff}
+[data-theme="light"] #pin.nib-home .tl .tic {opacity:.85}
+#pin.nib-home .tl .tb{font-size:12px;line-height:1.14;letter-spacing:-.2px}
+#pin.nib-home .tl .tt{font-size:9.5px}
+#pin.nib-home .tl .tb small{font-size:9px;margin-top:3px}
+#pin.nib-home .tl .pb{height:26px;width:26px;bottom:8px;right:8px}
+#pin.nib-home .tl .tic{top:9px;right:9px}
+/* Keep scrolling with wheel/touchpad, remove scrollbar chrome. */
+#pin.nib-home{scrollbar-width:none !important;-ms-overflow-style:none}
+#pin.nib-home::-webkit-scrollbar{display:none !important;width:0 !important;height:0 !important}
+
+
+/* Nib: exact original pre-glass tile gradients from user's old index.html.
+   Applies only to Dark / Night / Light Home tiles. Custom is unchanged. */
+[data-theme="dark"] #pin.nib-home .tl,
+[data-theme="night"] #pin.nib-home .tl {
+  background:linear-gradient(180deg,rgba(255,255,255,.04),color-mix(in srgb,var(--t) 40%,#000));
+  border:0;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+[data-theme="light"] #pin.nib-home .tl {
+  background:linear-gradient(180deg,#ffffff,color-mix(in srgb,var(--t) 17%,white));
+  border:0;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+/* Restore original tile proportions and labels, not miniature glass cards. */
+[data-theme="dark"] #pin.nib-home .tl,
+[data-theme="night"] #pin.nib-home .tl,
+[data-theme="light"] #pin.nib-home .tl {
+  height:96px;
+  padding:10px 12px;
+  border-radius:18px;
+}
+#pin.nib-home .tl .tb {font-size:14px;line-height:1.15;letter-spacing:normal}
+#pin.nib-home .tl .tt {font-size:10.5px}
+#pin.nib-home .tl .tb small {font-size:11px;margin-top:2px}
+#pin.nib-home .tl .pb {width:30px;height:30px;bottom:9px;right:9px}
+#pin.nib-home .tl .tic {top:9px;right:10px}
+/* Preserve scroll without a visible scrollbar. */
+#pin.nib-home {scrollbar-width:none}
+#pin.nib-home::-webkit-scrollbar {display:none;width:0;height:0}
+
+
+/* Nib compact Home: six gradient tiles + header fit without vertical scrolling.
+   Keep original color gradients for Dark/Night/Light and Custom theme unchanged. */
+#pin.nib-home {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 1px 1px !important;
+}
+#pin.nib-home .home-intro {
+  padding: 0 2px 5px;
+  min-height: 21px;
+  align-items: center;
+}
+#pin.nib-home .home-intro h2 { font-size: 12px; line-height: 17px; }
+#pin.nib-home .home-intro p { display: none; }
+#pin.nib-home .home-tag { padding: 3px 7px; font-size: 9px; }
+#pin.nib-home .tiles { gap: 6px; }
+#pin.nib-home .tl,
+[data-theme="dark"] #pin.nib-home .tl,
+[data-theme="night"] #pin.nib-home .tl,
+[data-theme="light"] #pin.nib-home .tl {
+  height: 88px;
+  padding: 9px 10px 8px;
+  border-radius: 16px;
+}
+#pin.nib-home .release-card {
+  margin-bottom: 6px;
+  padding: 6px 9px;
+  min-height: 34px;
+}
+#pin.nib-home .release-card b { font-size: 10.5px; }
+#pin.nib-home .release-card small { display: none; }
+#pin.nib-home .release-view { height: 24px; }
+/* Hide scrollbar on Home even when another rule enables it. */
+#pin.nib-home::-webkit-scrollbar {display:none !important; width:0 !important;}
+
+
+/* Update History: versions in a horizontal strip; details scroll without clipping. */
+.release-history-tabs{display:flex;gap:5px;overflow-x:auto;flex:0 0 auto;padding:2px 1px 7px;scrollbar-width:none}
+.release-history-tabs::-webkit-scrollbar{display:none}
+.release-version-btn{flex:none;font-size:10px!important;height:26px!important;padding:0 8px!important;border:1px solid rgba(150,150,175,.22)!important;border-radius:9px!important}
+.release-version-btn.active{background:color-mix(in srgb,var(--app,#9d7aff) 37%,transparent)!important}
+.release-note-text{min-height:0;flex:1;overflow-y:auto;scrollbar-width:thin}
+.release-note-text>div{min-width:0;width:100%}
+.release-note-text b{font-size:12px}
+.release-note-text small{display:block!important;font-size:10px;opacity:.7;margin-top:4px}
+/* What's New: compact layout without window clipping. */
+#pin:has(.release-page){overflow:hidden!important;max-height:290px!important;min-height:0!important;}
+.release-page{display:flex!important;flex-direction:column!important;min-height:0!important;max-height:280px!important;height:280px!important;overflow:hidden!important;padding:2px 4px 4px!important;}
+.release-head{flex:0 0 auto!important;padding:1px 0 6px!important;}
+.release-head h2{font-size:16px!important;margin:5px 0 2px!important;}
+.release-head p{display:none!important;}
+.release-items{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin;}
+.release-note-text{display:block!important;}
+.release-note-text div{font:12px/1.45 'Segoe UI',sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text;margin-top:7px;}
+.release-actions{flex:0 0 auto!important;margin-top:7px!important;padding-top:3px!important;}
+
 </style>
 
 <div id="island"><div id="clip">
@@ -95,14 +412,20 @@ svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:va
   <div id="full">
     <div id="hdr">
       <svg id="nib" viewBox="0 0 64 64" width="26" height="26"><g id="bot">
-        <g id="earL"><path d="M10 27L12 6L29 19Z" fill="#2a2f3c" stroke="#2a2f3c" stroke-width="3" stroke-linejoin="round"/></g><g id="earR"><path d="M54 27L52 6L35 19Z" fill="#2a2f3c" stroke="#2a2f3c" stroke-width="3" stroke-linejoin="round"/></g>
-        <ellipse cx="32" cy="37" rx="25" ry="21" fill="#2a2f3c"/><rect class="eye" id="cA"/><rect class="eye" id="cB"/>
+        <g id="earL"><path d="M10 27L12 6L29 19Z" class="cat-ear" stroke-width="3" stroke-linejoin="round"/></g><g id="earR"><path d="M54 27L52 6L35 19Z" class="cat-ear" stroke-width="3" stroke-linejoin="round"/></g>
+        <ellipse class="cat-face" cx="32" cy="37" rx="25" ry="21"/><rect class="eye" id="cA"/><rect class="eye" id="cB"/>
         <path class="hp" d="M14 40Q22 28 30 40M34 40Q42 28 50 40"/><path class="xx" d="M16 30l12 12M28 30L16 42M36 30l12 12M48 30L36 42"/>
-        <path d="M29.5 46h5L32 49z" fill="#c96f86"/></g></svg>
+        <path class="cat-nose" d="M29.5 46h5L32 49z"/></g><g id="cat-headphones" class="cat-accessory" fill="none" stroke="#8ab9ff" stroke-width="5"><path d="M9 38V27C9 11 55 11 55 27V38"/><rect x="6" y="30" width="7" height="15" rx="3" fill="#426aab"/><rect x="51" y="30" width="7" height="15" rx="3" fill="#426aab"/></g>
+<g id="cat-glasses" class="cat-accessory" fill="none" stroke="#6cc8d0" stroke-width="2.8"><circle cx="22" cy="36" r="9"/><circle cx="42" cy="36" r="9"/><path d="M31 35Q32 33 33 35M13 34L7 32M51 34L57 32"/></g>
+<g id="cat-bow" class="cat-accessory"><path d="M29 12Q15 1 17 17Q24 22 31 16Q39 22 48 12Q47 1 33 12Z" fill="#ee8fb5" stroke="#9e456d" stroke-width="1.5"/><circle cx="32" cy="14" r="4" fill="#b65c85"/></g>
+<g id="cat-crown" class="cat-accessory"><path d="M18 21L16 4L26 13L32 2L38 13L48 4L46 21Z" fill="#ffd36f" stroke="#bd852a" stroke-width="2"/><circle cx="32" cy="15" r="2.5" fill="#ec6b8b"/></g>
+<g id="cat-hearts"><path d="M48 10C45 5 40 9 44 13L49 17L54 12C58 6 51 5 48 10" fill="#ed709e"/></g>
+<text class="cat-sleep" x="48" y="10">Zz</text>
+</svg>
       <span class="nm" id="hname"></span><span class="dt"><span class="pill" id="hdt"></span></span>
-      <button id="menu" data-a="menu"></button>
+      <button id="pinbtn" data-a="pinpos"></button><button id="menu" data-a="menu"></button>
     </div>
-    <div id="menuBox"><button data-a="tab" data-t="apps" id="mApps"></button><button data-a="settings" id="mSet"></button><button data-a="fold" id="mFold"></button><button class="q" data-a="quit" id="mQuit"></button></div>
+    <div id="menuBox"><button data-a="settings" id="mSet"></button><button data-a="update" id="mUpdate"></button><button data-a="whatsnew" id="mWhatsNew">✨ What's New</button><button data-a="fold" id="mFold"></button><div class="sep"></div><button class="q" data-a="quit" id="mQuit"></button></div>
     <div id="body"><div id="pin"></div></div>
     <div id="nav"></div>
   </div>
@@ -111,30 +434,50 @@ svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:va
 <script>
 const $ = s => document.querySelector(s);
 const isl = $('#island'), pin = $('#pin'), full = $('#full'), root = document.documentElement;
+let moving = false, posInfo = { free: false, up: false, attached: false };
+let overSince = 0, lastDom = performance.now(), stuckAt = 0;   // detects clicks that no longer reach the island   // dragging the island / where it sits
 const DEF = { island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true },
   sounds: { on: true, vol: .7, done: 'chime', ask: 'bell', focus: 'marimba', event: 'soft' } };
 const COL = { idle: '#ffffff', sleep: '#8a90a2', work: '#b8d0ff', ask: '#ffc48a', done: '#b6f5d8', dizzy: '#ffa0ab', focus: '#ffd166' };
 const VERB = { Read:'Reading', Edit:'Editing', MultiEdit:'Editing', NotebookEdit:'Editing', Write:'Writing', Bash:'Running', Grep:'Searching', Glob:'Searching', WebFetch:'Browsing', WebSearch:'Browsing', Task:'Delegating', TodoWrite:'Planning' };
 const APPCOL = { music: '#1DB954', notes: '#f5c542', clip: '#4cc9f0', files: '#f5b942', calendar: '#4285F4', apps: '#8b93a7', discord: '#5865F2', chat: '#e6cf72', coffee: '#c98a5a', sys: '#7aa2ff', claude: '#ff8a3d' };
-const ORDER = ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'discord', 'chat', 'coffee', 'sys', 'claude'];
-const LBL = { home: 'Home', music: 'Music', focus: 'Focus', notes: 'Notes', clip: 'Clipboard', files: 'Files', calendar: 'Calendar', apps: 'Apps', discord: 'Discord', chat: 'Chat', coffee: 'Coffee', sys: 'System', claude: 'Claude' };
+const ORDER = ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'discord', 'chat', 'coffee', 'sys', 'claude', 'youtube', 'screen', 'voice'];
+const LBL = { home: 'Home', music: 'Music', focus: 'Focus', notes: 'Notes', clip: 'Clipboard', files: 'Files', calendar: 'Calendar', apps: 'Apps', discord: 'Discord', chat: 'Chat', coffee: 'Coffee', sys: 'System', claude: 'Claude', youtube:'YouTube', screen:'Screen tools', voice:'Voice memo', phone:'Phone Link' };
 const TIERS = [[15, 'Light', '#6fe3b4'], [30, 'Steady', '#ffd166'], [60, 'Deep', '#ff8a3d'], [1e9, 'Intense', '#ff5d6c']];
 const tier = m => TIERS.find(t => m <= t[0]);
 let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: [], widgets: [], icons: { fill: {}, stroke: {} } };
 let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false;
 let snd = true, t0 = 0, idleT, leaveT, ctx, focusEnd = 0, fSel = 25, focusMin = 25, cx = 0, cy = 0, lastMove = performance.now(), dizzyUntil = 0;
 let np = null, npAt = 0, art = '', artUrl = '', evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null, spOn = false;
+let voiceRecorder = null, voiceParts = [], voiceStream = null;
+let memoAudio = null, memoPlaying = '', currentOutput = 'default';
+function stopMemoAudio(){ if(memoAudio){memoAudio.pause();memoAudio.removeAttribute('src');memoAudio.load();memoAudio=null;} memoPlaying=''; }
+function voiceMsg(message){const el=$('#voiceStatus');if(el)el.textContent=message;}
+async function fillVoiceDevices(){const mic=$('#vmInput'),speaker=$('#vmOutput');if(!mic||!speaker)return;
+  const oldMic=mic.value||localStorage.getItem('nib:mic')||'default';
+  const oldOut=speaker.value||localStorage.getItem('nib:output')||'default';
+  try{const devices=await navigator.mediaDevices.enumerateDevices();
+    const build=(el,items,defaultTitle,selected)=>{el.innerHTML='';const def=document.createElement('option');def.value='default';def.textContent=defaultTitle;el.append(def);
+      items.forEach((d,i)=>{if(!d.deviceId||d.deviceId==='default'||d.deviceId==='communications')return;const op=document.createElement('option');op.value=d.deviceId;op.textContent=d.label||('Device '+(i+1));el.append(op);});
+      el.value=[...el.options].some(o=>o.value===selected)?selected:'default';};
+    build(mic,devices.filter(d=>d.kind==='audioinput'),'Default microphone',oldMic);
+    build(speaker,devices.filter(d=>d.kind==='audiooutput'),'System default speakers',oldOut);
+  }catch(e){voiceMsg('Could not list audio devices: '+e.message);}
+}
+
 let needKey = false, busy = false, lastIdx = -2, wander = { x: 0, y: 0, t: 0 };
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const NAME = () => S.name || 'Nib';
+const order = () => [...new Set([...(S.widgetOrder||[]),...ORDER])].filter(id=>ORDER.includes(id));
+const greeting = () => {const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening';};
 const ico = (k, sz = 18) => {
   const I = CAT.icons;
   if (I.fill && I.fill[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="currentColor"><path d="${I.fill[k].f}"/></svg>`;
   if (I.stroke && I.stroke[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I.stroke[k]}</svg>`;
   return '';
 };
-const wik = id => (CAT.widgets.find(w => w.id === id) || {}).ik || id;
+const wik = id => id === 'screen' ? 'screen' : (CAT.widgets.find(w => w.id === id) || {}).ik || id;
 const detail = i => { i = i || {}; const p = i.file_path || i.notebook_path; if (p) return String(p).split(/[\\/]/).slice(-2).join('/'); return String(i.command || i.pattern || i.url || i.query || i.description || '').slice(0, 140); };
 const fmt = s => s < 60 ? s + 's' : Math.floor(s / 60) + 'm ' + (s % 60) + 's';
 const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
@@ -149,7 +492,7 @@ const curLine = () => { const i = lyrIdx(); return i >= 0 ? np.lyrics[i].x : '';
 const nextEv = () => { const n = Date.now(), e = evs.find(e => !e.allDay && e.end > n && e.t - n < 3600e3); return e ? (e.title.length > 14 ? e.title.slice(0, 13) + '\u2026' : e.title) + ' \u00B7 ' + (e.t <= n ? 'now' : Math.ceil((e.t - n) / 60000) + 'm') : ''; };
 const focusCol = () => tier(focusMin)[2];
 const typing = () => ['inp', 'ntxt'].includes((document.activeElement || {}).id);
-const slotText = k => k === 'time' ? clock() : k === 'battery' ? (bat ? Math.round(bat.level * 100) + '%' + (bat.charging ? '+' : '') : '') : k === 'cpu' ? 'CPU ' + sys.cpu + '%' : k === 'ram' ? 'RAM ' + sys.ram + '%' : k === 'event' ? nextEv() : '';
+const slotText = k => k === 'gpuTemp' ? ('GPU ' + (sys.temp == null ? 'N/A' : sys.temp + '°C')) : k === 'time' ? clock() : k === 'battery' ? (bat ? Math.round(bat.level * 100) + '%' + (bat.charging ? '+' : '') : '') : k === 'cpu' ? 'CPU ' + sys.cpu + '%' : k === 'ram' ? 'RAM ' + sys.ram + '%' : k === 'event' ? nextEv() : '';
 
 // ---------- sounds (synthesised, no files)
 const SND = { chime: [[523, 659, 784], 'sine', .11, .3], bell: [[880, 1320], 'triangle', .14, .6], pop: [[420, 640], 'sine', .07, .14], soft: [[392, 523], 'sine', .16, .45], marimba: [[659, 784, 988], 'triangle', .09, .25], ping: [[1046], 'sine', 0, .5] };
@@ -168,21 +511,30 @@ nib.onPreview(o => tone(o.style, o.vol)); nib.onSound(v => snd = v);
 // ---------- layout / render
 function layout() {
   const I = S.island, o = (I.open === 'click' ? pinned : hover) || dragging || state === 'ask' || typing();
-  if (o !== wasOpen) { wasOpen = o; if (!o) { tab = 'home'; flushNotes(); menuOff(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); nib.focusable(false); } paintPin(); }
+  if (o !== wasOpen) { wasOpen = o; if (!o) { tab = 'home'; pinned=false; flushNotes(); menuOff(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); nib.focusable(false); } paintPin(); }
   const mus = !o && state === 'idle' && !focusEnd && I.music !== false && playing();
-  isl.className = [o && 'open', mus && 'mus', I.style === 'float' && 'float', I.eyes === false && 'noeyes', o && tab !== 'home' && 'app'].filter(Boolean).join(' ');
+  isl.className = [o && 'open', mus && 'mus', (I.style === 'float' || (posInfo.free && !posInfo.attached)) && 'float', posInfo.up && 'up', moving && 'moving', S.island.lock && 'locked', I.eyes === false && 'noeyes', o && tab !== 'home' && 'app'].filter(Boolean).join(' ');
   if (o && tab !== 'home') isl.style.setProperty('--app', appColor(tab));
   if (!o && !mus) {
-    const L = state === 'idle' ? slotText(I.left) : '', R = state === 'idle' ? (focusEnd ? mmss(focusEnd - Date.now()) : slotText(I.right)) : stTitle.slice(0, 16);
+    const L = state === 'idle' ? (slotText(I.left)) : '', R = state === 'idle' ? (focusEnd ? mmss(focusEnd - Date.now()) : slotText(I.right)) : stTitle.slice(0, 16);
     $('#L').textContent = L; $('#R').textContent = R; $('#R').style.color = focusEnd && state === 'idle' ? focusCol() : '';
     const sw = Math.max(L.length, state === 'idle' ? R.length : 0) * 7.4, w = Math.max(92, 24 + (I.eyes === false ? 0 : 42) + (L || R ? 2 * 9 : 0) + (state === 'idle' ? 2 * sw : (R ? 9 + R.length * 7.4 : 0)));
     $('#L').style.width = state === 'idle' && (L || R) ? sw + 'px' : '0'; $('#R').style.width = state === 'idle' && (L || R) ? sw + 'px' : '';
     isl.style.width = w + 'px'; isl.style.marginLeft = -w / 2 + 'px';
   } else { isl.style.width = ''; isl.style.marginLeft = ''; }
   if (o) fit(); else isl.style.height = '';
+  // Report the real island rectangle so the main process can recover hit-testing
+  // independently of renderer mousemove events (including after fullscreen games).
+  const hit = isl.getBoundingClientRect();
+  const nextHit = {left:hit.left,top:hit.top,width:hit.width,height:hit.height};
+  if (!layout.lastHit || Object.keys(nextHit).some(k => Math.abs(nextHit[k]-layout.lastHit[k])>2)) {
+    layout.lastHit=nextHit; nib.setHitbox(nextHit);
+  }
 }
 const fit = () => { if (wasOpen) isl.style.height = Math.min(Math.round(380 / (+getComputedStyle(root).getPropertyValue('--z') || 1)), full.offsetHeight) + 'px'; };
 new ResizeObserver(fit).observe(full);
+// Update main-process hitbox after width/height animations settle.
+['transitionend','transitioncancel'].forEach(ev=>isl.addEventListener(ev,()=>{const r=isl.getBoundingClientRect();nib.setHitbox({left:r.left,top:r.top,width:r.width,height:r.height});}));
 const appColor = t => t === 'focus' ? tier(focusEnd ? focusMin : fSel)[2] : APPCOL[t] || '#8b93a7';
 function set(s, t, sb, id) {
   clearTimeout(idleT); state = s; look = s; pend = id || 0; stTitle = t; stSub = sb || '';
@@ -194,10 +546,11 @@ const goIdle = () => set('idle', '', '');
 
 // ---------- open layout: header, nav, tiles, views
 function buildChrome() {
-  $('#hname').textContent = NAME(); $('#menu').innerHTML = ico('dots', 18);
-  $('#mApps').innerHTML = ico('apps', 16) + 'All apps'; $('#mSet').innerHTML = ico('sliders', 16) + 'Settings'; $('#mFold').innerHTML = ico('back', 16) + 'Fold in'; $('#mQuit').innerHTML = ico('winsettings', 16) + 'Quit';
-  const ids = ['home', ...ORDER.filter(on)];
+  $('#hname').textContent = S.greetings === false ? NAME() : greeting() + (S.you ? ', '+S.you : '') + ' 👋'; $('#menu').innerHTML = ico('dots', 18);
+  $('#mSet').innerHTML = ico('sliders', 16) + 'Settings'; $('#mUpdate').innerHTML = ico('download', 16) + 'Check for updates'; $('#mWhatsNew').textContent = "✨ What's New"; $('#mFold').innerHTML = ico('back', 16) + 'Fold in'; $('#mQuit').innerHTML = ico('winsettings', 16) + 'Quit';
+  const ids = ['home', ...order().filter(on)];
   $('#nav').innerHTML = ids.map(id => `<button class="nv ${tab === id ? 'on' : ''}" title="${LBL[id]}" data-a="tab" data-t="${id}">${ico(id === 'home' ? 'home' : wik(id), 17)}<span>${LBL[id]}</span></button>`).join('');
+  { const nv = $('#nav'), on = nv.querySelector('.on'); if (on) nv.scrollLeft = on.offsetLeft - (nv.clientWidth - on.offsetWidth) / 2; }   // keep the open app in view
 }
 const tile = (id, t, body, extra = '') => `<div class="tl" data-a="tab" data-t="${id}" style="--t:${t}"><div class="tt">${LBL[id] === 'Chat' ? esc(NAME()) : LBL[id]}</div>${body}${extra}</div>`;
 const TILES = {
@@ -211,7 +564,10 @@ const TILES = {
   discord: () => tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>mute / deafen</small></div>`),
   chat: () => tile('chat', '#e6cf72', `<span class="tic">${ico('chat', 20)}</span><div class="tb">Ask ${esc(NAME())}<small>anything</small></div>`),
   coffee: () => { const cur = !coffee.on ? 0 : coffee.until < 0 ? -1 : 1; return `<div class="tb" style="font-size:16px;margin-bottom:8px">${coffee.on ? 'Keeping your PC awake' : 'Your PC sleeps normally'}</div><div class="row">${[['Off', 0], ['30 min', 30], ['1 hour', 60], ['2 hours', 120], ['Always', -1]].map(([n, m]) => `<button class="s ${m === cur && m <= 0 ? 'pri' : ''}" data-a="cof" data-m="${m}">${n}</button>`).join('')}</div>`; },
-  sys: () => tile('sys', '#7aa2ff', `<span class="tic">${ico('sys', 20)}</span><div class="tb">CPU ${sys.cpu}%<small>RAM ${sys.ram}%${bat ? ' \u00B7 ' + Math.round(bat.level * 100) + '%' : ''}</small></div>`),
+  sys: () => tile('sys', '#7aa2ff', `<span class="tic">${ico('sys', 20)}</span><div class="tb">GPU ${sys.temp == null ? 'N/A' : sys.temp+'°C'}<small>${sys.load == null ? 'Usage N/A' : sys.load+'% usage'} · CPU ${sys.cpu}% · RAM ${sys.ram}%</small></div>`),
+  youtube: () => tile('youtube','#f43131',`<span class="tic">▶</span><div class="tb">YouTube<small>Browser playback</small></div>`),
+  screen: () => tile('screen','#a38bff',`<span class="tic">${ico('screen', 23)}</span><div class="tb">Screen tools<small>OCR, color, draw</small></div>`),
+  voice: () => tile('voice','#fa7ea8',`<span class="tic">🎙</span><div class="tb">Voice memo<small>Record locally</small></div>`),
   claude: () => tile('claude', '#ff8a3d', `<span class="tic">${ico('claude', 20)}</span><div class="tb">${cl.connected ? (state === 'idle' ? 'Ready' : esc(stTitle)) : 'Connect'}<small>${cl.connected ? 'Claude Code' : 'in this tab'}</small></div>`)
 };
 const statusCard = () => state === 'idle' ? '' : `<div class="stc" style="--st:${state === 'ask' ? '#ff8a3d' : state === 'done' ? '#6fe3b4' : '#7aa2ff'}"><b>${esc(stTitle)}</b><div class="sb">${esc(stSub)}</div>`
@@ -219,22 +575,65 @@ const statusCard = () => state === 'idle' ? '' : `<div class="stc" style="--st:$
 const appList = () => (S.apps || []).map(id => CAT.apps.find(a => a.id === id) || (S.custom || []).find(a => a.id === id)).filter(Boolean);
 const tileIcon = a => a.logo || a.icon ? `<img src="${esc(a.logo || a.icon)}" alt="">` : a.ik ? ico(a.ik, 24) : `<b>${esc((a.name || '?')[0].toUpperCase())}</b>`;
 const chips = () => [15, 25, 45, 60, 90].map(m => `<button class="s" data-a="fmin" data-m="${m}"><i class="dot" style="background:${tier(m)[2]};margin-right:6px"></i>${m}</button>`).join('');
+let NIB_RELEASE='0.4.0'; // replaced with app.getVersion() during startup
+let releaseInfo={body:'Loading release notes…',source:'loading'};
+let nibReleaseHistory=[];let selectedRelease=null;let releaseHistorySource='loading';
+const seenKey=()=> 'nib-whats-new-read-v'+NIB_RELEASE;
+const releaseSeen=()=>{try{return localStorage.getItem(seenKey())==='1';}catch{return true;}};
+const markReleaseSeen=()=>{try{localStorage.setItem(seenKey(),'1');}catch{}};
+const releaseCard=()=>`<section class="release-card"><div><b>✨ What's New in Nib v${esc(NIB_RELEASE)}</b><small>See the changes in your installed version</small></div><button class="s release-view" data-a="whatsnew">View update</button></section>`;
+const releasePage=()=>{
+  const entries=nibReleaseHistory.length?nibReleaseHistory:[{version:NIB_RELEASE,name:'Nib v'+NIB_RELEASE,date:'',body:releaseInfo.body}];
+  const current=entries.find(x=>x.version===(selectedRelease||NIB_RELEASE))||entries[0];
+  const selected=esc(current.version);
+  const info=current.version===NIB_RELEASE?releaseInfo:({body:current.body,source:releaseHistorySource});
+  return `<div class="release-page"><div class="release-head"><span class="release-tag">✨ NIB v${esc(NIB_RELEASE)} INSTALLED</span><h2>Update History</h2></div>
+    <div class="release-items"><div class="release-history-tabs">${entries.map(x=>`<button type="button" class="release-version-btn ${x.version===current.version?'active':''}" data-a="releaseSelect" data-v="${esc(x.version)}">v${esc(x.version)}${x.version===NIB_RELEASE?' · Installed':''}</button>`).join('')}</div>
+    <div class="release-item release-note-text"><div><b>${esc(current.name||'Nib v'+selected)}</b><small>${current.date?'Released '+esc(current.date)+' · ':''}v${selected} · ${info.source==='github'?'GitHub Releases':info.source==='cache'?'Offline cache':info.source==='loading'?'Loading…':'Available details'}</small><div>${esc(current.version===NIB_RELEASE?releaseInfo.body:current.body)}</div></div></div></div>
+    <div class="release-actions"><button class="s pri" data-a="whatsnewDone">Done</button><button class="s" data-a="update">Check for updates</button></div></div>`;
+};
+async function loadReleaseHistory(){
+  if(typeof nib.releaseHistory!=='function')return;
+  try{const r=await nib.releaseHistory();nibReleaseHistory=Array.isArray(r.releases)?r.releases:[];releaseHistorySource=r.source||'unavailable';
+    if(tab==='whatsnew'&&wasOpen)paintPin();
+  }catch(e){releaseHistorySource='unavailable';}
+}
+async function loadCurrentReleaseNotes(){
+  if(typeof nib.releaseNotes!=='function')return;
+  try{
+    const r=await nib.releaseNotes();if(!r||typeof r.version!=='string')throw Error('Missing app version');
+    NIB_RELEASE=r.version; releaseInfo={body:String(r.body||'No release details provided.'),source:r.source};
+    loadReleaseHistory();
+    if(!releaseSeen()){
+      // Open once per installed version. The user dismisses it with Done.
+      tab='whatsnew';pinned=true;hover=true;layout();paintPin();
+    } else if(wasOpen&&(tab==='home'||tab==='whatsnew'))paintPin();
+  }catch(e){releaseInfo={body:'Unable to read update details: '+e.message,source:'unavailable'};}
+}
 const TPL = {
-  home: () => statusCard() + `<div class="tiles">${ORDER.filter(on).slice(0, 6).map(id => TILES[id]()).join('')}</div>`,
+  home: () => `<div class="home-intro"><div><h2>My workspace</h2><p>Your essentials, one click away</p></div><span class="home-tag"><i class="home-dot"></i>Ready</span></div>` + statusCard() + (!releaseSeen() ? releaseCard() : '') + `<div class="tiles">${order().filter(on).slice(0, 6).map(id => TILES[id]()).join('')}</div>`,
+  whatsnew: releasePage,
   music: () => `<div class="mrow">${art ? `<img src="${art}">` : `<div class="noart">${ico(isSp() ? 'spotify' : 'note', 24)}</div>`}<div style="min-width:0"><div class="mt" id="n1"></div><div class="muted" id="n2"></div></div></div>
     <div class="lyr"><div id="l0"></div><div id="l1"></div><div id="l2"></div></div>
     <div class="prog"><span id="pt">0:00</span><div class="bar"><i id="pf"></i></div><span id="pr">0:00</span></div>
     <div class="ctl"><button data-a="mctl" data-k="prev">${ico('prev', 20)}</button><button class="big" data-a="mctl" data-k="play" id="pp">${ico('play', 20)}</button><button data-a="mctl" data-k="next">${ico('next', 20)}</button></div>
     <div class="vols"><button class="s" data-a="key" data-k="vdn">Vol -</button><button class="s" data-a="key" data-k="vup">Vol +</button><button class="s" data-a="key" data-k="mute">Mute</button>${spOn ? '' : '<button class="s" data-a="settings">Connect Spotify</button>'}</div>`,
+  youtube: () => `<div class="muted" id="ytStatus">Browser media playback (Chrome by default)</div><div class="row"><button class="s" data-a="ytctl" data-k="prev">⏮</button><button class="s pri" data-a="ytctl" data-k="play">▶ / ⏸</button><button class="s" data-a="ytctl" data-k="next">⏭</button><button class="s" data-a="ytrefresh">Refresh</button><button class="s" data-a="launch" data-t="https://www.youtube.com">Open</button></div>`,
+  screen: () => `<div class="muted" style="margin-bottom:10px">Choose a screen tool</div><div class="row"><button class="s pri" data-a="screenTool" data-k="color">Pick HEX</button><button class="s" data-a="screenTool" data-k="ocr">Text OCR</button><button class="s" data-a="screenTool" data-k="draw">Draw</button></div>`,
+  voice: () => `<div class="muted" id="voiceStatus">Recordings are stored privately in Nib.</div>
+  <label class="vm-select">Microphone <select id="vmInput" data-a="voiceDevice"></select></label>
+  <label class="vm-select">Speaker output <select id="vmOutput" data-a="voiceDevice"></select></label>
+  <div class="row"><button class="s pri" data-a="voiceStart">● Record</button><button class="s" data-a="voiceStop">Stop & save</button><button class="s" data-a="voiceRefresh">Refresh devices</button></div>
+  <div class="vm-hint">Select a memo to play it in Nib or export it as an audio file.</div><div id="memos" class="memo-list"></div>`,
   calendar: () => `<div id="cal" class="muted"></div>`,
   files: () => `<div class="zones"><div class="zone" data-zone="type"><b>Sort by type</b><div class="muted">Images, Documents...</div></div>${(S.zones || []).slice(0, 5).map((z, i) => `<div class="zone" data-zone="${i}"><b>${esc(z.name)}</b><div class="muted">drop here</div></div>`).join('')}</div><div class="row" style="margin-top:10px"><button class="s" data-a="tidy">Tidy Downloads</button><button class="s" data-a="undo">Undo last</button><button class="s" data-a="settings">Zones...</button></div><div id="fm" class="muted" style="margin-top:8px">Drag files onto a zone.</div>`,
   apps: () => { const l = appList(); return l.length ? `<div class="grid">${l.map(a => `<button class="tile" data-a="launch" data-t="${esc(a.target)}">${tileIcon(a)}<span>${esc(a.name)}</span></button>`).join('')}</div>` : '<div class="muted">Pick apps in Settings.</div>'; },
   discord: () => { const d = S.discord || {}; return `<div class="row"><button class="pri s" data-a="discord" data-k="mute">Mute</button><button class="pri s" data-a="discord" data-k="deafen">Deafen</button><button class="s" data-a="launch" data-t="discord:">Open Discord</button></div>` + (d.mute || d.deafen ? '' : `<p class="muted">Set your Discord keybinds, then enter the same keys in Settings.</p><button class="s" data-a="settings">Open Settings</button>`); },
   chat: () => `<div id="clog"></div><input id="inp" autocomplete="off" spellcheck="false">`,
   notes: () => `<div class="ntabs" id="ntabs"></div><textarea id="ntxt" spellcheck="false" placeholder="Write something..."></textarea><div class="row" style="margin-top:8px"><button class="s" data-a="nnew">New note</button><button class="s" data-a="ndel">Delete note</button></div>`,
-  clip: () => clips.length ? clips.map((c, i) => `<button class="clip" data-a="cpy" data-i="${i}">${esc(c.replace(/\s+/g, ' ').slice(0, 90))}</button>`).join('') + `<div class="row"><button class="s" data-a="cclear">Clear</button></div>` : '<div class="muted">Copy something and it shows up here. Kept in memory only, never saved.</div>',
+  clip: () => clips.length ? clips.map((c,i)=>`<div class="row" style="align-items:center"><input type="checkbox" class="clip-select" data-i="${i}"><button class="clip" data-a="cpy" data-i="${i}">${esc(c.replace(/\s+/g,' ').slice(0,90))}</button></div>`).join('') + `<div class="row"><button class="s" data-a="clipRemove">Remove selected</button><button class="s" data-a="clipExport">Export selected</button><button class="s" data-a="cclear">Clear all</button></div>` : '<div class="muted">No clipboard items. Kept in memory only.</div>',
   coffee: () => `<div class="tb" style="font-size:16px;margin-bottom:8px">${coffee.on ? 'Keeping your PC awake' : 'Your PC sleeps normally'}</div><div class="row">${[['Off', 0], ['30 min', 30], ['1 hour', 60], ['2 hours', 120], ['Always', -1]].map(([n, m]) => `<button class="s ${(coffee.on ? (coffee.until < 0 ? -1 : 1) : 0) === (m ? Math.sign(m) : 0) && m <= 0 ? 'pri' : ''}" data-a="cof" data-m="${m}">${n}</button>`).join('')}</div>`,
-  sys: () => ['CPU', 'RAM'].map(k => `<div class="meter"><div class="row" style="justify-content:space-between"><span>${k}</span><b id="s${k}">${sys[k.toLowerCase()]}%</b></div><div class="bar"><i id="b${k}" style="width:${sys[k.toLowerCase()]}%"></i></div></div>`).join('') + (bat ? `<div class="meter"><div class="row" style="justify-content:space-between"><span>Battery${bat.charging ? ' (charging)' : ''}</span><b>${Math.round(bat.level * 100)}%</b></div><div class="bar"><i style="width:${Math.round(bat.level * 100)}%"></i></div></div>` : ''),
+  sys: () => (S.systemMetrics||['cpu','ram','battery','gpuTemp','gpuLoad','vram']).map(k => k==='gpuTemp' ? `<div class="meter">GPU temperature: <b>${sys.temp == null ? 'Not available' : sys.temp+'°C'}</b></div>` : k==='gpuLoad' ? `<div class="meter">GPU usage: <b>${sys.load == null ? 'Not available' : sys.load+'%'}</b></div>` : k==='vram' ? `<div class="meter">VRAM: <b>${sys.vramUsed == null || !sys.vramTotal ? 'Not available' : (sys.vramUsed/1024).toFixed(1)+' / '+(sys.vramTotal/1024).toFixed(1)+' GB'}</b></div>` : k==='gpuPower' ? `<div class="meter">GPU power: <b>${sys.power == null ? 'Not available' : sys.power.toFixed(0)+' W'+(sys.powerLimit == null ? '' : ' / '+sys.powerLimit.toFixed(0)+' W')}</b></div>` : k==='gpuFan' ? `<div class="meter">GPU fan: <b>${sys.fan == null ? 'Not available' : sys.fan+'%'}</b></div>` : k==='battery' ? (bat ? `<div class="meter"><div class="row"><span>Battery${bat.charging?' (charging)':''}</span><b>${Math.round(bat.level*100)}%</b></div><div class="bar"><i style="width:${Math.round(bat.level*100)}%"></i></div></div>` : '') : ['cpu','ram'].includes(k)? `<div class="meter"><div class="row" style="justify-content:space-between"><span>${k.toUpperCase()}</span><b id="s${k.toUpperCase()}">${sys[k]}%</b></div><div class="bar"><i id="b${k.toUpperCase()}" style="width:${sys[k]}%"></i></div></div>` : '').join(''),
   claude: () => `<div class="tb" style="font-size:16px">${cl.connected ? 'Connected to Claude Code' : 'Not connected yet'}</div><div class="muted" style="margin:6px 0 10px">${cl.connected ? 'The eyes show what Claude is doing. Restart Claude Code sessions after connecting.' : 'Adds small hooks to Claude Code so the island can show what it is doing.'}</div><div class="row"><button class="pri s" data-a="clc">${cl.connected ? 'Disconnect' : 'Connect'}</button><button class="s" data-a="clg">${cl.gate ? 'Ask before Bash and edits: on' : 'Ask before Bash and edits: off'}</button></div>`,
   focus: () => {
     const run = !!focusEnd, m = run ? focusMin : fSel, tr = tier(m);
@@ -245,12 +644,13 @@ const TPL = {
 };
 function paintPin() {
   if (!wasOpen) return;
-  buildChrome(); pin.innerHTML = (TPL[tab] || TPL.home)();
+  buildChrome(); pin.classList.toggle('nib-home', tab === 'home'); pin.innerHTML = (TPL[tab] || TPL.home)();
+  if (tab === 'home') pin.scrollTop = 0;
   if (tab === 'music') { paintNP(); lastIdx = -2; paintLyr(); }
-  if (tab === 'calendar') loadCal(); if (tab === 'chat') startChat(); if (tab === 'notes') startNotes();
+  if (tab === 'voice') { loadMemos(); fillVoiceDevices(); } if (tab === 'calendar') loadCal(); if (tab === 'chat') startChat(); if (tab === 'notes') startNotes();
   fit();
 }
-function openTab(t) { if (tab === 'notes') flushNotes(); tab = t; if (t === 'claude') nib.claude().then(r => { cl = r; if (tab === 'claude') paintPin(); }); if (tab !== 'chat' && tab !== 'notes') { nib.focusable(false); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } paintPin(); layout(); }
+function openTab(t) { if(tab==='voice' && t!=='voice')stopMemoAudio(); if (tab === 'notes') flushNotes(); tab = t; if (t === 'claude') nib.claude().then(r => { cl = r; if (tab === 'claude') paintPin(); }); if (tab !== 'chat' && tab !== 'notes') { nib.focusable(false); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } paintPin(); layout(); }
 function paintNP() {
   const a = $('#n1'); if (!a) return;
   a.textContent = np ? np.title : 'Nothing playing'; $('#n2').textContent = np ? (np.artist || '') + (np.status === 'Paused' ? (np.artist ? ' \u00B7 ' : '') + 'Paused' : '') : 'Start something in Spotify';
@@ -265,12 +665,41 @@ function paintLyr() {
   $('#l0').textContent = g(i - 1); $('#l1').textContent = i < 0 ? '\u266A' : g(i) || '\u266A'; $('#l2').textContent = g(i + 1);
   if (i !== lastIdx && $('#l1').animate) $('#l1').animate([{ opacity: .2, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'ease-out' }); lastIdx = i;
 }
-function paintMus() {
-  const m = $('#mus'); if (!m || !isl.classList.contains('mus')) return;
-  const l = curLine(), k = isSp() ? 'spotify' : 'note'; if ($('#mlogo').dataset.k !== k) { $('#mlogo').innerHTML = ico(k, 20); $('#mlogo').dataset.k = k; }
-  const a = l || np.title, b = l ? np.title + (np.artist ? ' \u00B7 ' + np.artist : '') : np.artist;
-  if ($('#m1').textContent !== a) { $('#m1').textContent = a; if ($('#m1').animate) $('#m1').animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'ease-out' }); } $('#m2').textContent = b;
+// The resting music pill is intentionally compact. Scroll long lyrics and titles
+// back and forth so the full text is readable without making the notch huge.
+function setScrollingMusicLine(id, value) {
+  const box = $(id); if (!box) return;
+  const text = String(value || '');
+  if (box.dataset.fullText !== text || !box.firstElementChild) {
+    box.dataset.fullText = text;
+    box.replaceChildren();
+    const line = document.createElement('span');
+    line.className = 'nib-music-scroll';
+    line.textContent = text;
+    box.appendChild(line);
+  }
+  const line = box.firstElementChild;
+  if (!line || box.clientWidth === 0) return;
+  const overflow = Math.max(0, Math.ceil(line.scrollWidth - box.clientWidth));
+  if (overflow > 1) {
+    line.style.setProperty('--scroll-distance', overflow + 'px');
+    line.style.setProperty('--scroll-time', Math.max(7, overflow / 23 + 3).toFixed(1) + 's');
+    line.classList.add('is-scrolling');
+  } else {
+    line.classList.remove('is-scrolling');
+    line.style.removeProperty('--scroll-distance');
+  }
 }
+function paintMus() {
+  const m = $('#mus'); if (!m || !isl.classList.contains('mus') || !np) return;
+  const l = curLine(), k = isSp() ? 'spotify' : 'note';
+  if ($('#mlogo').dataset.k !== k) { $('#mlogo').innerHTML = ico(k, 20); $('#mlogo').dataset.k = k; }
+  const a = l || np.title;
+  const b = l ? np.title + (np.artist ? ' \u00B7 ' + np.artist : '') : np.artist;
+  setScrollingMusicLine('#m1', a);
+  setScrollingMusicLine('#m2', b);
+}
+window.addEventListener('resize', () => { if (isl.classList.contains('mus')) paintMus(); });
 setInterval(() => {
   const i = lyrIdx(); if (i !== lastIdx) { paintLyr(); paintMus(); }
   if (tab === 'music' && wasOpen && np) { const p = npPos(), d = np.dur || 0; if ($('#pf')) { $('#pf').style.width = d ? Math.min(100, p / d * 100) + '%' : '0'; $('#pt').textContent = tm(p); $('#pr').textContent = d ? '-' + tm(d - p) : ''; } }
@@ -286,7 +715,7 @@ async function pollNP() {
   setTimeout(pollNP, (tab === 'music' && wasOpen) || playing() ? 1500 : 3500);
 }
 let calT; async function pollCal() { clearTimeout(calT); if (S.ics) { const r = await nib.cal(); evs = r.ok ? r.events : []; } calT = setTimeout(pollCal, 300000); }
-let sysT; async function pollSys() { clearTimeout(sysT); const need = ['cpu', 'ram'].includes(S.island.left) || ['cpu', 'ram'].includes(S.island.right) || on('sys'); if (need) { sys = await nib.sys(); if (tab === 'sys' && wasOpen && $('#sCPU')) { for (const k of ['CPU', 'RAM']) { $('#s' + k).textContent = sys[k.toLowerCase()] + '%'; $('#b' + k).style.width = sys[k.toLowerCase()] + '%'; } } } sysT = setTimeout(pollSys, 2000); }
+let sysT; async function pollSys() { clearTimeout(sysT); const need = ['cpu','ram','gpuTemp'].includes(S.island.left) || ['cpu','ram','gpuTemp'].includes(S.island.right) || on('sys'); if (need) { sys = await nib.sys(); if (tab === 'sys' && wasOpen) { paintPin(); for (const k of ['CPU','RAM']) {const el=$('#s'+k),bar=$('#b'+k);if(el)el.textContent=sys[k.toLowerCase()]+'%';if(bar)bar.style.width=sys[k.toLowerCase()]+'%';} } } sysT = setTimeout(pollSys, 2000); }
 if (navigator.getBattery) navigator.getBattery().then(b => { bat = b; });
 const evRow = e => { const d = new Date(e.t), lab = d.toDateString() === new Date().toDateString() ? '' : d.toLocaleDateString([], { weekday: 'short' }) + ' '; return `<div class="ev"><b>${esc(lab + (e.allDay ? 'All day' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })))}</b><span>${esc(e.title)}</span></div>`; };
 async function loadCal() {
@@ -296,6 +725,11 @@ async function loadCal() {
   box.innerHTML = r.ok ? (r.events.length ? r.events.map(evRow).join('') : 'Nothing in the next 7 days.') : 'Could not load the calendar: ' + esc(r.error);
 }
 nib.onClip(v => { clips = v; if (wasOpen && (tab === 'clip' || tab === 'home')) paintPin(); });
+
+async function loadMemos(){const box=$('#memos');if(!box)return;try{const list=await nib.extrasListAudio();if(!box.isConnected)return;
+  window.nibMemoList=list;
+  box.innerHTML=list.length?list.map((m,i)=>`<div class="memo-row"><span>${esc(m.name.replace('Memo-','').replace('.webm','').replace('T',' '))}</span><button class="s" data-a="memoPlay" data-i="${i}">${memoPlaying===m.name?'Stop':'Play'}</button><button class="s" data-a="memoExport" data-i="${i}">Save As...</button><button class="s" data-a="memoDelete" data-i="${i}">Delete</button></div>`).join(''):'<div class="muted">No recordings yet</div>';
+}catch(e){box.textContent='Could not load recordings: '+e.message;}}
 
 // ---------- notes (saved on this PC)
 let saveT;
@@ -331,8 +765,27 @@ const setSel = m => { fSel = m; const tr = tier(m), fr = $('#fr'); if (!fr) retu
 const fm = r => { const e = $('#fm'); if (!e) return; e.textContent = r.restored !== undefined ? (r.restored ? 'Put back ' + r.restored + ' file(s).' : 'Nothing to undo.') : r.moved ? 'Moved ' + r.moved + ' file(s) ' + (r.label || '') + '.' + (r.failed ? ' ' + r.failed + ' failed.' : '') : r.failed ? 'Could not move those files.' : 'Nothing to move.'; if (r.moved || r.restored) hop(1.4); };
 nib.onDrop(fm);
 const menuOff = () => $('#menuBox').classList.remove('on');
+nib.onRepairCheck(() => { /* hit-testing is owned by Electron's main process */ });
+// External tray collapse works even if the panel is stuck in click/hover mode.
+if (typeof nib.onCollapse === 'function') nib.onCollapse(() => {
+  clearTimeout(leaveT); leaveT=0; pinned=false; hover=false; dragging=false;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  tab='home'; menuOff(); layout();
+});
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape' && !typing()) { pinned=false;hover=false;tab='home';menuOff();layout(); }
+});
+nib.onForceOpen(() => {
+  try {
+    moving = false; clearTimeout(leaveT); leaveT=0; pinned = false; hover = false; tab = 'home';
+    layout(); paintPin();
+    // The main process now owns click-through and native pointer state.
+  } catch(e) { console.error('[nib] recovery failed',e); }
+});
 const ACT = {
-  tab: d => { menuOff(); openTab(d.t); }, menu: () => $('#menuBox').classList.toggle('on'), fold: () => { menuOff(); pinned = false; hover = false; layout(); },
+  tab: d => { menuOff(); openTab(d.t); }, menu: () => $('#menuBox').classList.toggle('on'), resetpos: () => { menuOff(); nib.resetPos(); }, pinpos: () => { nib.setSettings({ island: { ...S.island, lock: !S.island.lock } }); }, fold: () => { clearTimeout(leaveT); menuOff(); pinned = false; hover = false; if(document.activeElement?.blur)document.activeElement.blur(); layout(); },
+  whatsnew: () => { menuOff(); selectedRelease=NIB_RELEASE; openTab('whatsnew'); }, releaseSelect: d => { selectedRelease=d.v; paintPin(); }, whatsnewDone: () => { markReleaseSeen(); openTab('home'); },
+  update: async () => { menuOff(); try { const r=await nib.checkUpdates(); if(r && !r.ok) alert(r.message||'Update check unavailable'); } catch(e){alert('Update check failed: '+e.message);} },
   quit: () => nib.quit(), settings: () => { menuOff(); nib.openSettings(); }, launch: d => nib.launch(d.t), discord: d => nib.discord(d.k), key: d => nib.key(d.k),
   mctl: async d => { if (d.k === 'play' && np) { np.status = playing() ? 'Paused' : 'Playing'; npAt = performance.now(); paintNP(); layout(); } await nib.music(d.k); setTimeout(() => { if (!pollBusy) pollNP2(); }, 500); },
   tidy: async () => fm(await nib.tidy()), undo: async () => fm(await nib.undo()),
@@ -342,11 +795,48 @@ const ACT = {
   nnew: () => { notes.unshift({ id: Date.now(), text: '' }); nIdx = 0; saveNotes(); paintTabs(); $('#ntxt').value = ''; $('#ntxt').focus(); },
   ndel: () => { notes.splice(nIdx, 1); nIdx = 0; if (!notes.length) notes = [{ id: Date.now(), text: '' }]; saveNotes(); startNotes(); },
   cpy: async d => { await nib.clipCopy(clips[+d.i]); const b = document.querySelector(`[data-i="${d.i}"]`); if (b) b.textContent = 'Copied'; },
+  clipRemove: async () => {const ids=[...pin.querySelectorAll('.clip-select:checked')].map(x=>+x.dataset.i); clips=await nib.clipRemove(ids); paintPin();},
+  clipExport: async () => {const ids=[...pin.querySelectorAll('.clip-select:checked')].map(x=>+x.dataset.i); await nib.clipExport(ids);},
+  ytrefresh: async () => {const m=await nib.youtubeGet();const el=$('#ytStatus');if(el)el.textContent=m?(m.title+' — '+m.status):'No supported browser media session found';},
+  ytctl: async d => {await nib.youtubeControl(d.k);const m=await nib.youtubeGet();const el=$('#ytStatus');if(el)el.textContent=m?(m.title+' — '+m.status):'No supported browser media session found';},
+  screenTool: d => nib.extrasOverlay(d.k),
+  voiceRefresh: async () => {await fillVoiceDevices(); voiceMsg('Audio device list updated.');},
+  voiceStart: async () => {if(!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder==='undefined'){voiceMsg('Microphone recording is not available in this Electron session.');return;} if(voiceRecorder && voiceRecorder.state!=='inactive') {voiceMsg('A recording is already in progress.');return;}
+    try{ const input=$('#vmInput')?.value||'default';localStorage.setItem('nib:mic',input);const micSettings={echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1};if(input!=='default')micSettings.deviceId={ideal:input};const constraints={audio:micSettings};
+      voiceStream=await navigator.mediaDevices.getUserMedia(constraints);voiceParts=[];
+      voiceRecorder=new MediaRecorder(voiceStream,MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?{mimeType:'audio/webm;codecs=opus'}:{});
+      voiceRecorder.ondataavailable=e=>{if(e.data.size)voiceParts.push(e.data)};
+      voiceRecorder.onerror=e=>voiceMsg('Recording error: '+(e.error?.message||'Unknown error'));
+      voiceRecorder.start(250); voiceMsg('Recording from '+(voiceStream.getAudioTracks()[0]?.label||'microphone')+'... Speak normally, then press Stop & save.');await fillVoiceDevices();
+    }catch(e){voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceMsg('Microphone error: '+e.message);}},
+  voiceStop: async () => {if(!voiceRecorder || voiceRecorder.state==='inactive'){voiceMsg('Nothing is recording.');return;}
+    const r=voiceRecorder; r.onstop=async()=>{try{const blob=new Blob(voiceParts,{type:r.mimeType||'audio/webm'});
+      if(blob.size<500)throw Error('Recording is empty or too short. Check the microphone selected in Nib and Windows microphone privacy settings.');
+      const bytes=[...new Uint8Array(await blob.arrayBuffer())];const saved=await nib.extrasSaveAudio(bytes);
+      voiceMsg(saved?'Saved in Nib. Press Play to listen.':'Could not save recording.');await loadMemos();
+    }catch(e){voiceMsg('Save failed: '+e.message);}finally{voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceRecorder=null;voiceParts=[];}};
+    r.stop();},
+  memoPlay: async d => {const m=(window.nibMemoList||[])[+d.i];if(!m)return;
+    try{if(memoPlaying===m.name){stopMemoAudio();voiceMsg('Playback stopped.');await loadMemos();return;}
+      stopMemoAudio(); const data=await nib.extrasReadAudio(m.name);
+      if(!data||!data.startsWith('data:audio/'))throw Error('Recording data is missing or invalid.');
+      const audio=new Audio();memoAudio=audio;memoPlaying=m.name;audio.preload='auto';audio.src=data;
+      const selected=$('#vmOutput')?.value||localStorage.getItem('nib:output')||'default';
+      if(selected!=='default'&&typeof audio.setSinkId==='function'){try{await audio.setSinkId(selected);}catch(e){voiceMsg('Selected output unavailable; playing via system default.');}}
+      audio.onended=()=>{stopMemoAudio();voiceMsg('Playback finished.');loadMemos();};
+      audio.onerror=()=>{voiceMsg('Playback failed: Unsupported recording format or damaged file.');stopMemoAudio();loadMemos();};
+      await audio.play();voiceMsg('Playing memo inside Nib...');await loadMemos();
+    }catch(e){stopMemoAudio();voiceMsg('Playback failed: '+e.message);await loadMemos();}},
+  memoExport: async d => {const m=(window.nibMemoList||[])[+d.i];if(!m)return;
+    try{const ok=await nib.extrasExportAudio(m.name);voiceMsg(ok?'Voice memo exported.':'Export canceled.');}
+    catch(e){voiceMsg('Export failed: '+e.message);}},
+  memoDelete: async d => {const m=(window.nibMemoList||[])[+d.i];if(m&&confirm('Delete this recording?')){if(memoPlaying===m.name)stopMemoAudio();await nib.extrasDeleteAudio(m.name);loadMemos();}},
   cclear: async () => { await nib.clipClear(); clips = []; paintPin(); },
   cof: async d => { coffee = await nib.coffee(+d.m); paintPin(); },
   clc: async () => { const r = await nib.claudeSet({ connect: !cl.connected }); if (!r.error) cl = r; paintPin(); }, clg: async () => { cl = await nib.claudeSet({ gate: !cl.gate }); paintPin(); }
 };
 let pollBusy = false; const pollNP2 = async () => { pollBusy = true; np = await nib.np(); npAt = performance.now(); paintNP(); layout(); pollBusy = false; };
+document.addEventListener('change', e => {if(e.target.id==='vmInput')localStorage.setItem('nib:mic',e.target.value);if(e.target.id==='vmOutput')localStorage.setItem('nib:output',e.target.value);});
 document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && ACT[b.dataset.a]) ACT[b.dataset.a](b.dataset); else if (!e.target.closest('#menuBox')) menuOff(); });
 const answer = d => { const id = pend; if (!id) return; nib.decide(id, d); set('work', d === 'allow' ? 'Working' : 'Denied', ''); };
 
@@ -366,20 +856,78 @@ function tick() {
   const n = Date.now();
   for (const e of evs) { const k = e.t + e.title; if (!e.allDay && e.t - n < 15000 && e.t - n > -20000 && !alerted.has(k)) { alerted.add(k); if (state === 'idle') { play('event'); set('done', e.title, 'Starting now'); idleT = setTimeout(goIdle, 8000); } } }
   if (wasOpen) { $('#hdt').textContent = new Date().toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) + '  ' + clock(); if (focusEnd) { const a = $('#fr'), b = $('#tfocus'); if (a) a.textContent = mmss(focusEnd - n); if (b && b.firstChild) b.firstChild.textContent = mmss(focusEnd - n); } }
-  if (!wasOpen || state === 'idle') layout();
+  if (!wasOpen && !focusEnd) {
+    const sec = Math.floor(n / 1000);
+    if (sec !== tick.lastSecond) { tick.lastSecond = sec; layout(); }
+  } else if (!wasOpen) layout();
 }
 setInterval(tick, 500);
 
-// ---------- cursor drives hover + click-through (works during file drags too)
-let over = false;
+// Native hover messages are a fallback when Chromium stops forwarding pointer events.
+// Electron main process owns the hover hit-test. No second renderer-side hit-test.
+// This prevents competing setIgnore() calls from fighting after OCR/fullscreen transitions.
+let nativePointerInside = false;
+let nativePointerSeen = performance.now();
+// Short panels are harder to reach. Keep them open briefly after the pointer leaves.
+let foldDeadline = 0;
+const foldGraceMs = () => tab === 'home' ? 850 : 1650;
+function scheduleAutoFold(){
+  clearTimeout(leaveT);
+  foldDeadline = performance.now() + foldGraceMs();
+  leaveT = setTimeout(autoFoldIfOutside, foldGraceMs());
+}
+function autoFoldIfOutside(){
+  if (moving || dragging || nativePointerInside || typing()) return;
+  // A delayed safety-net event must never bypass the hover grace period.
+  const remain = foldDeadline - performance.now();
+  if (remain > 0) { clearTimeout(leaveT); leaveT = setTimeout(autoFoldIfOutside, Math.ceil(remain)); return; }
+  if(S.island.open==='click'){ if(pinned && !nativePointerInside && !typing()){pinned=false;menuOff();layout();} return; }
+  // Hover mode should never remain manually pinned after an unrelated recovery.
+  pinned = false;
+  if (!nativePointerInside && !typing() && hover) {
+    hover = false; menuOff(); layout();
+  }
+}
+nib.onNativeHover(inside => {
+  if (moving) return;
+  nativePointerInside = !!inside;
+  nativePointerSeen = performance.now();
+  clearTimeout(leaveT); leaveT = 0;
+  if (inside) { foldDeadline = 0; if(S.island.open!=='click'){hover = true; if (!wasOpen) layout();} }
+  else if (wasOpen) scheduleAutoFold();
+});
+// Safety net for missing native-leave transitions after fullscreen or OCR.
+setInterval(() => {
+  if (!wasOpen || moving || dragging) return;
+  const r=isl.getBoundingClientRect();
+  const p={x:cx,y:cy};
+  const inside = p.x>=r.left-14 && p.x<=r.right+14 && p.y>=r.top-14 && p.y<=r.bottom+14;
+  if (!inside && performance.now()-lastMove<5000 && nativePointerInside) {
+    nativePointerInside=false;
+    scheduleAutoFold();
+  }
+}, 800);
 nib.onCursor((x, y) => {
   cx = x; cy = y; lastMove = performance.now();
-  const r = isl.getBoundingClientRect(), z = +getComputedStyle(root).getPropertyValue('--z') || 1, o = x > r.left - 14 * z && x < r.right + 14 * z && y < r.bottom + 14 * z;
-  if (o !== over) { over = o; nib.setIgnore(!o); }
-  if (o) { clearTimeout(leaveT); leaveT = 0; if (!hover) { hover = true; layout(); } }
-  else if (hover && !leaveT) leaveT = setTimeout(() => { leaveT = 0; if (typing()) return; hover = false; pinned = false; layout(); }, 380);
 });
+window.addEventListener('mousemove', () => { lastDom = performance.now(); }, true);
+setInterval(() => nib.beat(), 2000);   // tells Nib the page is alive
 isl.addEventListener('click', e => { if (S.island.open === 'click' && !wasOpen && !e.target.closest('#mini')) { pinned = true; layout(); } });
+// ---------- drag the island anywhere on screen (it remembers the spot; Settings can lock it)
+let dragSt = null, noClick = false;
+nib.onPos(p => { if (p.free !== posInfo.free || p.up !== posInfo.up || p.attached !== posInfo.attached) { posInfo = p; layout(); } });
+$('#nav').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+isl.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || (S.island && S.island.lock) || e.target.closest('button,input,textarea,select,a,#menuBox,[data-a]')) return;
+  dragSt = { id: e.pointerId, x: e.screenX, y: e.screenY };
+});
+isl.addEventListener('pointermove', e => {
+  if (!dragSt || moving || !(e.buttons & 1) || Math.hypot(e.screenX - dragSt.x, e.screenY - dragSt.y) < 6) return;
+  moving = true; try { isl.setPointerCapture(dragSt.id); } catch {} nib.setIgnore(false); nib.dragStart(); layout();
+});
+const endMove = () => { dragSt = null; if (!moving) return; moving = false; noClick = true; setTimeout(() => noClick = false, 80); nib.dragEnd(); layout(); };
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => isl.addEventListener(t, endMove));
+window.addEventListener('click', e => { if (noClick) { e.stopPropagation(); e.preventDefault(); } }, true);
 let dragT;
 document.addEventListener('dragenter', () => { clearTimeout(dragT); if (!dragging) { dragging = true; tab = 'files'; layout(); paintPin(); } });
 document.addEventListener('dragover', e => { clearTimeout(dragT); dragT = setTimeout(endDrag, 400); document.querySelectorAll('.zone').forEach(z => z.classList.toggle('over', z === e.target.closest('.zone'))); });
@@ -393,14 +941,31 @@ let hopY = 0, hopV = 0, ex = 0, ey = 0, ew = 1, eh = 1, t = 0, last = performanc
 const hop = v => { hopV = -v * 60; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const poke = () => { pokes++; clearTimeout(pokeT); pokeT = setTimeout(() => pokes = 0, 2500); if (pokes >= 5) { pokes = 0; dizzyUntil = performance.now() + 2600; } else hop(1.8); };
-miniSvg.addEventListener('click', poke); nibSvg.addEventListener('click', poke);
+// Pet on hover/click without hijacking the island drag handler.
+let petUntil=0, lastPet=0, petClear;
+function petCat(){
+  if(S.catPetting===false || moving || document.hidden)return;
+  const now=performance.now();if(now-lastPet<650)return;
+  lastPet=now;petUntil=now+1400;
+  nibSvg.classList.add('petted');clearTimeout(petClear);
+  petClear=setTimeout(()=>nibSvg.classList.remove('petted'),850);
+  hop(.75);
+}
+miniSvg.addEventListener('click',poke);
+nibSvg.addEventListener('click',()=>{petCat();poke();});
+nibSvg.addEventListener('pointerenter',()=>{if(S.catPetting!==false && S.catPersonality==='friendly')petCat();});
 function setEye(a, b, c1, c2, cy, bw, bh, rx, w, h, ox, oy) {
   for (const [el, cx0] of [[a, c1], [b, c2]]) { const W = bw * w, Hh = Math.max(1.4, bh * h); el.setAttribute('x', (cx0 - W / 2 + ox).toFixed(2)); el.setAttribute('y', (cy - Hh / 2 + oy).toFixed(2)); el.setAttribute('width', W.toFixed(2)); el.setAttribute('height', Hh.toFixed(2)); el.setAttribute('rx', Math.min(rx, W / 2, Hh / 2).toFixed(2)); }
 }
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
-  const dizzy = now < dizzyUntil, sleepy = state === 'idle' && !wasOpen && !focusEnd && now - lastMove > 25000;
-  const vis = dizzy ? 'dizzy' : sleepy ? 'sleep' : (state === 'idle' && focusEnd && look === 'idle') ? 'focus' : look;
+  const personality=S.catPersonality||'friendly';
+  const idleMs=clamp(Number(S.catSleepMinutes)||3,1,30)*60000;
+  const sleepy=S.catSleepEnabled!==false && state==='idle' && !focusEnd && now-lastMove>idleMs;
+  nibSvg.classList.toggle('sleeping',sleepy);
+  // Keep idle animation subtle, especially during fullscreen gaming.
+  const dizzy=now<dizzyUntil;
+  const vis = dizzy ? 'dizzy' : (now<petUntil ? 'done' : sleepy ? 'sleep' : (state === 'idle' && focusEnd && look === 'idle') ? 'focus' : look);
   if (vis !== want) { want = vis; for (const s of [miniSvg, nibSvg]) s.setAttribute('class', 'v-' + vis); if (vis === 'focus') COL.focus = focusCol(); root.style.setProperty('--c', COL[vis] || '#fff'); }
   let tx, ty;
   if (vis === 'work') { tx = Math.sin(t * 2.3) * 2.2; ty = Math.sin(t * 1.3) * .4; }
@@ -411,14 +976,16 @@ function frame(now) {
   }
   const f = 1 - Math.exp(-dt * 12); ex += (tx - ex) * f; ey += (ty - ey) * f;
   const [tw, th] = TG[vis] || [1, 1]; ew += (tw - ew) * (1 - Math.exp(-dt * 10)); eh += (th - eh) * (1 - Math.exp(-dt * 10));
-  if (t > nextBlink) { blinkAt = t; nextBlink = t + 2 + Math.random() * 3.5; }
+  if (S.catAnimations!==false && t>nextBlink) {
+    blinkAt=t; nextBlink=t+(personality==='sleepy'?3.8:personality==='playful'?1.8:2.8)+Math.random()*3.4;
+  }
   const bl = 1 - Math.sin(clamp((t - blinkAt) / .16, 0, 1) * Math.PI) * .9;
   hopV += (-hopY * 240 - hopV * 11) * dt; hopY += hopV * dt; const sq = clamp(-hopV / 500, -.15, .15);
   const h = eh * bl * (1 - sq * .5), w = ew * (1 + sq * .4);
   setEye(mA, mB, 9, 25, 8, 11, 14, 4, w, h, ex, ey + hopY * .25);
   if (wasOpen) {
     setEye(cA, cB, 22, 42, 37, 12, 16, 4.5, w, h, ex * 1.5, ey * 1.5);
-    if (t > nextTw) { twT = t; twSide = Math.random() < .5 ? -1 : 1; nextTw = t + 4 + Math.random() * 5; }
+    if(S.catAnimations!==false && t>nextTw){twT=t;twSide=Math.random()<.5?-1:1;nextTw=t+(personality==='playful'?2:personality==='sleepy'?8:4)+Math.random()*5;}
     const e = Math.sin(clamp((t - twT) / .35, 0, 1) * Math.PI) * 14, fe = 1 - Math.exp(-dt * 12); aL += ((twSide < 0 ? -e : 0) - aL) * fe; aR += ((twSide > 0 ? e : 0) - aR) * fe;
     earL.setAttribute('transform', `rotate(${aL.toFixed(1)} 20 24)`); earR.setAttribute('transform', `rotate(${aR.toFixed(1)} 44 24)`);
     bot.setAttribute('transform', `translate(32 58) translate(0 ${(hopY * .5).toFixed(2)}) scale(${(1 - sq * .3).toFixed(3)} ${(1 + sq * .4).toFixed(3)}) translate(-32 -58)`);
@@ -430,7 +997,48 @@ requestAnimationFrame(frame);
 // ---------- settings
 function apply(s) {
   S = { ...s, island: { ...DEF.island, ...(s.island || {}) }, sounds: { ...DEF.sounds, ...(s.sounds || {}) } };
+  root.dataset.theme = S.theme || 'dark'; root.dataset.profile = S.profile || 'normal';
+  // In Custom theme, independently color the notch body, not merely its accent.
+  const notchHex=/^#[0-9a-f]{6}$/i.test(S.notchColor||'')?S.notchColor:'#7948C8';
+  const notchRgb=[1,3,5].map(i=>parseInt(notchHex.slice(i,i+2),16));
+  const notchLum=notchRgb.map(n=>{const v=n/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});
+  const notchLight=.2126*notchLum[0]+.7152*notchLum[1]+.0722*notchLum[2]>.32;
+  const tint=notchRgb.map(n=>Math.round(n*(notchLight?.91:.77)));
+  root.style.setProperty('--notch-color',notchHex);
+  root.style.setProperty('--notch-rgb',notchRgb.join(' '));
+  root.style.setProperty('--notch-tint-rgb',tint.join(' '));
+  root.style.setProperty('--notch-fg',notchLight?'#152033':'#ffffff');
+  root.style.setProperty('--notch-dim',notchLight?'rgba(21,32,51,.7)':'rgba(255,255,255,.7)');
+  root.style.setProperty('--app',/^#[0-9a-f]{6}$/i.test(S.themeColor||'')?S.themeColor:(S.theme==='light'?'#5f738e':'#8b93a7'));
+  const accessory=['none','headphones','glasses','bow','crown'].includes(S.catAccessory)?S.catAccessory:'none';
+  $('#nib').dataset.accessory=accessory;
+  $('#nib').classList.toggle('cat-grumpy',S.catPersonality==='grumpy');
+  $('#nib').classList.toggle('cat-playful',S.catPersonality==='playful');
+  // A custom cat fur color overrides only the full cat SVG; mini eyes inherit a
+  // matching hue but remain readable on the notch in both themes.
+  const cat = $('#nib'), mini = $('#mini');
+  const fur = /^#[0-9a-f]{6}$/i.test(S.catColor || '') ? S.catColor : '';
+  if (fur) {
+    const ch = [1,3,5].map(i=>parseInt(fur.slice(i,i+2),16)/255);
+    const lum=ch.map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
+    const bright=lum[0]*.2126+lum[1]*.7152+lum[2]*.0722>.48;
+    const contrast=bright?'#172033':'#ffffff';
+    cat.style.setProperty('--cat-face',fur);
+    cat.style.setProperty('--cat-ear',fur);
+    cat.style.setProperty('--cat-eyes',contrast);
+    cat.style.setProperty('--cat-expression',contrast);
+    mini.style.setProperty('--mini-eyes-custom',fur);
+  } else {
+    ['--cat-face','--cat-ear','--cat-eyes','--cat-expression'].forEach(p=>cat.style.removeProperty(p));
+    mini.style.removeProperty('--mini-eyes-custom');
+  }
+
+  const eyeColor=/^#[0-9a-f]{6}$/i.test(S.catEyeColor||'')?S.catEyeColor:'';
+  if(eyeColor){ cat.style.setProperty('--cat-eyes',eyeColor);cat.style.setProperty('--cat-expression',eyeColor);mini.style.setProperty('--mini-eyes-custom',eyeColor); }
   root.style.setProperty('--z', { compact: .88, large: 1.15 }[S.island.size] || 1); root.style.setProperty('--a', (1 - clamp(+S.island.alpha || 0, 0, 80) / 100).toFixed(2));
+  // Reset-position was removed from the simplified menu. Never access a missing element here.
+  { const pb = $('#pinbtn'); pb.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>'; pb.classList.toggle('on', !!S.island.lock);
+    pb.title = S.island.lock ? 'Pinned here. Click to unpin and move it' : 'Pin here. Drag the island anywhere, then click to lock it'; $('#hdr').title = S.island.lock ? '' : 'Drag to move'; }
   pollCal(); pollSys(); wasOpen ? paintPin() : null; layout();
 }
 nib.onSettings(apply); nib.onSpotify(v => { spOn = v; if (wasOpen && tab === 'music') paintPin(); });
@@ -438,5 +1046,6 @@ nib.onSettings(apply); nib.onSpotify(v => { spOn = v; if (wasOpen && tab === 'mu
   const r = await nib.getSettings(); CAT = r.catalog; apply(r.settings);
   [notes, clips, coffee, cl, spOn] = await Promise.all([nib.notesGet(), nib.clipGet(), nib.coffeeGet(), nib.claude(), nib.spotifyStatus()]);
   pollNP(); layout();
+  loadCurrentReleaseNotes();
 })();
 </script>

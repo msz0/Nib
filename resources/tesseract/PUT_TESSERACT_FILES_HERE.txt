@@ -1,0 +1,1 @@
+Copy the COMPLETE installed Tesseract OCR directory here (tesseract.exe, DLLs, tessdata/eng.traineddata). Native binaries are not included in this source ZIP. Remove this text file before release. Include upstream license notices.

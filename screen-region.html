@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>Select area - Nib</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;cursor:crosshair;user-select:none}
+#screen{position:fixed;inset:0;width:100%;height:100%;object-fit:fill}
+#shade{position:fixed;inset:0;background:#05081160;pointer-events:none}
+#rect{position:fixed;display:none;border:2px solid #c8e38a;background:#c8e38a22;
+box-shadow:0 0 0 99999px #05081160;pointer-events:none}
+#tip{position:fixed;top:18px;left:50%;transform:translateX(-50%);color:#fff;background:#161b25e8;
+border-radius:10px;padding:10px 17px;font:600 13px Segoe UI,sans-serif;pointer-events:none;white-space:nowrap}
+</style></head><body><img id="screen"><div id="shade"></div><div id="rect"></div>
+<div id="tip">Drag to capture an area • Esc to cancel</div>
+<script>
+(()=>{'use strict';
+const pic=document.getElementById('screen'),box=document.getElementById('rect'),shade=document.getElementById('shade');
+let ready=false,token='',start=null,img=null,done=false;
+nib.onRegionInit(async s=>{try{token=s.token;pic.src=s.data;await pic.decode();img=pic;ready=true;}catch{if(s&&s.token)nib.regionSelection(s.token,null);}});
+function finish(data){if(done||!token)return;done=true;nib.regionSelection(token,data);}
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();finish(null);}});
+function pos(e){return {x:Math.max(0,Math.min(innerWidth,e.clientX)),y:Math.max(0,Math.min(innerHeight,e.clientY))};}
+function rect(a,b){return{x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};}
+function paint(r){Object.assign(box.style,{display:'block',left:r.x+'px',top:r.y+'px',width:r.w+'px',height:r.h+'px'});shade.style.display='none';}
+window.addEventListener('pointerdown',e=>{if(!ready||done||e.button!==0)return;start=pos(e);window.setPointerCapture?.(e.pointerId);paint(rect(start,start));});
+window.addEventListener('pointermove',e=>{if(start&&!done)paint(rect(start,pos(e)));});
+window.addEventListener('pointerup',e=>{
+ if(!start||done||!ready)return;
+ const r=rect(start,pos(e));start=null;
+ if(r.w<5||r.h<5){box.style.display='none';shade.style.display='block';return;}
+ try{
+  const canvas=document.createElement('canvas');
+  const sx=pic.naturalWidth/innerWidth, sy=pic.naturalHeight/innerHeight;
+  canvas.width=Math.max(1,Math.round(r.w*sx));canvas.height=Math.max(1,Math.round(r.h*sy));
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(pic,Math.round(r.x*sx),Math.round(r.y*sy),canvas.width,canvas.height,0,0,canvas.width,canvas.height);
+  finish(canvas.toDataURL('image/png'));
+ }catch{finish(null);}
+});
+})();
+</script></body></html>

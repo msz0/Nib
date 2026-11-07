@@ -9,18 +9,19 @@ html,body{height:100%;margin:0}body{display:flex;background:var(--bg);color:#ece
 .ni:hover{background:#14171d;color:#fff}.ni.on{background:#1a1e26;color:#fff}.ni svg{flex:none}.gap{height:14px}.sec{padding:8px 12px 4px;color:#6b7284;font-size:11.5px}
 #main{flex:1;overflow:auto;padding:30px 40px 60px}h1{font-size:26px;margin:0 0 2px}.sub{color:#7d8496;margin:0 0 22px}h3{font-size:13px;margin:22px 0 10px;color:#dfe2ea}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.r{display:flex;align-items:center;gap:16px;padding:14px 18px;border-top:1px solid var(--line)}.r:first-child{border-top:0}.rt{flex:1;min-width:0}.rt b{display:block;font-weight:600}.rt small{color:#7d8496;font-size:12.5px;display:block;margin-top:2px}
-.seg{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}.seg button,.btn{height:32px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:#101319;color:#eceef3;font:600 12.5px "Segoe UI",sans-serif;cursor:pointer}
+.r{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:14px 18px;border-top:1px solid var(--line)}.r:first-child{border-top:0}.rt{flex:1 1 240px;min-width:190px;overflow-wrap:anywhere}.rt b{display:block;font-weight:600}.rt small{color:#7d8496;font-size:12.5px;display:block;margin-top:2px}
+.seg{display:flex;flex:1 1 300px;min-width:0;flex-wrap:wrap;gap:6px;justify-content:flex-start}.seg button,.btn{height:32px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:#101319;color:#eceef3;font:600 12.5px "Segoe UI",sans-serif;cursor:pointer}
 .seg button:hover,.btn:hover{background:#1a1e26}.seg button.on{background:var(--ac);color:#10130a;border-color:var(--ac)}
 .tg{width:46px;height:26px;border-radius:13px;border:0;background:#2a2f3a;position:relative;cursor:pointer;flex:none;transition:background .2s}.tg::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:#9aa1b2;transition:.2s}
 .tg.on{background:var(--ac)}.tg.on::after{left:23px;background:#10130a}
 .rg{display:flex;align-items:center;gap:12px;min-width:240px}.rg input{flex:1;accent-color:var(--ac)}.rg span{width:50px;text-align:right;color:#9aa1b2;font-variant-numeric:tabular-nums}
 input[type=text]{height:34px;min-width:260px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:#0e1015;color:#eceef3;font:inherit;outline:none}input[type=text]:focus{border-color:#444b60}
 .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ac{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
-.ac .h{display:flex;gap:14px;align-items:center}.ac .ic{width:40px;height:40px;border-radius:10px;background:#1c2029;display:grid;place-items:center;color:#cfd3dd;flex:none}.ac b{display:block}.ac .st{font-size:12px;color:var(--ac)}.ac .st.off{color:#7d8496}.ac p{margin:10px 0 0;color:#9aa1b2;font-size:13px}.ac .h .tg{margin-left:auto}
+.ac[draggable="true"]{cursor:grab}.ac.dragging{opacity:.45;outline:2px dashed var(--ac)}.ac.drop-target{outline:2px solid var(--ac)}.ac .h{display:flex;gap:14px;align-items:center}.ac .ic{width:40px;height:40px;border-radius:10px;background:#1c2029;display:grid;place-items:center;color:#cfd3dd;flex:none}.ac b{display:block}.ac .st{font-size:12px;color:var(--ac)}.ac .st.off{color:#7d8496}.ac p{margin:10px 0 0;color:#9aa1b2;font-size:13px}.ac .h .tg{margin-left:auto}
 .hint{color:#7d8496;font-size:12.5px;margin:8px 2px}.ok{color:var(--ac);font-size:12.5px}.err{color:#ff7b86;font-size:12.5px}
-.arow{display:flex;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line)}.arow:first-child{border-top:0}.arow .h{cursor:grab;color:#566;padding:0 4px}.arow .nm{flex:1}.arow input.n{width:130px;min-width:0}.arow input.t{flex:1;min-width:0}
+.arow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);min-width:0}.arow:first-child{border-top:0}.arow .h{cursor:grab;color:#566;padding:0 4px}.arow .nm{flex:1}.arow input.n{width:100px;min-width:75px;flex:1 1 100px}.arow input.t{flex:2 1 140px;min-width:110px}
 .lg{width:26px;height:26px;flex:none;display:grid;place-items:center;color:#cfd3dd}.lg img{width:24px;height:24px;object-fit:contain;filter:grayscale(1) brightness(1.2)}
+.arow .btn{padding:0 7px;white-space:nowrap;max-width:100%}.arow .bl{font-size:11px}.arow .h{flex:none}.ac .draghandle{cursor:grab;color:#9ba5b8;font-size:21px;user-select:none;flex:none}.ac .draghandle:active{cursor:grabbing}.ac .ic{flex:none}.ac{min-width:0}.ac .h>div:nth-child(3){min-width:0;flex:1}.btn.on{background:var(--ac);color:#10130a;border-color:var(--ac)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px}.mini{width:30px;padding:0}code{background:#1a1e26;padding:2px 6px;border-radius:6px;font-size:12.5px}
 </style>
 <div id="side"></div><div id="main"></div>
@@ -29,7 +30,7 @@ const $ = s => document.querySelector(s); let S, C, page = 'apps', dragEl = null
 const PAGES = [['apps', 'Apps', 'apps'], ['island', 'Island', 'sliders'], ['music', 'Music', 'spotify'], ['sounds', 'Sounds', 'chat'], ['launcher', 'Launcher', 'folder'], ['connect', 'Connections', 'claude'], ['general', 'General', 'sys']];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ico = (k, sz = 18) => { const I = C.icons; if (I.fill[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="currentColor"><path d="${I.fill[k].f}"/></svg>`; if (I.stroke[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I.stroke[k]}</svg>`; return ''; };
-const queue = () => { clearTimeout(saveT); saveT = setTimeout(() => nib.setSettings(S), 250); };
+const queue = () => { clearTimeout(saveT); saveT = setTimeout(() => { nib.setSettings(S).catch(e => console.error('[Nib settings] Save failed:',e)); }, 350); };
 const mk = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 const row = (t, d, ctl) => { const r = mk('div', 'r', `<div class="rt"><b>${t}</b><small>${d || ''}</small></div>`); if (ctl) r.appendChild(ctl); return r; };
 const card = rows => { const c = mk('div', 'card'); rows.forEach(r => c.appendChild(r)); return c; };
@@ -37,34 +38,166 @@ const tog = (get, set) => { const b = mk('button', 'tg' + (get() ? ' on' : ''));
 const seg = (opts, get, set, after) => { const w = mk('div', 'seg'); for (const [v, n] of opts) { const b = mk('button', get() === v ? 'on' : '', n); b.onclick = () => { set(v); [...w.children].forEach(c => c.classList.toggle('on', c === b)); queue(); if (after) after(v); }; w.appendChild(b); } return w; };
 const rng = (min, max, step, get, set, f, after) => { const w = mk('div', 'rg'), i = mk('input'), l = mk('span', '', f(get())); i.type = 'range'; i.min = min; i.max = max; i.step = step; i.value = get(); i.oninput = () => { set(+i.value); l.textContent = f(+i.value); queue(); }; if (after) i.onchange = after; w.append(i, l); return w; };
 const txt = (get, set, ph, w) => { const i = mk('input'); i.type = 'text'; i.value = get() || ''; i.placeholder = ph || ''; if (w) i.style.minWidth = w; i.onchange = () => { set(i.value.trim()); queue(); }; return i; };
+// key recorder: click Record, press the keys (combinations work), it fills the box
+const KN = { Space: 'Space', Enter: 'Enter', NumpadEnter: 'NumEnter', Tab: 'Tab', Backspace: 'Backspace', Insert: 'Insert', Delete: 'Delete', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown',
+  ArrowLeft: 'Left', ArrowUp: 'Up', ArrowRight: 'Right', ArrowDown: 'Down', Backquote: '`', Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']', Backslash: '\\', Semicolon: ';', Quote: "'",
+  Comma: ',', Period: '.', Slash: '/', CapsLock: 'CapsLock', ScrollLock: 'ScrollLock', Pause: 'Pause', PrintScreen: 'PrintScreen', NumpadAdd: 'NumAdd', NumpadSubtract: 'NumSub',
+  NumpadMultiply: 'NumMul', NumpadDivide: 'NumDiv', NumpadDecimal: 'NumDec' };
+const keyName = c => /^Key[A-Z]$/.test(c) ? c[3] : /^Digit\d$/.test(c) ? c[5] : /^F\d{1,2}$/.test(c) ? c : /^Numpad\d$/.test(c) ? 'Num' + c[6] : KN[c] || '';
+const keyrec = (get, set, ph) => {
+  const w = mk('div'), i = mk('input'), b = mk('button', 'btn', 'Record'), x = mk('button', 'btn mini', '\u2715');
+  w.style.cssText = 'display:flex;gap:6px;align-items:center'; x.title = 'Clear';
+  i.type = 'text'; i.value = get() || ''; i.placeholder = ph || ''; i.style.minWidth = '150px';
+  i.onchange = () => { set(i.value.trim()); queue(); };
+  let rec = false;
+  const onKey = e => {
+    e.preventDefault(); e.stopPropagation();
+    if (e.code === 'Escape') { stop(); return; }
+    const n = keyName(e.code); if (!n) return;   // a modifier on its own: keep waiting for the main key
+    const combo = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', e.metaKey && 'Win'].filter(Boolean).concat(n).join('+');
+    i.value = combo; set(combo); queue(); stop();
+  };
+  const stop = () => { rec = false; b.textContent = 'Record'; b.classList.remove('on'); window.removeEventListener('keydown', onKey, true); };
+  b.onclick = () => { if (rec) { stop(); return; } rec = true; b.textContent = 'Press keys... (Esc cancels)'; b.classList.add('on'); i.blur(); window.addEventListener('keydown', onKey, true); };
+  x.onclick = () => { stop(); i.value = ''; set(''); queue(); };
+  window.addEventListener('blur', () => { if (rec) stop(); });
+  w.append(i, b, x); return w;
+};
 const head = (t, s) => [mk('h1', '', t), mk('p', 'sub', s)];
 
 function nav() {
   $('#side').innerHTML = `<div class="brand"><div>${esc(S.name || 'Nib')}<small>Settings</small></div></div>` + PAGES.map(([id, n, ik]) => `<button class="ni ${id === page ? 'on' : ''}" data-p="${id}">${ico(ik, 17)}${n}</button>`).join('');
   $('#side').querySelectorAll('.ni').forEach(b => b.onclick = () => { page = b.dataset.p; show(); });
 }
-function show() { nav(); const m = $('#main'); m.innerHTML = ''; PG[page]().forEach(n => m.appendChild(n)); m.scrollTop = 0; }
+function show() { document.documentElement.style.setProperty('--ac',/^#[0-9a-f]{6}$/i.test(S.themeColor||'')?S.themeColor:'#c8e38a'); nav(); const m = $('#main'); m.innerHTML = ''; PG[page]().forEach(n => m.appendChild(n)); m.scrollTop = 0; }
 
-const SLOTS = [['nothing', 'Nothing'], ['time', 'Time'], ['battery', 'Battery'], ['cpu', 'CPU'], ['ram', 'RAM'], ['event', 'Next event']];
+function themeColorEditor(){
+ const box=mk('div','seg');const inp=mk('input');inp.type='color';inp.value=/^#[0-9a-f]{6}$/i.test(S.themeColor||'')?S.themeColor:'#8b93a7';inp.title='Custom theme accent';
+ const label=mk('input');label.type='text';label.style.minWidth='115px';label.style.width='115px';label.value=S.themeColor||'';label.placeholder='#8B93A7';
+ const reset=mk('button','btn','Use default');const apply=v=>{if(!/^#[0-9a-f]{6}$/i.test(v))return;S.themeColor=v.toUpperCase();inp.value=S.themeColor;label.value=S.themeColor;document.documentElement.style.setProperty('--ac',S.themeColor);queue();};
+ inp.oninput=()=>apply(inp.value);label.onchange=()=>apply(label.value.trim());reset.onclick=()=>{S.themeColor='';label.value='';document.documentElement.style.setProperty('--ac','#c8e38a');queue();};box.append(inp,label,reset);return box;
+}
+function notchColorEditor(){
+ const wrap=mk('div','seg');
+ const picker=mk('input');picker.type='color';picker.title='Notch background color';
+ const hex=mk('input');hex.type='text';hex.placeholder='#7948C8';hex.style.cssText='width:112px;min-width:100px';hex.maxLength=7;
+ const presets=[['Purple','#7948C8'],['Blue','#2563EB'],['Pink','#DB2777'],['Mint','#0F766E'],['Black','#171717'],['White','#F8FAFC']];
+ const current=()=>/^#[0-9a-f]{6}$/i.test(S.notchColor||'')?S.notchColor:'#7948C8';
+ picker.value=current();hex.value=current().toUpperCase();
+ const apply=value=>{if(!/^#[0-9a-f]{6}$/i.test(value))return;S.notchColor=value.toUpperCase();picker.value=S.notchColor;hex.value=S.notchColor;queue();};
+ picker.oninput=()=>apply(picker.value);hex.onchange=()=>{if(/^#[0-9a-f]{6}$/i.test(hex.value.trim()))apply(hex.value.trim());else hex.value=current().toUpperCase();};
+ const palette=mk('div','seg');palette.style.flexWrap='wrap';
+ for(const [name,color] of presets){const b=mk('button','btn',name);b.title=color;b.style.borderBottom='3px solid '+color;b.onclick=()=>apply(color);palette.append(b);}
+ wrap.append(picker,hex,palette);return wrap;
+}
+function combinedThemeEditor(){
+ // Keep the color controls next to the Custom option, not in a separate settings card.
+ const wrap=mk('div');wrap.style.cssText='width:100%';
+ const palette=row('Notch background','Choose the color of the notch when Custom is selected.',notchColorEditor());
+ palette.style.cssText='border-top:1px solid var(--line,rgba(255,255,255,.09));margin-top:12px;padding-top:12px';
+ const buttons=seg([['dark','Dark'],['light','Light'],['night','Night'],['custom','Custom']],()=>S.theme||'dark',v=>{S.theme=v},v=>{palette.hidden=v!=='custom'});
+ const top=row('Theme','Choose the appearance of Nib',buttons);
+ palette.hidden=S.theme!=='custom';
+ wrap.append(top,palette);
+ return wrap;
+}
+function customProfilesEditor(){
+ const box=mk('div');const list=mk('div');const name=mk('input');name.type='text';name.maxLength=48;name.placeholder='My profile name';name.style.minWidth='180px';const save=mk('button','btn','Save current');
+ const redraw=()=>{list.innerHTML='';for(const item of S.customProfiles||[]){const line=mk('div','arow');const title=mk('span','nm',esc(item.name));const load=mk('button','btn','Load');const rename=mk('button','btn','Rename');const del=mk('button','btn','Delete');
+ load.onclick=()=>{S.widgets=[...(item.widgets||[])];S.widgetOrder=[...(item.widgetOrder||[])];S.island={...S.island,...(item.island||{}),pos:S.island.pos};S.theme=item.theme||S.theme;S.themeColor=item.themeColor||'';S.notchColor=item.notchColor||'#7948C8';S.profile='custom';queue();show();};
+ rename.onclick=()=>{const v=prompt('Rename profile',item.name);if(v&&v.trim()){item.name=v.trim().slice(0,48);queue();redraw();}};
+ del.onclick=()=>{if(confirm('Delete profile '+item.name+'?')){S.customProfiles=S.customProfiles.filter(x=>x.id!==item.id);queue();redraw();}};
+ line.append(title,load,rename,del);list.append(line);}};
+ save.onclick=()=>{const v=name.value.trim();if(!v)return;S.customProfiles=S.customProfiles||[];if(S.customProfiles.length>=30){alert('Maximum 30 profiles');return;}S.customProfiles.push({id:'p'+Date.now(),name:v,widgets:[...(S.widgets||[])],widgetOrder:[...(S.widgetOrder||[])],island:{...S.island,pos:null},theme:S.theme,themeColor:S.themeColor||'',notchColor:S.notchColor||'#7948C8'});name.value='';queue();redraw();};
+ box.append(list,name,save);redraw();return box;
+}
+const SLOTS = [['nothing', 'Nothing'], ['time', 'Time'], ['battery', 'Battery'], ['cpu', 'CPU'], ['ram', 'RAM'], ['event', 'Next event'], ['gpuTemp','GPU temp']];
 const STYLES = [['off', 'Off'], ['chime', 'Chime'], ['bell', 'Bell'], ['pop', 'Pop'], ['soft', 'Soft'], ['marimba', 'Marimba'], ['ping', 'Ping']];
+// Cat appearance is saved with the existing Nib settings, no new IPC or dependency.
+const CAT_PRESETS = [['Original', ''], ['Midnight', '#263448'], ['Orange', '#e88c3f'], ['Cream', '#f3d8ae'], ['Pink', '#f2a9c0'], ['White', '#f5f5f4'], ['Black', '#22242c'], ['Blue', '#649ddd'], ['Purple', '#a48bd3'], ['Mint', '#88c9aa']];
+function catColorEditor() {
+  const wrap=mk('div'); wrap.style.cssText='width:100%;padding:4px 2px 8px';
+  const preview=mk('div'); preview.style.cssText='display:flex;align-items:center;gap:14px;margin:0 0 12px';
+  const sample=mk('div'); sample.style.cssText='height:64px;width:70px;display:grid;place-items:center;background:#222832;border-radius:14px';
+  const svg=mk('div'); svg.innerHTML='<svg viewBox="0 0 64 64" width="54" height="54" aria-label="Cat color preview"><path d="M10 27L12 6L29 19Z M54 27L52 6L35 19Z" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><ellipse cx="32" cy="37" rx="25" ry="21" fill="currentColor"/><ellipse cx="23" cy="36" rx="3.5" ry="5" fill="var(--preview-eyes,#fff)"/><ellipse cx="41" cy="36" rx="3.5" ry="5" fill="var(--preview-eyes,#fff)"/><path d="M29.5 46h5L32 49z" fill="#c96f86"/></svg>';
+  sample.append(svg);
+  const label=mk('div','hint','Original (follows theme)');
+  const picker=mk('input');picker.type='color';picker.value='#2a2f3c';picker.title='Choose a custom cat color';picker.style.cssText='height:38px;width:56px;padding:2px;border:1px solid #384253;border-radius:9px;background:#222832;cursor:pointer';
+  preview.append(sample,label,picker);
+  const buttons=mk('div');buttons.style.cssText='display:flex;flex-wrap:wrap;gap:7px';
+  const readable=(hex)=>{const n=hex.replace('#','');const c=[0,2,4].map(i=>parseInt(n.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return c[0]*.2126+c[1]*.7152+c[2]*.0722>.48?'#172033':'#fff'};
+  const paint=()=>{const color=/^#[0-9a-f]{6}$/i.test(S.catColor||'')?S.catColor:'';const shown=color||'#2a2f3c';svg.style.color=shown;svg.style.setProperty('--preview-eyes',readable(shown));picker.value=shown;label.textContent=color?'Custom: '+color.toUpperCase():'Original (follows theme)';buttons.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.color===color));};
+  const update=color=>{S.catColor=color;paint();queue();};
+  CAT_PRESETS.forEach(([name,color])=>{const b=mk('button','btn',name);b.dataset.color=color;b.title=color||'Use theme default';if(color)b.style.borderBottom='3px solid '+color;b.onclick=()=>update(color);buttons.append(b)});
+  picker.oninput=()=>update(picker.value);
+  wrap.append(preview,buttons,mk('div','hint','Changes save automatically and update the cat without affecting blink, eye tracking or expressions.'));
+  paint();return wrap;
+}
+
+// Cat companion controls persist through Nib's existing settings: no new IPC.
+function catStudio(){
+ const wrap=mk('div');wrap.style.cssText='display:flex;flex-direction:column;gap:10px;width:100%';
+ const section=(title,description,control)=>{const block=mk('div');block.style.cssText='padding:9px 0;border-bottom:1px solid #2c3340';block.append(mk('div','',`<b>${title}</b><div class="hint">${description}</div>`),control);wrap.append(block)};
+ const choice=(options,key,defaultValue)=>{
+  const el=mk('div','seg');
+  const paint=()=>[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.value===(S[key]??defaultValue)));
+  options.forEach(([value,label])=>{const b=mk('button','btn',label);b.dataset.value=value;b.onclick=()=>{S[key]=value;paint();queue()};el.append(b)});paint();return el;
+ };
+ section('Personality','Controls cat idle expressions and animation timing.',choice([['friendly','Friendly'],['playful','Playful'],['sleepy','Sleepy'],['grumpy','Grumpy'],['minimal','Minimal']], 'catPersonality','friendly'));
+ section('Accessories','Decorations shown on the expanded cat.',choice([['none','None'],['headphones','Headphones'],['glasses','Glasses'],['bow','Bow'],['crown','Crown']], 'catAccessory','none'));
+ const eye=mk('div');eye.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+ const ep=mk('input');ep.type='color';ep.value=/^#[0-9a-f]{6}$/i.test(S.catEyeColor||'')?S.catEyeColor:'#ffffff';ep.title='Select cat eye color';
+ const reset=mk('button','btn','Automatic eyes');const lbl=mk('span','hint');
+ const draw=()=>{lbl.textContent=S.catEyeColor?S.catEyeColor.toUpperCase():'Theme / fur contrast'};
+ ep.oninput=()=>{S.catEyeColor=ep.value;draw();queue()};reset.onclick=()=>{S.catEyeColor='';draw();queue()};draw();eye.append(ep,reset,lbl);
+ section('Eye color','Choose any eye color or return to automatic contrast.',eye);
+ section('Pet interaction','Click the cat for a happy reaction.',tog(()=>S.catPetting!==false,v=>S.catPetting=v));
+ section('Idle sleep','Cat closes its eyes after a period of inactivity.',tog(()=>S.catSleepEnabled!==false,v=>S.catSleepEnabled=v));
+ section('Random animations','Enable blinking and ear twitches.',tog(()=>S.catAnimations!==false,v=>S.catAnimations=v));
+ const range=rng(1,30,1,()=>S.catSleepMinutes||3,v=>S.catSleepMinutes=v,v=>v+' min');
+ section('Sleep after','Idle time until the cat sleeps (1–30 minutes).',range);
+ return wrap;
+}
+
 const PG = {
   apps() {
     const g = mk('div', 'cards');
-    for (const w of C.widgets) {
-      const c = mk('div', 'ac', `<div class="h"><div class="ic">${ico(w.ik, 20)}</div><div><b>${esc(w.name)}</b><span class="st"></span></div></div><p>${esc(w.desc)}</p>`);
+    const sorted = [...C.widgets].sort((a,b) => { const x=(S.widgetOrder||[]).indexOf(a.id), y=(S.widgetOrder||[]).indexOf(b.id); return (x<0?999:x)-(y<0?999:y); });
+    for (const w of sorted) {
+      const c = mk('div', 'ac', `<div class="h"><span class="draghandle" title="Drag to rearrange">⠿</span><div class="ic">${ico(w.id === 'screen' ? 'screen' : w.ik, 20)}</div><div><b>${esc(w.name)}</b><span class="st"></span></div></div><p>${esc(w.desc)}</p>`);
       const st = c.querySelector('.st'), paint = () => { const o = S.widgets.includes(w.id); st.textContent = o ? 'In your island' : 'Off'; st.className = 'st' + (o ? '' : ' off'); };
-      c.querySelector('.h').appendChild(tog(() => S.widgets.includes(w.id), v => { S.widgets = v ? [...S.widgets, w.id] : S.widgets.filter(x => x !== w.id); paint(); })); paint(); g.appendChild(c);
+      c.querySelector('.h').appendChild(tog(() => S.widgets.includes(w.id), v => { S.widgets = v ? [...S.widgets, w.id] : S.widgets.filter(x => x !== w.id); paint(); })); paint(); c.dataset.widget = w.id; c.draggable = false;
+      const controls = mk('div','appmove'); controls.style.cssText='display:flex;gap:4px;margin-top:10px;justify-content:flex-end';
+      const move = (delta) => {const cards=[...g.querySelectorAll('.ac')];const i=cards.indexOf(c);const j=i+delta;if(j<0||j>=cards.length)return;if(delta<0)g.insertBefore(c,cards[j]);else g.insertBefore(cards[j],c);saveOrder();};
+      const up=mk('button','btn mini','↑'),down=mk('button','btn mini','↓');up.title='Move up';down.title='Move down';up.onclick=()=>move(-1);down.onclick=()=>move(1);controls.append(up,down);c.appendChild(controls);g.appendChild(c);
     }
-    return [...head('Apps', 'Pick which tools are in your island'), g];
+    const saveOrder=()=>{S.widgetOrder=[...g.querySelectorAll('.ac')].map(c=>c.dataset.widget);queue();};
+    let dragged=null;
+    g.addEventListener('mousedown',e=>{const h=e.target.closest('.draghandle');if(h){h.closest('.ac').draggable=true;}});
+    g.addEventListener('dragstart',e=>{const c=e.target.closest('.ac');if(!c||!c.draggable){e.preventDefault();return;}dragged=c;c.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',c.dataset.widget);});
+    g.addEventListener('dragover',e=>{if(!dragged)return;e.preventDefault();const c=e.target.closest('.ac');if(!c||c===dragged)return;c.classList.add('drop-target');});
+    g.addEventListener('dragleave',e=>{const c=e.target.closest('.ac');if(c)c.classList.remove('drop-target');});
+    g.addEventListener('drop',e=>{if(!dragged)return;e.preventDefault();const target=e.target.closest('.ac');if(target&&target!==dragged){const cards=[...g.children];const from=cards.indexOf(dragged),to=cards.indexOf(target);g.insertBefore(dragged,to>from?target.nextSibling:target);saveOrder();} });
+    g.addEventListener('dragend',()=>{g.querySelectorAll('.ac').forEach(c=>{c.draggable=false;c.classList.remove('dragging','drop-target')});dragged=null;});
+    return [...head('Apps', 'Drag using ⠿ or use ↑ ↓ to reorder. Changes save automatically.'), g];
   },
   island() {
     const I = S.island;
     return [...head('Island', 'How it looks and what it shows'),
       mk('h3', '', 'Look'),
+      card([row('Custom accent color','Choose a HEX color for buttons and highlights (separate from the notch).',themeColorEditor())]),
+      mk('h3', '', 'Custom profiles'),
+      card([row('Save and manage profiles','Save your current widgets, theme and island settings. Load, rename or delete them later.',customProfilesEditor())]),
+      card([combinedThemeEditor(),row('Profile','Optimized widget presets for different activities',seg([['normal','Normal'],['gamer','Gamer'],['working','Working'],['streamer','Streamer']],()=>S.profile||'normal',v=>{S.profile=v; const p={gamer:['music','discord','sys','focus','apps','youtube'],working:['focus','notes','calendar','files','clip','apps'],streamer:['music','discord','sys','voice','youtube','apps']};if(p[v]){S.widgets=[...new Set([...p[v],...S.widgets.filter(id=>!p[v].includes(id))])];S.widgetOrder=[...p[v],...C.widgets.map(w=>w.id).filter(id=>!p[v].includes(id))];} })),row('Friendly greetings','Greet you based on time of day',tog(()=>S.greetings!==false,v=>S.greetings=v))]),
       card([row('Size', 'How big the island is', seg([['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']], () => I.size, v => I.size = v)),
         row('Style', 'Attached to the top edge like a laptop notch, or floating just below it', seg([['attached', 'Attached'], ['float', 'Floating']], () => I.style, v => I.style = v)),
         row('See-through', 'How much you see through the island', rng(0, 60, 5, () => I.alpha, v => I.alpha = v, v => v + '%')),
         row('Open', 'Opens when your mouse moves over it, or only when you click it', seg([['hover', 'On hover'], ['click', 'On click']], () => I.open, v => I.open = v))]),
+      mk('h3', '', 'Cat appearance'),
+      card([row('Cat fur color','Select a preset or pick any HEX color. Original follows the current theme.',catColorEditor())]),
+      card([row('Cat companion','Personality, eye color, accessories, petting and sleep.',catStudio())]),
+      mk('h3', '', 'System panel metrics'),
+      card([row('Visible system information', 'Choose exactly what appears in System', (()=>{const w=mk('div','seg');const available=[['cpu','CPU'],['ram','RAM'],['battery','Battery'],['gpuTemp','GPU temp'],['gpuLoad','GPU usage'],['vram','VRAM'],['gpuPower','Power'],['gpuFan','Fan']];for(const [id,label] of available){const b=mk('button','btn',label);const paint=()=>b.classList.toggle('on',(S.systemMetrics||['cpu','ram','battery','gpuTemp','gpuLoad','vram']).includes(id));b.onclick=()=>{const a=new Set(S.systemMetrics||['cpu','ram','battery','gpuTemp','gpuLoad','vram']);if(a.has(id))a.delete(id);else a.add(id);S.systemMetrics=[...a];paint();queue();};paint();w.appendChild(b)}return w;})())]),
       mk('h3', '', 'Resting island'),
       card([row('Left of the eyes', 'What it shows when nothing is going on', seg(SLOTS, () => I.left, v => I.left = v)),
         row('Eyes', 'In the middle, like a camera', tog(() => I.eyes !== false, v => I.eyes = v)),
@@ -83,7 +216,7 @@ const PG = {
     setTimeout(async () => { const on = await nib.spotifyStatus(); paint(on); nib.onSpotify(paint); }, 0);
     return [...head('Music', 'Spotify, lyrics and which player is controlled'),
       card([top, idRow]), how, msg,
-      mk('h3', '', 'Player'),
+      mk('h3', '', 'YouTube browser playback'),card([row('Browser','Set process name to chrome or msedge (not a particular tab)',txt(()=>S.youtubeBrowser||'chrome',v=>S.youtubeBrowser=v==='msedge'?'msedge':'chrome','chrome', '160px'))]),mk('h3', '', 'Player'),
       card([row('Player app', 'Play, Pause, Next and Previous only ever control this app (default Spotify), never your browser, so Netflix or YouTube are left alone', txt(() => S.player, v => S.player = v || 'Spotify', 'Spotify', '160px')),
         row('Lyrics timing', 'Nudge if lines come a bit early or late (+ shows them earlier)', rng(-3, 3, .1, () => +S.lyricOffset || 0, v => S.lyricOffset = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + 's'))]),
       mk('div', 'hint', 'Spotify has no lyrics service in its public API, so lyrics come from the free LRCLIB database, matched to your exact track and length. Not every song has them.')];
@@ -126,7 +259,7 @@ const PG = {
     setTimeout(async () => paint(await nib.claude()), 0);
     return [...head('Connections', 'Calendar, Discord and Claude Code'),
       mk('h3', '', 'Calendar'), card([row('Calendar link', 'Google Calendar: Settings, your calendar, Integrate calendar, Secret address in iCal format. Anyone with the link can read it, so keep it private.', txt(() => S.ics, v => S.ics = v, 'https://... .ics', '300px'))]),
-      mk('h3', '', 'Discord'), card([row('Mute hotkey', 'Add Toggle Mute in Discord > Keybinds with the same keys', txt(() => S.discord.mute, v => S.discord.mute = v, 'Ctrl+Shift+M', '160px')), row('Deafen hotkey', 'Add Toggle Deafen with the same keys', txt(() => S.discord.deafen, v => S.discord.deafen = v, 'Ctrl+Shift+D', '160px'))]),
+      mk('h3', '', 'Discord'), card([row('Mute hotkey', 'Click Record and press the keys, combinations work. Add Toggle Mute in Discord > Keybinds with the same keys', keyrec(() => S.discord.mute, v => S.discord.mute = v, 'Ctrl+Shift+M')), row('Deafen hotkey', 'Click Record and press the keys. Add Toggle Deafen in Discord > Keybinds with the same keys', keyrec(() => S.discord.deafen, v => S.discord.deafen = v, 'Ctrl+Shift+D'))]),
       mk('h3', '', 'Claude Code'), card([top])];
   },
   general() {

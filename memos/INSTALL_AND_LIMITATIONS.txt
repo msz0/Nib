@@ -1,0 +1,17 @@
+NIB SOURCE UPDATE / Windows 11
+
+This is NOT a precompiled EXE. You must build it on Windows.
+
+1. Backup your existing Nib project.
+2. Unzip these files into your existing Nib-source\Nib-source folder.
+3. For zero-dependency OCR on users' PCs, copy the COMPLETE Tesseract-OCR installation directory (tesseract.exe, DLLs, tessdata and license notices) into resources\tesseract.
+   This archive cannot ship the native Tesseract binaries and does not claim they are present.
+4. Run npm install, then npm start, and test. Build with npm run dist.
+5. Test installer on a clean Windows machine without Tesseract.
+
+New: floating live hex sampler; it samples the real desktop pixel at cursor using Windows GDI and does not freeze screen. Copy button captures hex.
+OCR: bundled engine autodetected when present; PATH fallback for development; text now shown in editable box.
+Local crash log: AppData Nib userData folder / nib-errors.log. Not a substitute for bug fixing.
+Phone notifications: NOT implemented. Real notification sync requires a trusted opt-in phone companion, permissions and a secure pairing protocol. No fake Phone Link integration is included.
+Screen drawing and OCR still use fullscreen overlay for interaction. The picker no longer does. They require further real Windows testing.
+No Electron/Windows installer execution has been tested in this environment. Do NOT claim production-ready security or stability.
