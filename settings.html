@@ -206,7 +206,6 @@ const PG = {
       card([row('Left of the eyes', 'What it shows when nothing is going on', seg(SLOTS, () => I.left, v => I.left = v)),
         row('Eyes', 'In the middle, like a camera', tog(() => I.eyes !== false, v => I.eyes = v)),
         row('Right of the eyes', 'What it shows when nothing is going on', seg(SLOTS, () => I.right, v => I.right = v)),
-        row('Discord avatars near the eyes', 'Show only profile pictures of people in your current voice channel while the island is resting.', tog(() => I.discordAvatars === true, v => I.discordAvatars = v)),
         row('Clock', 'How the time looks, in the island', seg([['auto', 'Automatic'], ['12', '12-hour'], ['24', '24-hour']], () => I.clock, v => I.clock = v))]),
       mk('h3', '', 'While music plays'),
       card([row('Song on the island', 'Shows the song with its logo and the line being sung', tog(() => I.music !== false, v => I.music = v)),
@@ -260,53 +259,10 @@ const PG = {
     const cl = mk('div', 'rt', '<b>Claude Code</b><small id="cls">Checking...</small>'), cb = mk('button', 'btn', '...'), top = mk('div', 'r'); top.append(cl, cb);
     const paint = s => { $('#cls').textContent = s.connected ? 'Connected. The eyes show what Claude is doing.' : 'Not connected'; cb.textContent = s.connected ? 'Disconnect' : 'Connect'; cb.onclick = async () => paint(await nib.claudeSet({ connect: !s.connected })); };
     setTimeout(async () => paint(await nib.claude()), 0);
-    const dv = mk('div', 'rt', '<b>Discord voice participants</b><small>Checking connection...</small>');
-    const token = mk('input'), userId = txt(() => S.discordVoiceUserId, v => S.discordVoiceUserId = v, 'Your Discord user ID', '220px');
-    token.type = 'password'; token.placeholder = 'Discord bot token'; token.autocomplete = 'off'; token.spellcheck = false; token.style.minWidth = '250px';
-    const consent = mk('input'); consent.type = 'checkbox';
-    const consentRow = mk('label', 'r'); consentRow.style.cursor = 'pointer';
-    consentRow.append(consent, mk('span', 'hint', 'I will use this only in servers where I am authorized to view voice participants.'));
-    const action = mk('div', 'r'), button = mk('button', 'btn'), forget = mk('button', 'btn', 'Forget saved token');
-    const message = mk('div', 'hint');
-    action.append(dv, button, forget);
-    const paintDiscord = state => {
-      S.discordVoiceEnabled = !!state.enabled;
-      const small = dv.querySelector('small');
-      small.textContent = state.error || (state.connected ? 'Connected to Discord. Voice roster is in the Discord tile.' : state.enabled ? state.status + '…' : state.configured ? 'Disconnected. Encrypted token saved on this PC.' : 'Not connected.');
-      button.textContent = state.enabled ? 'Disconnect' : state.configured ? 'Reconnect' : 'Connect';
-      forget.disabled = !state.configured;
-    };
-    button.onclick = async () => {
-      message.textContent = '';
-      if (button.textContent === 'Disconnect') { paintDiscord(await nib.discordVoiceDisconnect()); return; }
-      if (!consent.checked) { message.className = 'err'; message.textContent = 'Confirm that you are authorized to view participants before connecting.'; return; }
-      const result = token.value.trim()
-        ? await nib.discordVoiceConnect(token.value, userId.value.trim())
-        : await nib.discordVoiceEnable(userId.value.trim());
-      if (!result.ok) { message.className = 'err'; message.textContent = result.error; return; }
-      token.value = ''; S.discordVoiceUserId = userId.value.trim();
-      message.className = 'ok'; message.textContent = 'Connection requested. Discord status will update here.';
-      paintDiscord(await nib.discordVoiceStatus());
-    };
-    forget.onclick = async () => {
-      if (!confirm('Disconnect and permanently remove the saved encrypted Discord bot token?')) return;
-      const result = await nib.discordVoiceForget();
-      if (!result.ok) { message.className = 'err'; message.textContent = result.error; return; }
-      token.value = ''; userId.value = ''; S.discordVoiceUserId = '';
-      message.className = 'ok'; message.textContent = 'Disconnected; saved bot token removed.';
-      paintDiscord(result.state);
-    };
-    setTimeout(async () => { paintDiscord(await nib.discordVoiceStatus()); nib.onDiscordVoice(paintDiscord); }, 0);
-    const voiceCard = card([
-      row('Bot token', 'Stored encrypted in Windows secure storage; never saved in settings.json. Paste only into this local settings window.', token),
-      row('Your Discord user ID', 'Enable Developer Mode in Discord, then right-click your profile and choose Copy User ID.', userId),
-      consentRow, action, message
-    ]);
-    const voiceHow = mk('div', 'hint', 'Setup: create a bot in the Discord Developer Portal, enable the Server Members Intent, then invite it to each server with only View Channels access for voice channels you want to monitor. Do not grant Administrator. The bot does not join or record calls. Nib keeps the current roster and join ping in memory only, and shows them only in the Discord tile; the resting island can show avatars only. Discord and its avatar CDN receive the normal bot and image requests. You are responsible for any notice or legal basis required for your servers; this is a privacy-focused design, not legal certification.');
     return [...head('Connections', 'Calendar, Discord and Claude Code'),
       mk('h3', '', 'Calendar'), card([row('Calendar link', 'Google Calendar: Settings, your calendar, Integrate calendar, Secret address in iCal format. Anyone with the link can read it, so keep it private.', txt(() => S.ics, v => S.ics = v, 'https://... .ics', '300px'))]),
       mk('h3', '', 'Discord'), card([row('Mute hotkey', 'Click Record and press the keys, combinations work. Add Toggle Mute in Discord > Keybinds with the same keys', keyrec(() => S.discord.mute, v => S.discord.mute = v, 'Ctrl+Shift+M')), row('Deafen hotkey', 'Click Record and press the keys. Add Toggle Deafen in Discord > Keybinds with the same keys', keyrec(() => S.discord.deafen, v => S.discord.deafen = v, 'Ctrl+Shift+D'))]),
-      voiceCard, voiceHow,
+      mk('div', 'hint', 'No Discord bot token is used or stored. Discord does not expose voice-channel participants through its local desktop connection, so Nib keeps the mute/deafen hotkeys but does not show participant lists, join alerts, or avatars.'),
       mk('h3', '', 'Claude Code'), card([top])];
   },
   general() {

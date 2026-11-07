@@ -8,7 +8,7 @@ const logCrash = (kind, error) => { try { const out = path.join(app.getPath('use
 process.on('uncaughtException', error => logCrash('uncaughtException', error));
 process.on('unhandledRejection', error => logCrash('unhandledRejection', error));
 const hooks = require('./claude-hooks'), { ask } = require('./chat');
-const files = require('./files'), calendar = require('./calendar'), media = require('./media'), lyrics = require('./lyrics'), ICONS = require('./icons'), spotifyApi = require('./spotify'), discordVoiceApi = require('./discord-voice');
+const files = require('./files'), calendar = require('./calendar'), media = require('./media'), lyrics = require('./lyrics'), ICONS = require('./icons'), spotifyApi = require('./spotify');
 
 const W = 520, H = 400;
 const GATE = new Set(['Bash', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
@@ -29,14 +29,13 @@ const CATALOG = {
 const DEF = { v: 3, name: 'Nib', you: '', spotifyId: '', player: 'Spotify', youtubeBrowser: 'chrome', youtubeConnected: false, youtubePreviousPlayer: 'Spotify', lyricOffset: 0,
   widgets: ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'chat', 'coffee', 'claude'], widgetOrder: [], theme: 'dark', profile: 'normal', greetings: true,
   apps: ['spotify', 'discord', 'gcal', 'browser', 'vscode', 'explorer', 'calc', 'settings'], custom: [], zones: [], sortBase: '', ics: '', discord: { mute: '', deafen: '' },
-  island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true, discordAvatars: false, pos: null, lock: false },
-  discordVoiceUserId: '', discordVoiceEnabled: false,
+  island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true, pos: null, lock: false },
   gameModeShortcut: 'Ctrl+Alt+G',
   openShortcut: '',
   collapseShortcut: '',
   gameModeAuto: false,
   sounds: { on: true, vol: .7, done: 'chime', ask: 'bell', focus: 'marimba', event: 'soft' } };
-let win, sw, tray, server, spotify, discordVoice, S = { ...DEF }, gateOn = true, history = [];
+let win, sw, tray, server, spotify, S = { ...DEF }, gateOn = true, history = [];
 
 const sfile = () => path.join(app.getPath('userData'), 'settings.json');
 const keyFile = () => path.join(app.getPath('userData'), 'key.bin');
@@ -92,6 +91,14 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else app.whenReady().then(async () => {
   if (process.argv.includes('--at-login')) await new Promise(r => setTimeout(r, 5000));   // let Windows finish loading the desktop first
   load();
+  const legacyDiscordToken = path.join(app.getPath('userData'), 'discord-bot.bin');
+  try { fs.rmSync(legacyDiscordToken, { force: true }); }
+  catch (e) { console.error('[discord] Could not remove the previously saved bot token:', e); }
+  const hadLegacyDiscordSettings = 'discordVoiceUserId' in S || 'discordVoiceEnabled' in S || 'discordAvatars' in S.island;
+  delete S.discordVoiceUserId;
+  delete S.discordVoiceEnabled;
+  delete S.island.discordAvatars;
+  if (hadLegacyDiscordSettings) save();
   position = require('./position')({ screen, getS: () => S, W, H });
   if (app.isPackaged && loginOn() && !app.getLoginItemSettings({ args: LOGIN_ARGS }).openAtLogin) setLogin(true);   // upgrade an older startup entry
   let ignoring = true;   // what the page last asked for: true = clicks pass through, false = island takes clicks
@@ -243,7 +250,7 @@ else app.whenReady().then(async () => {
   powerMonitor.on('resume', () => { media.reset(); setTimeout(() => repairNotch(false), 2500); });
   powerMonitor.on('unlock-screen', () => setTimeout(() => repairNotch(false), 1500));
   app.on('child-process-gone', (_, d) => { if (d.type === 'GPU') setTimeout(() => repairNotch(false), 1000); });
-  app.on('before-quit', () => { try { media.stop(); if (discordVoice) discordVoice.stop(); } catch {} });
+  app.on('before-quit', () => { try { media.stop(); } catch {} });
   // the page says "alive" every 2 seconds; if that stops, replace it
   ipcMain.on('beat', () => { beatAt = Date.now(); streak = 0; });
   setInterval(() => { if (win && !win.isDestroyed() && !screenSelectionActive && Date.now()-beatAt>30000 && !win.webContents.isLoading()) { win.webContents.send('nib:health-check'); } }, 15000);
@@ -554,83 +561,6 @@ else app.whenReady().then(async () => {
   ipcMain.handle('spotify:status', () => spotify.connected());
   ipcMain.handle('spotify:connect', () => { try { spotify.connect(); return { ok: true }; } catch (e) { return { ok: false, error: e.message }; } });
   ipcMain.handle('spotify:disconnect', () => { spotify.disconnect(); return true; });
-  const discordTokenFile = path.join(app.getPath('userData'), 'discord-bot.bin');
-  const discordState = () => ({ ...discordVoice.status(), enabled: !!S.discordVoiceEnabled, configured: fs.existsSync(discordTokenFile) });
-  discordVoice = discordVoiceApi.create({
-    onChange: state => {
-      const value = { ...state, enabled: !!S.discordVoiceEnabled, configured: fs.existsSync(discordTokenFile) };
-      if (win && !win.isDestroyed()) win.webContents.send('discord:voice', value);
-      if (sw && !sw.isDestroyed()) sw.webContents.send('discord:voice', {
-        status: value.status, error: value.error, connected: value.connected,
-        enabled: value.enabled, configured: value.configured
-      });
-    }
-  });
-  const stopDiscordVoice = () => { S.discordVoiceEnabled = false; save(); discordVoice.stop(); };
-  ipcMain.handle('discord:voice:status', event => {
-    const state = discordState();
-    return win && event.sender === win.webContents ? state : {
-      status: state.status, error: state.error, connected: state.connected,
-      enabled: state.enabled, configured: state.configured
-    };
-  });
-  const isSettingsWindow = event => sw && !sw.isDestroyed() && event.sender === sw.webContents;
-  ipcMain.handle('discord:voice:connect', (event, rawToken, rawUserId) => {
-    if (!isSettingsWindow(event)) return { ok: false, error: 'Open Discord settings to connect the bot.' };
-    const token = typeof rawToken === 'string' ? rawToken.trim() : '';
-    const userId = typeof rawUserId === 'string' ? rawUserId.trim() : '';
-    if (token.length < 20 || token.length > 512) return { ok: false, error: 'Enter your Discord bot token.' };
-    if (!discordVoice.validateUserId(userId)) return { ok: false, error: 'Enter your Discord user ID (17–20 digits).' };
-    if (!safeStorage.isEncryptionAvailable()) return { ok: false, error: 'Windows secure storage is unavailable; the bot token was not saved.' };
-    try {
-      fs.mkdirSync(path.dirname(discordTokenFile), { recursive: true });
-      fs.writeFileSync(discordTokenFile, enc(token));
-      S.discordVoiceUserId = userId; S.discordVoiceEnabled = true; save();
-      discordVoice.start(token, userId);
-      return { ok: true, state: discordState() };
-    } catch (e) {
-      S.discordVoiceEnabled = false; save();
-      return { ok: false, error: String(e.message || e) };
-    }
-  });
-  ipcMain.handle('discord:voice:enable', (event, rawUserId) => {
-    if (!isSettingsWindow(event)) return { ok: false, error: 'Open Discord settings to connect the bot.' };
-    const userId = typeof rawUserId === 'string' ? rawUserId.trim() : '';
-    if (!discordVoice.validateUserId(userId)) return { ok: false, error: 'Enter your Discord user ID (17–20 digits).' };
-    if (!fs.existsSync(discordTokenFile)) return { ok: false, error: 'Enter your bot token first.' };
-    if (!safeStorage.isEncryptionAvailable()) return { ok: false, error: 'Windows secure storage is unavailable.' };
-    try {
-      const token = dec(fs.readFileSync(discordTokenFile));
-      S.discordVoiceUserId = userId; S.discordVoiceEnabled = true; save();
-      discordVoice.start(token, userId);
-      return { ok: true, state: discordState() };
-    } catch (e) {
-      S.discordVoiceEnabled = false; save();
-      return { ok: false, error: 'Could not load the saved bot token: ' + String(e.message || e) };
-    }
-  });
-  ipcMain.handle('discord:voice:disconnect', event => {
-    if (!isSettingsWindow(event)) return { ok: false, error: 'Open Discord settings to disconnect the bot.' };
-    stopDiscordVoice(); return { ok: true, state: discordState() };
-  });
-  ipcMain.handle('discord:voice:forget', event => {
-    if (!isSettingsWindow(event)) return { ok: false, error: 'Open Discord settings to remove the saved token.' };
-    stopDiscordVoice();
-    try { fs.rmSync(discordTokenFile, { force: true }); } catch (e) { return { ok: false, error: String(e.message || e) }; }
-    S.discordVoiceUserId = ''; save();
-    discordVoice.refresh();
-    return { ok: true, state: discordState() };
-  });
-  if (S.discordVoiceEnabled) {
-    try {
-      if (!fs.existsSync(discordTokenFile)) throw new Error('Saved Discord bot token is missing.');
-      if (!safeStorage.isEncryptionAvailable()) throw new Error('Windows secure storage is unavailable.');
-      discordVoice.start(dec(fs.readFileSync(discordTokenFile)), S.discordVoiceUserId);
-    } catch (e) {
-      S.discordVoiceEnabled = false; save();
-      discordVoice.fail('Could not reconnect to Discord: ' + String(e.message || e));
-    }
-  }
   const {session} = require('electron');
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => callback(permission === 'media' && webContents === win.webContents));
   // Nib extras: native dialogs, short-lived overlays; never record without a user click.
