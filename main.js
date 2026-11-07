@@ -323,8 +323,10 @@ else app.whenReady().then(async () => {
   ipcMain.on('app:launch', (_, t) => launch(t));
   ipcMain.on('media:key', (_, k) => media.key(k));
   ipcMain.on('discord:key', (_, k) => { const c = S.discord && S.discord[k]; console.log('[discord]', k, 'key:', c || '(not set)'); if (!media.press(c)) media.keys(c); });
+  let selectedMediaId = '';
   ipcMain.handle('media:np', async () => {
-    let m = await media.nowPlaying();
+    let m = await media.nowPlaying(selectedMediaId);
+    if (selectedMediaId && (!m || m.sourceId !== selectedMediaId)) selectedMediaId = '';
     if (m && spotify.connected() && m.source === 'spotify') {
       const api = await spotify.playing();
       if (api && api.title === m.title) m = { ...api, status: m.status, pos: m.pos, dur: m.dur, src: m.src, source: m.source, sourceId: m.sourceId, artUrl: m.artUrl || api.artUrl };
@@ -337,6 +339,15 @@ else app.whenReady().then(async () => {
       if (l === undefined) lyrics.fetchFor(k, { title: m.title, artist: m.artist1 || m.artist, album: m.album, dur: m.dur }); else m.lyrics = l;
     }
     return m;
+  });
+  ipcMain.handle('media:players', () => media.players());
+  ipcMain.handle('media:select', (_, sourceId) => {
+    selectedMediaId = typeof sourceId === 'string' ? sourceId.slice(0, 300) : '';
+    return true;
+  });
+  ipcMain.handle('media:seek', async (_, seconds) => {
+    const active = await media.nowPlaying(selectedMediaId);
+    return media.seek(Number(seconds), active && active.sourceId);
   });
   ipcMain.handle('pick:logo', async e => {
     const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { properties: ['openFile'], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'ico', 'svg', 'webp'] }] });
@@ -470,7 +481,7 @@ else app.whenReady().then(async () => {
 
   // ---- extra tools: music control (chosen player only), album art, system stats, clipboard history, keep-awake, Claude Code link
   ipcMain.handle('music:ctl', async (_, cmd) => {
-    const active = await media.nowPlaying();
+    const active = await media.nowPlaying(selectedMediaId);
     const r = await media.control(cmd, active && active.sourceId);
     return r || (active && active.source === 'spotify' && spotify.connected() ? spotify.control(cmd) : false);
   });

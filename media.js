@@ -18,6 +18,7 @@ const INIT = [
   "function NzThumb($i){try{if(!$i.Thumbnail){return ''};$st=NzAw ($i.Thumbnail.OpenReadAsync()) ([Windows.Storage.Streams.IRandomAccessStreamWithContentType]);$n=[uint32]$st.Size;if($n -le 0 -or $n -gt 1048576){return ''};$r=New-Object -TypeName Windows.Storage.Streams.DataReader -ArgumentList $st;[void](NzAw ($r.LoadAsync($n)) ([uint32]));$b=New-Object byte[] $n;$r.ReadBytes($b);[Convert]::ToBase64String($b)+'|'+[string]$st.ContentType}catch{''}}",
   "function NzMediaAll{$out=@();if(!$m){'-';return};foreach($s in $m.GetSessions()){try{$i=NzAw ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties]);$t=$s.GetTimelineProperties();$st=[string]$s.GetPlaybackInfo().PlaybackStatus;$p=[math]::Max(0,$t.Position.TotalSeconds);if($st -eq 'Playing'){$p+=([DateTimeOffset]::UtcNow-$t.LastUpdatedTime).TotalSeconds};$d=[math]::Max(0,($t.EndTime-$t.StartTime).TotalSeconds);if($i.Title){$th=NzThumb $i;$parts=$th -split '\\|',2;$out+=[pscustomobject]@{t=[string]$i.Title;a=[string]$i.Artist;s=$st;p=[math]::Round($p,1);d=[math]::Round($d,1);src=[string]$s.SourceAppUserModelId;art=$parts[0];mime=$parts[1]}}}catch{}};if($out.Count){$out|ConvertTo-Json -Compress}else{'-'}}",
   "function NzCtl($pat,$c){try{$s=$null;foreach($x in $m.GetSessions()){if(([string]$x.SourceAppUserModelId) -eq $pat){$s=$x;break}};if(!$s){$s=NzSess $pat};if(!$s){'-';return};$r=$false;if($c -eq 'play'){$r=NzAw ($s.TryTogglePlayPauseAsync()) ([bool])}elseif($c -eq 'next'){$r=NzAw ($s.TrySkipNextAsync()) ([bool])}elseif($c -eq 'prev'){$r=NzAw ($s.TrySkipPreviousAsync()) ([bool])};if($r){'ok'}else{'-'}}catch{'-'}}",
+  "function NzSeek($pat,$p){try{$s=$null;foreach($x in $m.GetSessions()){if(([string]$x.SourceAppUserModelId) -eq $pat){$s=$x;break}};if(!$s){'-';return};$r=NzAw ($s.TryChangePlaybackPositionAsync([TimeSpan]::FromSeconds([double]$p))) ([bool]);if($r){'ok'}else{'-'}}catch{'-'}}",
   "function NzTitle{$p=Get-Process Spotify -ErrorAction SilentlyContinue|Where-Object{$_.MainWindowTitle}|Select-Object -First 1;if($p){$p.MainWindowTitle}else{'-'}}"
 ];
 const VK = { mute: 173, vdn: 174, vup: 175 };   // system volume keys only (never play/pause)
@@ -74,22 +75,41 @@ const ask1 = cmd => new Promise(res => {
   q.push(w); ps.stdin.write(cmd + '\n');
 });
 const sourceFor = src => /spotify/i.test(src || '') ? 'spotify' : /edge|msedge/i.test(src || '') ? 'msedge' : /firefox/i.test(src || '') ? 'firefox' : /chrome/i.test(src || '') ? 'chrome' : 'other';
+const playerLabel = source => ({ spotify: 'Spotify', chrome: 'Chrome', msedge: 'Edge', firefox: 'Firefox' }[source] || 'Media player');
 const normalize = j => j && j.t && ['Playing', 'Paused', 'Stopped', 'Opened'].includes(j.s)
   ? { title: j.t, artist: j.a || '', status: j.s === 'Playing' ? 'Playing' : 'Paused', pos: Math.max(0, Number(j.p) || 0), dur: Math.max(0, Number(j.d) || 0), src: j.src || '', source: sourceFor(j.src), sourceId: j.src || '', artUrl: j.art && j.mime ? `data:${j.mime};base64,${j.art}` : '' }
   : null;
-async function nowPlaying() {   // {title, artist, status, pos(sec), dur, src} or null
+async function nowPlaying(preferredSourceId) {   // {title, artist, status, pos(sec), dur, src} or null
   const r = await ask1('NzMediaAll');
   if (r && r !== '-') {
     try {
       const list = JSON.parse(r);
       const sessions = (Array.isArray(list) ? list : [list]).map(normalize).filter(Boolean);
-      if (sessions.length) return sessions.find(item => item.status === 'Playing') || sessions[0];
+      if (sessions.length) return (preferredSourceId && sessions.find(item => item.sourceId === preferredSourceId))
+        || sessions.find(item => item.status === 'Playing') || sessions[0];
     } catch {}
   }
   const n = await ask1('NzTitle'); if (!n || n === '-') return null;   // fallback: Spotify's window title
   const m = n.match(/^(.*?) - (.*)$/);
   return /^spotify/i.test(n) ? { title: 'Spotify', artist: '', status: 'Paused', pos: 0, dur: 0, src: 'Spotify', source: 'spotify' }
     : { title: m ? m[2] : n, artist: m ? m[1] : '', status: 'Playing', pos: 0, dur: 0, src: 'Spotify', source: 'spotify', nopos: true };
+}
+async function players() {
+  const r = await ask1('NzMediaAll');
+  if (!r || r === '-') return [];
+  try {
+    const list = JSON.parse(r);
+    return (Array.isArray(list) ? list : [list]).map(normalize).filter(Boolean).map(item => ({
+      sourceId: item.sourceId,
+      source: item.source,
+      label: playerLabel(item.source),
+      title: item.title,
+      artist: item.artist,
+      status: item.status
+    }));
+  } catch {
+    return [];
+  }
 }
 const control = async (cmd, player) => {
   if (!['play', 'next', 'prev'].includes(cmd)) return false;
@@ -98,4 +118,10 @@ const control = async (cmd, player) => {
   const quoted = String(active).replace(/'/g, "''");
   return (await ask1(`NzCtl '${quoted}' ${cmd}`)) === 'ok';
 };
-module.exports = { key, keys, press, comboCmd, reset, nowPlaying, control, stop: () => { try { ps && ps.kill(); } catch {} } };
+const seek = async (seconds, player) => {
+  const active = player || (await nowPlaying())?.sourceId;
+  if (!active || !Number.isFinite(seconds)) return false;
+  const quoted = String(active).replace(/'/g, "''");
+  return (await ask1(`NzSeek '${quoted}' ${Math.max(0, seconds)}`)) === 'ok';
+};
+module.exports = { key, keys, press, comboCmd, reset, nowPlaying, players, control, seek, stop: () => { try { ps && ps.kill(); } catch {} } };
