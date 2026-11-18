@@ -101,6 +101,7 @@ module.exports = {
   "focus": "<circle cx=\"12\" cy=\"13\" r=\"7.500\"/><path d=\"M12 9v4l3 2M9.500 3h5\"/>",
   "sliders": "<path d=\"M4 7h10M18 7h2M4 17h2M10 17h10\"/><circle cx=\"16\" cy=\"7\" r=\"2\"/><circle cx=\"8\" cy=\"17\" r=\"2\"/>",
   "note": "<circle cx=\"7\" cy=\"17\" r=\"2.500\"/><circle cx=\"17\" cy=\"15\" r=\"2.500\"/><path d=\"M9.500 17V5l10-2v12\"/>",
+  "equalizer": "<path d=\"M5 10v4M9 6v12M13 9v6M17 4v16M21 8v8\"/>",
   "back": "<path d=\"M14.500 6l-6 6 6 6\"/>",
   "home": "<path d=\"M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z\"/>",
   "clip": "<rect x=\"6\" y=\"4.5\" width=\"12\" height=\"16\" rx=\"2.5\"/><path d=\"M9 4.5h6V7H9z\"/>",

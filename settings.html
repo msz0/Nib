@@ -27,7 +27,7 @@ input[type=text]{height:34px;min-width:260px;padding:0 12px;border-radius:9px;bo
 <div id="side"></div><div id="main"></div>
 <script>
 const $ = s => document.querySelector(s); let S, C, page = 'apps', dragEl = null, saveT;
-const PAGES = [['apps', 'Apps', 'apps'], ['island', 'Island', 'sliders'], ['music', 'Music', 'spotify'], ['sounds', 'Sounds', 'chat'], ['launcher', 'Launcher', 'folder'], ['connect', 'Connections', 'claude'], ['general', 'General', 'sys']];
+const PAGES = [['apps', 'Apps', 'apps'], ['island', 'Island', 'sliders'], ['music', 'Music', 'equalizer'], ['sounds', 'Sounds', 'chat'], ['launcher', 'Launcher', 'folder'], ['connect', 'Connections', 'claude'], ['general', 'General', 'sys']];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ico = (k, sz = 18) => { const I = C.icons; if (I.fill[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="currentColor"><path d="${I.fill[k].f}"/></svg>`; if (I.stroke[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I.stroke[k]}</svg>`; return ''; };
 const queue = () => { clearTimeout(saveT); saveT = setTimeout(() => { nib.setSettings(S).catch(e => console.error('[Nib settings] Save failed:',e)); }, 350); };

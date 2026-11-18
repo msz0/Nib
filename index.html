@@ -14,7 +14,7 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 /* notch */
 #island{--bg:rgb(0 0 0/var(--a));--tint:var(--bg);--e:cubic-bezier(.2,1.1,.3,1);zoom:var(--z);position:absolute;top:0;left:50%;width:100px;height:28px;margin-left:-50px;
   transition:--bg .5s ease,--tint .6s ease,width .5s var(--e),height .5s var(--e),margin-left .5s var(--e),top .4s ease}
-#island::before,#island::after{content:'';position:absolute;top:0;width:12px;height:12px;pointer-events:none}
+#island::before,#island::after{content:'';position:absolute;top:-1px;width:12px;height:13px;pointer-events:none}
 #island::before{right:100%;background:radial-gradient(circle at 0 100%,transparent 11.4px,var(--bg) 12px)}
 #island::after{left:100%;background:radial-gradient(circle at 100% 100%,transparent 11.4px,var(--bg) 12px)}
 #island.float{top:10px}#island.float::before,#island.float::after{display:none}
@@ -29,7 +29,7 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 #rest{display:flex;align-items:center;justify-content:center;gap:9px;height:100%;padding:0 12px;white-space:nowrap;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
 #full,.open #rest{display:none}.open #full{display:block}
 .slot{overflow:hidden;text-overflow:ellipsis;color:#fff;transition:color .4s}#L{text-align:right}#R{text-align:left}
-#mini{flex:none;cursor:pointer;filter:drop-shadow(0 0 3px var(--c));animation:fin .4s ease both}#island.noeyes #mini{display:none}
+#mini{flex:none;cursor:pointer;animation:fin .4s ease both}#island.noeyes #mini{display:none}
 @keyframes fin{from{opacity:0}}
 #mus{display:none;align-items:center;gap:10px;width:100%}.mus #mus{display:flex}.mus #mini,.mus .slot{display:none}
 #mus svg{flex:none;color:#fff}#mtx{min-width:0;text-align:left;flex:1}#m1{font-size:12px;font-weight:600;overflow:hidden}#m2{font-size:10px;color:var(--dim);overflow:hidden}
@@ -90,7 +90,7 @@ button.pri{background:#eceef3;color:#000}button.pri:hover{background:#fff}
 #l0,#l2{font-size:12.5px;color:rgba(255,255,255,.4)}#l1{font-size:15px;font-weight:700;margin:2px 0}
 .prog{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}.bar{position:relative;flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden;cursor:pointer;touch-action:none}.bar i{display:block;height:100%;background:var(--media-accent,#fff);width:0;transition:width .18s linear}
 .ctl{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px}.ctl button{background:transparent;width:38px;height:34px;padding:0;display:grid;place-items:center}.ctl .big{width:44px;height:44px;border-radius:22px;background:#fff;color:#000}
-.vols{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px}.volume{display:flex;align-items:center;gap:7px;color:var(--dim);font-size:12px}.volume input{width:128px;margin:0;accent-color:var(--media-accent,#fff)}
+.volume{display:flex;align-items:center;gap:7px;color:var(--dim);font-size:12px}.volume input{width:128px;margin:0;accent-color:var(--media-accent,#fff)}
 #clog{height:80px;overflow:auto;user-select:text;font-size:13px;line-height:1.45;margin-bottom:8px}
 #inp,#ntxt{width:100%;border:0;border-radius:14px;background:rgba(255,255,255,.09);color:var(--fg);padding:0 14px;font:13px "Segoe UI",sans-serif;outline:none;user-select:text}#inp{height:34px}
 #ntxt{height:118px;padding:10px 12px;resize:none;line-height:1.45}#inp::placeholder,#ntxt::placeholder{color:#7d8496}
@@ -110,7 +110,6 @@ svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:va
 #nib .hp,#nib .xx{stroke:var(--cat-expression)}
 /* Preserve the existing requestAnimationFrame eye/blink/hop/ear animations. */
 [data-theme="light"] #nib{--cat-face:#263448;--cat-ear:#263448;--cat-eyes:#fff;--cat-expression:#fff;--cat-nose:#eb8199;filter:drop-shadow(0 1px 1px rgba(15,23,42,.12))}
-[data-theme="light"] #mini{filter:drop-shadow(0 0 1px rgba(15,23,42,.16))}
 [data-theme="light"] #mini .eye{fill:#25364e}
 #mini .eye{fill:var(--mini-eyes-custom,var(--c))}
 [data-theme="light"] #mini .eye{fill:var(--mini-eyes-custom,#25364e)}
@@ -448,7 +447,7 @@ const tier = m => TIERS.find(t => m <= t[0]);
 let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: [], widgets: [], icons: { fill: {}, stroke: {} } };
 let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false, gameMode = false;
 let snd = true, t0 = 0, idleT, leaveT, ctx, focusEnd = 0, fSel = 25, focusMin = 25, cx = 0, cy = 0, lastMove = performance.now(), dizzyUntil = 0;
-let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaAppVolume = 50, mediaVolumeTarget = '', mediaVolumeMessage = 'Reading app volume…', mediaVolumeAvailable = false, mediaScrubbing = false, mediaSeekBar = null, evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null, spOn = false;
+let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaAppVolume = 50, mediaVolumeTarget = '', mediaVolumeMessage = 'Reading app volume…', mediaVolumeAvailable = false, mediaScrubbing = false, mediaSeekBar = null, evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null;
 let voiceRecorder = null, voiceParts = [], voiceStream = null;
 let memoAudio = null, memoPlaying = '', currentOutput = 'default';
 function stopMemoAudio(){ if(memoAudio){memoAudio.pause();memoAudio.removeAttribute('src');memoAudio.load();memoAudio=null;} memoPlaying=''; }
@@ -485,9 +484,9 @@ const tm = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':
 const clock = () => { const c = S.island.clock; return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: c === '12' ? true : c === '24' ? false : undefined }); };
 const on = id => (S.widgets || []).includes(id);
 const playing = () => np && np.status === 'Playing';
-const isSp = () => np && /spotify/i.test(np.src || '');
+const isSp = () => np && (/spotify/i.test(np.src || '') || np.source === 'spotify');
 const isYouTube = () => np && !isSp() && ['chrome', 'msedge'].includes(np.source);
-const mediaBrandIcon = () => isSp() ? 'spotify' : isYouTube() ? 'youtube' : 'music';
+const mediaBrandIcon = () => isSp() ? 'spotify' : isYouTube() ? 'youtube' : 'equalizer';
 const mediaLabel = () => !np ? 'Media' : isSp() ? 'Spotify' : np.source === 'msedge' ? 'YouTube · Edge' : np.source === 'chrome' ? 'YouTube · Chrome' : 'Media player';
 const npPos = () => np ? np.pos + (playing() ? (performance.now() - npAt) / 1000 : 0) : 0;
 const lyrIdx = () => { if (!np || !np.lyrics) return -1; const p = npPos() + .25 + (+S.lyricOffset || 0); let i = -1; for (let k = 0; k < np.lyrics.length; k++) { if (np.lyrics[k].t <= p) i = k; else break; } return i; };
@@ -557,7 +556,7 @@ function buildChrome() {
 }
 const tile = (id, t, body, extra = '') => `<div class="tl" data-a="tab" data-t="${id}" style="--t:${t}"><div class="tt">${LBL[id] === 'Chat' ? esc(NAME()) : LBL[id]}</div>${body}${extra}</div>`;
 const TILES = {
-  music: () => tile('music', 'var(--media-accent,#607a6a)', (art ? `<img class="art" src="${art}">` : `<span class="tic">${ico('music', 22)}</span>`) + `<div class="tb">${np ? esc(np.title) : 'Not playing'}<small>${np ? esc(np.artist || (playing() ? 'Playing' : 'Paused')) : 'Open ' + esc(mediaLabel())}</small></div>`, np ? `<button class="pb" data-a="mctl" data-k="play">${ico(playing() ? 'pause' : 'play', 14)}</button>` : ''),
+  music: () => tile('music', 'var(--media-accent,#607a6a)', (art ? `<img class="art" src="${art}">` : `<span class="tic">${ico(mediaBrandIcon(), 22)}</span>`) + `<div class="tb">${np ? esc(np.title) : 'Not playing'}<small>${np ? esc(np.artist || (playing() ? 'Playing' : 'Paused')) : 'Open ' + esc(mediaLabel())}</small></div>`, np ? `<button class="pb" data-a="mctl" data-k="play">${ico(playing() ? 'pause' : 'play', 14)}</button>` : ''),
   focus: () => { const m = focusEnd ? focusMin : fSel; return tile('focus', tier(m)[2], `<div class="tb big" id="tfocus">${focusEnd ? mmss(focusEnd - Date.now()) : String(m).padStart(2, '0') + ':00'}<small>${focusEnd ? 'In progress' : 'Ready to start'}</small></div>`, `<button class="pb" data-a="${focusEnd ? 'fstop' : 'fstart'}">${ico(focusEnd ? 'pause' : 'play', 14)}</button>`); },
   notes: () => tile('notes', '#f5c542', `<span class="tic">${ico('notepad', 20)}</span><div class="tb">${esc(((notes[0] || {}).text || '').split('\n')[0] || 'New note').slice(0, 40)}<small>${notes.length} note${notes.length === 1 ? '' : 's'}</small></div>`),
   clip: () => tile('clip', '#4cc9f0', `<span class="tic">${ico('clip', 20)}</span><div class="tb">${clips.length ? esc(clips[0].slice(0, 36)) : 'Copy something'}<small>${clips.length} saved</small></div>`),
@@ -619,7 +618,7 @@ const TPL = {
     <div class="lyr" style="max-height:34px;overflow:hidden;font-size:10px;line-height:1.15"><div id="l0"></div><div id="l1"></div><div id="l2"></div></div>
     <div class="prog"><span id="pt">0:00</span><div class="bar" id="mediaProgress" title="Seek" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="${np?.dur || 0}" aria-valuenow="${Math.round(npPos())}"><i id="pf"></i></div><span id="pr">0:00</span></div>
     <div class="ctl"><button data-a="mctl" data-k="prev">${ico('prev', 20)}</button><button class="big" data-a="mctl" data-k="play" id="pp">${ico('play', 20)}</button><button data-a="mctl" data-k="next">${ico('next', 20)}</button></div>
-    <div class="vols">${spOn || !isSp() ? '' : '<button class="s" data-a="settings">Connect Spotify</button>'}</div>`,
+    `,
   screen: () => `<div class="muted" style="margin-bottom:10px">Choose a screen tool</div><div class="row"><button class="s pri" data-a="screenTool" data-k="color">Pick HEX</button><button class="s" data-a="screenTool" data-k="ocr">Text OCR</button><button class="s" data-a="screenTool" data-k="draw">Draw</button></div>`,
   voice: () => `<div class="muted" id="voiceStatus">Recordings are stored privately in Nib.</div>
   <label class="vm-select">Microphone <select id="vmInput" data-a="voiceDevice"></select></label>
@@ -716,7 +715,7 @@ function setScrollingMusicLine(id, value) {
 }
 function paintMus() {
   const m = $('#mus'); if (!m || !isl.classList.contains('mus') || !np) return;
-  const l = curLine(), logo = $('#mlogo'), k = isSp() && art ? 'album' : mediaBrandIcon();
+  const l = curLine(), logo = $('#mlogo'), k = art && !isYouTube() ? 'album' : mediaBrandIcon();
   if (logo.dataset.k !== k || (k === 'album' && logo.dataset.art !== artUrl)) {
     if (k === 'album') {
       const image = new Image();
@@ -1096,6 +1095,7 @@ document.addEventListener('drop', () => { clearTimeout(dragT); setTimeout(endDra
 const mA = $('#mA'), mB = $('#mB'), cA = $('#cA'), cB = $('#cB'), bot = $('#bot'), earL = $('#earL'), earR = $('#earR'), miniSvg = $('#mini'), nibSvg = $('#nib');
 const TG = { idle: [1, 1], work: [1, .6], ask: [1.1, 1.15], focus: [1, .78], sleep: [1, .14], done: [1, 1], dizzy: [1, 1] };
 let hopY = 0, hopV = 0, ex = 0, ey = 0, ew = 1, eh = 1, t = 0, last = performance.now(), nextBlink = 2, blinkAt = -9, want = '', pokes = 0, pokeT, aL = 0, aR = 0, nextTw = 4, twT = -9, twSide = 1;
+let playfulGaze = { x: 0, y: 0, until: 0, next: 0 };
 const hop = v => { hopV = -v * 60; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const poke = () => { pokes++; clearTimeout(pokeT); pokeT = setTimeout(() => pokes = 0, 2500); if (pokes >= 5) { pokes = 0; dizzyUntil = performance.now() + 2600; } else hop(1.8); };
@@ -1131,6 +1131,15 @@ function frame(now) {
     const rr = (wasOpen ? nibSvg : miniSvg).getBoundingClientRect(), dx = cx - (rr.left + rr.width / 2), dy = cy - (rr.top + rr.height / 2), k = Math.min(1, Math.hypot(dx, dy) / 180), a = Math.atan2(dy, dx);
     tx = Math.cos(a) * 2.4 * k; ty = Math.sin(a) * 1.4 * k;
     if (now - lastMove > 4000 && vis === 'idle') { if (t > wander.t) { wander = { x: (Math.random() - .5) * 3.6, y: (Math.random() - .5) * 1.6, t: t + 2 + Math.random() * 3 }; } tx = wander.x; ty = wander.y; }
+  }
+  // Playful cats briefly dart their gaze around, then settle back on the cursor.
+  if (personality === 'playful' && vis !== 'sleep' && vis !== 'dizzy') {
+    if (t > playfulGaze.next) {
+      playfulGaze = Math.random() < .72
+        ? { x: (Math.random() - .5) * 7, y: (Math.random() - .5) * 3.4, until: t + .28 + Math.random() * .48, next: t + 1.2 + Math.random() * 2.2 }
+        : { x: 0, y: 0, until: 0, next: t + 1.5 + Math.random() * 2.5 };
+    }
+    if (t < playfulGaze.until) { tx += playfulGaze.x; ty += playfulGaze.y; }
   }
   const f = 1 - Math.exp(-dt * 12); ex += (tx - ex) * f; ey += (ty - ey) * f;
   const [tw, th] = TG[vis] || [1, 1]; ew += (tw - ew) * (1 - Math.exp(-dt * 10)); eh += (th - eh) * (1 - Math.exp(-dt * 10));
@@ -1199,10 +1208,10 @@ function apply(s) {
     pb.title = S.island.lock ? 'Pinned here. Click to unpin and move it' : 'Pin here. Drag the island anywhere, then click to lock it'; $('#hdr').title = S.island.lock ? '' : 'Drag to move'; }
   pollCal(); pollSys(); wasOpen ? paintPin() : null; layout();
 }
-nib.onSettings(apply); nib.onSpotify(v => { spOn = v; if (wasOpen && tab === 'music') paintPin(); });
+nib.onSettings(apply);
 (async () => {
   const r = await nib.getSettings(); CAT = r.catalog; apply(r.settings);
-  [notes, clips, coffee, cl, spOn] = await Promise.all([nib.notesGet(), nib.clipGet(), nib.coffeeGet(), nib.claude(), nib.spotifyStatus()]);
+  [notes, clips, coffee, cl] = await Promise.all([nib.notesGet(), nib.clipGet(), nib.coffeeGet(), nib.claude()]);
   pollNP(); layout();
   loadCurrentReleaseNotes();
 })();

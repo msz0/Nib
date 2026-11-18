@@ -2,7 +2,6 @@ dist/
 dist-test/
 node_modules/
 target/
-src-tauri/gen/
 
 # Local editor and backup artifacts
 *.backup-*
