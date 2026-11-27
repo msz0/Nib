@@ -1,0 +1,15 @@
+Nib Screen Tools — Windowed Edition
+
+CHANGES
+- OCR and drawing now open in separate resizable windows rather than fullscreen overlays.
+- OCR captures a screenshot on demand, then lets users drag-select the region in a preview and recognize only the crop.
+- Drawing is now screenshot annotation, not live drawing directly on the desktop. Saving exports a PNG. To annotate the live desktop itself, a transparent overlay is inherently required.
+- One window per tool; reopening focuses the existing window.
+- Errors are logged to Nib userData/nib-errors.log; capture has a timeout and restores its window on failure.
+- Live HEX window remains independent.
+
+REMAINING LIMITATIONS
+- Tesseract OCR executable and language files still need to be bundled under resources/tesseract (not included in this ZIP).
+- Cannot guarantee no Windows GPU/driver crashes without runtime testing; this is code-validated only.
+- Windows's screen capture permissions and multi-display behavior may vary; primary display is used.
+- This ZIP is SOURCE FILES, not an installer. Back up the project and replace source files, then npm start.

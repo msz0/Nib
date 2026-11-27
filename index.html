@@ -476,7 +476,10 @@ const ico = (k, sz = 18) => {
   if (I.stroke && I.stroke[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I.stroke[k]}</svg>`;
   return '';
 };
-const wik = id => id === 'screen' ? 'screen' : (CAT.widgets.find(w => w.id === id) || {}).ik || id;
+const calKind = () => /icloud|apple/i.test(S.ics || '') ? 'apple' : /outlook|office365|live\.com/i.test(S.ics || '') ? 'outlook' : 'google';
+const calIcon = () => { const k = calKind(); return k === 'apple' ? 'applecal' : k === 'outlook' ? 'outlookcal' : 'googlecalendar'; };
+const calColor = () => { const k = calKind(); return k === 'apple' ? '#FF3B30' : k === 'outlook' ? '#0078D4' : '#4285F4'; };
+const wik = id => id === 'screen' ? 'screen' : id === 'calendar' ? calIcon() : (CAT.widgets.find(w => w.id === id) || {}).ik || id;
 const detail = i => { i = i || {}; const p = i.file_path || i.notebook_path; if (p) return String(p).split(/[\\/]/).slice(-2).join('/'); return String(i.command || i.pattern || i.url || i.query || i.description || '').slice(0, 140); };
 const fmt = s => s < 60 ? s + 's' : Math.floor(s / 60) + 'm ' + (s % 60) + 's';
 const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
@@ -510,8 +513,32 @@ const play = ev => { const s = S.sounds; if (snd && s.on && s[ev] && s[ev] !== '
 nib.onPreview(o => tone(o.style, o.vol)); nib.onSound(v => snd = v);
 
 // ---------- layout / render
+let bannerOpen = false, bannerT = null;
+function showIslandPopup(title, sub, dur = 7500) {
+  clearTimeout(bannerT);
+  clearTimeout(idleT);
+  bannerOpen = true;
+  tab = 'home';
+  state = 'done';
+  look = 'done';
+  stTitle = title;
+  stSub = sub;
+  hop(1.6);
+  setTimeout(() => hop(1.2), 380);
+  play('event');
+  paintPin();
+  layout();
+  bannerT = setTimeout(() => {
+    bannerOpen = false;
+    if (!hover && !pinned && !typing() && state !== 'ask') {
+      goIdle();
+    } else {
+      layout();
+    }
+  }, dur);
+}
 function layout() {
-  const I = S.island, o = !gameMode && ((I.open === 'click' ? pinned : hover) || dragging || state === 'ask' || typing());
+  const I = S.island, o = !gameMode && ((I.open === 'click' ? pinned : hover) || dragging || state === 'ask' || typing() || bannerOpen);
   if (o !== wasOpen) { wasOpen = o; if (!o) { tab = 'home'; pinned=false; flushNotes(); menuOff(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); nib.focusable(false); } paintPin(); }
   const mus = !o && state === 'idle' && !focusEnd && I.music !== false && playing();
   isl.className = [o && 'open', mus && 'mus', (I.style === 'float' || (posInfo.free && !posInfo.attached)) && 'float', posInfo.up && 'up', moving && 'moving', S.island.lock && 'locked', I.eyes === false && 'noeyes', o && tab !== 'home' && 'app'].filter(Boolean).join(' ');
@@ -537,14 +564,14 @@ const fit = () => { if (wasOpen) isl.style.height = Math.min(Math.round(380 / (+
 new ResizeObserver(fit).observe(full);
 // Update main-process hitbox after width/height animations settle.
 ['transitionend','transitioncancel'].forEach(ev=>isl.addEventListener(ev,()=>{const r=isl.getBoundingClientRect();nib.setHitbox({left:r.left,top:r.top,width:r.width,height:r.height});}));
-const appColor = t => t === 'focus' ? tier(focusEnd ? focusMin : fSel)[2] : APPCOL[t] || '#8b93a7';
+const appColor = t => t === 'focus' ? tier(focusEnd ? focusMin : fSel)[2] : t === 'calendar' ? calColor() : APPCOL[t] || '#8b93a7';
 function set(s, t, sb, id) {
   clearTimeout(idleT); state = s; look = s; pend = id || 0; stTitle = t; stSub = sb || '';
   if (s === 'ask') tab = 'home';
   if (s === 'done') { hop(1.6); setTimeout(() => hop(1.2), 380); }
   paintPin(); layout();
 }
-const goIdle = () => set('idle', '', '');
+const goIdle = () => { bannerOpen = false; set('idle', '', ''); };
 
 // ---------- open layout: header, nav, tiles, views
 function buildChrome() {
@@ -561,7 +588,7 @@ const TILES = {
   notes: () => tile('notes', '#f5c542', `<span class="tic">${ico('notepad', 20)}</span><div class="tb">${esc(((notes[0] || {}).text || '').split('\n')[0] || 'New note').slice(0, 40)}<small>${notes.length} note${notes.length === 1 ? '' : 's'}</small></div>`),
   clip: () => tile('clip', '#4cc9f0', `<span class="tic">${ico('clip', 20)}</span><div class="tb">${clips.length ? esc(clips[0].slice(0, 36)) : 'Copy something'}<small>${clips.length} saved</small></div>`),
   files: () => tile('files', '#f5b942', `<span class="tic">${ico('folder', 20)}</span><div class="tb">Drop files<small>to sort them</small></div>`),
-  calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', '#4285F4', `<span class="tic">${ico('googlecalendar', 20)}</span><div class="tb">${e ? esc(e.title.slice(0, 28)) : S.ics ? 'Nothing soon' : 'Add a link'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'in Settings'}</small></div>`); },
+  calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', calColor(), `<span class="tic">${ico(calIcon(), 20)}</span><div class="tb">${e ? esc(e.title.slice(0, 28)) : S.ics ? 'Nothing soon' : 'Add a link'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'in Settings'}</small></div>`); },
   apps: () => tile('apps', '#8b93a7', `<span class="tic">${ico('apps', 20)}</span><div class="tb">Apps<small>${appList().length} ready</small></div>`),
   discord: () => tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>Mute and deafen controls</small></div>`),
   chat: () => tile('chat', '#e6cf72', `<span class="tic">${ico('chat', 20)}</span><div class="tb">Ask ${esc(NAME())}<small>anything</small></div>`),
@@ -571,8 +598,10 @@ const TILES = {
   voice: () => tile('voice','#fa7ea8',`<span class="tic">🎙</span><div class="tb">Voice memo<small>Record locally</small></div>`),
   claude: () => tile('claude', '#ff8a3d', `<span class="tic">${ico('claude', 20)}</span><div class="tb">${cl.connected ? (state === 'idle' ? 'Ready' : esc(stTitle)) : 'Connect'}<small>${cl.connected ? 'Claude Code' : 'in this tab'}</small></div>`)
 };
-const statusCard = () => state === 'idle' ? '' : `<div class="stc" style="--st:${state === 'ask' ? '#ff8a3d' : state === 'done' ? '#6fe3b4' : '#7aa2ff'}"><b>${esc(stTitle)}</b><div class="sb">${esc(stSub)}</div>`
-  + (pend ? `<div class="row"><button class="pri s" data-a="allow">Allow</button><button class="s" data-a="deny">Deny</button></div>` : state === 'ask' ? `<div class="row"><button class="s" data-a="dismiss">Dismiss</button></div>` : '') + '</div>';
+const statusCard = () => state === 'idle' ? '' : `<div class="stc" style="--st:${state === 'ask' ? '#ff8a3d' : state === 'done' ? (stTitle.includes('Calendar') || stTitle.includes('Event') || stTitle.includes('Starting now') ? calColor() : '#6fe3b4') : '#7aa2ff'}"><b>${esc(stTitle)}</b><div class="sb">${esc(stSub)}</div>`
+  + (pend ? `<div class="row"><button class="pri s" data-a="allow">Allow</button><button class="s" data-a="deny">Deny</button></div>`
+    : (stTitle.includes('Calendar') || stTitle.includes('Event') || stTitle.includes('Starting now')) ? `<div class="row"><button class="s pri" data-a="tab" data-t="calendar">View Calendar</button><button class="s" data-a="dismiss">Dismiss</button></div>`
+    : state === 'ask' ? `<div class="row"><button class="s" data-a="dismiss">Dismiss</button></div>` : '') + '</div>';
 const appList = () => (S.apps || []).map(id => CAT.apps.find(a => a.id === id) || (S.custom || []).find(a => a.id === id)).filter(Boolean);
 const tileIcon = a => a.logo || a.icon ? `<img src="${esc(a.logo || a.icon)}" alt="">` : a.ik ? ico(a.ik, 24) : `<b>${esc((a.name || '?')[0].toUpperCase())}</b>`;
 const chips = () => [15, 25, 45, 60, 90].map(m => `<button class="s" data-a="fmin" data-m="${m}"><i class="dot" style="background:${tier(m)[2]};margin-right:6px"></i>${m}</button>`).join('');
@@ -791,15 +820,129 @@ async function pollNP() {
   }
   setTimeout(pollNP, (tab === 'music' && wasOpen) || playing() ? 1500 : 3500);
 }
-let calT; async function pollCal() { clearTimeout(calT); if (S.ics) { const r = await nib.cal(); evs = r.ok ? r.events : []; } calT = setTimeout(pollCal, 300000); }
-let sysT; async function pollSys() { clearTimeout(sysT); const need = ['cpu','ram','gpuTemp'].includes(S.island.left) || ['cpu','ram','gpuTemp'].includes(S.island.right) || on('sys'); if (need) { sys = await nib.sys(); if (tab === 'sys' && wasOpen) { paintPin(); for (const k of ['CPU','RAM']) {const el=$('#s'+k),bar=$('#b'+k);if(el)el.textContent=sys[k.toLowerCase()]+'%';if(bar)bar.style.width=sys[k.toLowerCase()]+'%';} } } sysT = setTimeout(pollSys, 2000); }
-if (navigator.getBattery) navigator.getBattery().then(b => { bat = b; });
+let calT, knownEvents = new Map(), calInitialized = false, calSyncing = false;
+const calWeb = () => /icloud|apple/i.test(S.ics || '') ? 'https://www.icloud.com/calendar' : /outlook|office365|live\.com/i.test(S.ics || '') ? 'https://outlook.live.com/calendar' : 'https://calendar.google.com';
+const calWebLabel = () => /icloud|apple/i.test(S.ics || '') ? 'Apple Calendar' : /outlook|office365|live\.com/i.test(S.ics || '') ? 'Outlook' : 'Google Calendar';
+
+function fmtCalTime(e) {
+  const d = new Date(e.t), now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const isTomorrow = d.toDateString() === tomorrow.toDateString();
+  const dayStr = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  if (e.allDay) return `${dayStr} (All day)`;
+  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return isToday ? timeStr : `${timeStr} · ${dayStr}`;
+}
+
+async function syncCal(force = false) {
+  if (!S.ics) { evs = []; knownEvents.clear(); calInitialized = false; return { ok: true, events: [] }; }
+  if (calSyncing && !force) return { ok: true, events: evs };
+  calSyncing = true;
+  try {
+    const r = await nib.cal(force);
+    if (r.ok && Array.isArray(r.events)) {
+      const added = [];
+      const changed = [];
+      const currentMap = new Map();
+
+      for (const e of r.events) {
+        const id = e.id || (e.t + '|' + (e.title || ''));
+        currentMap.set(id, { t: e.t, end: e.end, title: e.title, allDay: e.allDay });
+
+        if (calInitialized) {
+          if (!knownEvents.has(id)) {
+            added.push(e);
+          } else {
+            const prev = knownEvents.get(id);
+            if (prev.t !== e.t || prev.title !== e.title || prev.allDay !== e.allDay) {
+              changed.push({ current: e, prev });
+            }
+          }
+        }
+      }
+
+      knownEvents = currentMap;
+      evs = r.events;
+
+      // Live Island Notification:
+      if (calInitialized && S.calAlerts !== false) {
+        if (added.length > 0 && changed.length === 0) {
+          if (added.length === 1) {
+            const e = added[0];
+            showIslandPopup('📅 Event added', `${e.title} · ${fmtCalTime(e)}`, 8000);
+          } else {
+            showIslandPopup('📅 Events added', `${added.length} new events · Next: ${added[0].title}`, 8000);
+          }
+        } else if (changed.length > 0 && added.length === 0) {
+          if (changed.length === 1) {
+            const { current, prev } = changed[0];
+            if (current.t !== prev.t) {
+              showIslandPopup('📅 Event rescheduled', `${current.title} · Now ${fmtCalTime(current)}`, 8000);
+            } else {
+              showIslandPopup('📅 Event updated', `"${current.title}" · ${fmtCalTime(current)}`, 8000);
+            }
+          } else {
+            showIslandPopup('📅 Calendar updated', `${changed.length} events modified`, 8000);
+          }
+        } else if (added.length > 0 && changed.length > 0) {
+          showIslandPopup('📅 Calendar updated', `${added.length} added, ${changed.length} updated`, 8000);
+        }
+      }
+
+      calInitialized = true;
+      if (wasOpen && tab === 'home') paintPin();
+    }
+    return r;
+  } finally {
+    calSyncing = false;
+  }
+}
+
+async function pollCal() {
+  clearTimeout(calT);
+  if (S.ics) {
+    await syncCal(false);
+    if (tab === 'calendar' && wasOpen && $('#cal')) {
+      renderCalView();
+    }
+  }
+  calT = setTimeout(pollCal, 30000);
+}
+
 const evRow = e => { const d = new Date(e.t), lab = d.toDateString() === new Date().toDateString() ? '' : d.toLocaleDateString([], { weekday: 'short' }) + ' '; return `<div class="ev"><b>${esc(lab + (e.allDay ? 'All day' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })))}</b><span>${esc(e.title)}</span></div>`; };
-async function loadCal() {
+
+function renderCalView(err) {
   const box = $('#cal'); if (!box) return;
-  if (!S.ics) { box.innerHTML = 'Add your calendar link in Settings to see events here.<div class="row" style="margin-top:8px"><button class="s" data-a="settings">Open Settings</button><button class="s" data-a="launch" data-t="https://calendar.google.com">Google Calendar</button></div>'; return; }
-  box.textContent = 'Loading...'; const r = await nib.cal(); if (tab !== 'calendar' || !$('#cal')) return;
-  box.innerHTML = r.ok ? (r.events.length ? r.events.map(evRow).join('') : 'Nothing in the next 7 days.') : 'Could not load the calendar: ' + esc(r.error);
+  if (!S.ics) {
+    box.innerHTML = 'Add your calendar link in Settings to see events here.<div class="row" style="margin-top:8px"><button class="s" data-a="settings">Open Settings</button><button class="s" data-a="launch" data-t="https://www.icloud.com/calendar">Apple Calendar</button><button class="s" data-a="launch" data-t="https://calendar.google.com">Google Calendar</button></div>';
+    fit(); return;
+  }
+  if (err) {
+    box.innerHTML = `<div class="muted">Could not load the calendar: ${esc(err)}</div><div class="row" style="margin-top:10px"><button class="s pri" data-a="calRefresh">↻ Retry</button><button class="s" data-a="settings">Settings</button></div>`;
+    fit(); return;
+  }
+  const rows = evs.length ? evs.map(evRow).join('') : '<div class="muted" style="margin-bottom:8px">Nothing in the next 7 days.</div>';
+  const actions = `<div class="row" style="margin-top:10px;align-items:center;justify-content:space-between"><button class="s pri" id="calRef" data-a="calRefresh">↻ Refresh</button><div class="row" style="gap:6px"><button class="s" data-a="launch" data-t="${calWeb()}">${calWebLabel()}</button><button class="s" data-a="settings">Settings</button></div></div>`;
+  box.innerHTML = rows + actions;
+  fit();
+}
+
+async function loadCal(force = false) {
+  const box = $('#cal'); if (!box) return;
+  if (!S.ics) { renderCalView(); return; }
+  if (force) {
+    const btn = $('#calRef');
+    if (btn) { btn.textContent = 'Refreshing...'; btn.disabled = true; }
+  } else if (!evs.length) {
+    box.textContent = 'Loading...';
+  } else {
+    renderCalView();
+  }
+  const r = await syncCal(force);
+  if (tab !== 'calendar' || !$('#cal')) return;
+  if (!r.ok) { renderCalView(r.error); return; }
+  renderCalView();
 }
 nib.onClip(v => { clips = v; if (wasOpen && (tab === 'clip' || tab === 'home')) paintPin(); });
 
@@ -870,6 +1013,7 @@ const ACT = {
   whatsnew: () => { menuOff(); selectedRelease=NIB_RELEASE; openTab('whatsnew'); }, releaseSelect: d => { selectedRelease=d.v; paintPin(); }, whatsnewDone: () => { markReleaseSeen(); openTab('home'); },
   update: async () => { menuOff(); try { const r=await nib.checkUpdates(); if(r && !r.ok) alert(r.message||'Update check unavailable'); } catch(e){alert('Update check failed: '+e.message);} },
   quit: () => nib.quit(), settings: () => { menuOff(); nib.openSettings(); }, launch: d => nib.launch(d.t), discord: d => nib.discord(d.k), key: d => nib.key(d.k),
+  calRefresh: () => loadCal(true),
   mctl: async d => { await nib.music(d.k); setTimeout(() => { if (!pollBusy) pollNP2(); }, 500); },
   tidy: async () => fm(await nib.tidy()), undo: async () => fm(await nib.undo()),
   fmin: d => setSel(+d.m), fstart: () => { focusMin = fSel; focusEnd = Date.now() + focusMin * 60000; paintPin(); layout(); }, fstop: () => { focusEnd = 0; paintPin(); layout(); }, fadd: () => { focusEnd += 5 * 60000; focusMin += 5; paintPin(); },
@@ -1009,9 +1153,9 @@ nib.on(e => {
 
 // ---------- clock, focus, calendar alerts
 function tick() {
-  if (focusEnd && Date.now() >= focusEnd) { focusEnd = 0; play('focus'); set('done', 'Focus complete', 'Nice work. Take a short break.'); idleT = setTimeout(goIdle, 8000); }
+  if (focusEnd && Date.now() >= focusEnd) { focusEnd = 0; play('focus'); showIslandPopup('Focus complete', 'Nice work. Take a short break.', 8000); }
   const n = Date.now();
-  for (const e of evs) { const k = e.t + e.title; if (!e.allDay && e.t - n < 15000 && e.t - n > -20000 && !alerted.has(k)) { alerted.add(k); if (state === 'idle') { play('event'); set('done', e.title, 'Starting now'); idleT = setTimeout(goIdle, 8000); } } }
+  for (const e of evs) { const k = (e.id || '') + e.t + e.title; if (!e.allDay && e.t - n < 15000 && e.t - n > -20000 && !alerted.has(k)) { alerted.add(k); if (state === 'idle') { showIslandPopup('🔔 Starting now', e.title, 9000); } } }
   if (wasOpen) { $('#hdt').textContent = new Date().toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) + '  ' + clock(); if (focusEnd) { const a = $('#fr'), b = $('#tfocus'); if (a) a.textContent = mmss(focusEnd - n); if (b && b.firstChild) b.firstChild.textContent = mmss(focusEnd - n); } }
   if (!wasOpen && !focusEnd) {
     const sec = Math.floor(n / 1000);
@@ -1163,6 +1307,7 @@ requestAnimationFrame(frame);
 
 // ---------- settings
 function apply(s) {
+  if (S.ics !== s.ics) { knownEvents.clear(); calInitialized = false; }
   S = { ...s, island: { ...DEF.island, ...(s.island || {}) }, sounds: { ...DEF.sounds, ...(s.sounds || {}) } };
   root.dataset.theme = S.theme || 'dark'; root.dataset.profile = S.profile || 'normal';
   // In Custom theme, independently color the notch body, not merely its accent.

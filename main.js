@@ -18,6 +18,7 @@ const CATALOG = {
     ['apps', 'Apps', 'A launcher with your favourite apps', 'apps'], ['chat', 'Chat', 'Ask your companion anything (your own API key)', 'chat'], ['coffee', 'Coffee', 'Keep the PC awake for a while', 'coffee'],
     ['discord', 'Discord', 'Mute and deafen with your keybinds', 'discord'], ['sys', 'System', 'CPU, memory, battery and GPU', 'sys'], ['screen', 'Screen tools', 'Color picker, text OCR and draw on screen', 'apps'], ['voice', 'Voice memo', 'Record a private audio note', 'chat'], ['claude', 'Claude Code', 'See what Claude is doing, approve things from the island', 'claude']].map(([id, name, desc, ik]) => ({ id, name, desc, ik })),
   apps: [['spotify', 'Spotify', 'spotify:', 'spotify'], ['discord', 'Discord', 'discord:', 'discord'], ['gcal', 'Google Calendar', 'https://calendar.google.com', 'googlecalendar'],
+    ['applecal', 'Apple Calendar', 'https://www.icloud.com/calendar', 'applecal'],
     ['outlookcal', 'Outlook Calendar', 'outlookcal:', 'outlookcal'], ['gmail', 'Gmail', 'https://mail.google.com', 'gmail'], ['browser', 'Browser', 'https://www.google.com', 'browser'],
     ['youtube', 'YouTube', 'https://www.youtube.com', 'youtube'], ['vscode', 'VS Code', 'code', 'vscode'], ['terminal', 'Terminal', 'wt', 'terminal'], ['explorer', 'Files', 'explorer', 'explorer'],
     ['notepad', 'Notepad', 'notepad', 'notepad'], ['calc', 'Calculator', 'calc', 'calc'], ['settings', 'Windows Settings', 'ms-settings:', 'winsettings'], ['teams', 'Teams', 'msteams:', 'teams'],
@@ -28,7 +29,7 @@ const CATALOG = {
 };
 const DEF = { v: 3, name: 'Nib', you: '', spotifyId: '', player: 'Spotify', youtubeBrowser: 'chrome', youtubeConnected: false, youtubePreviousPlayer: 'Spotify', lyricOffset: 0,
   widgets: ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'chat', 'coffee', 'claude'], widgetOrder: [], theme: 'dark', profile: 'normal', greetings: true,
-  apps: ['spotify', 'discord', 'gcal', 'browser', 'vscode', 'explorer', 'calc', 'settings'], custom: [], zones: [], sortBase: '', ics: '', discord: { mute: '', deafen: '' },
+  apps: ['spotify', 'discord', 'gcal', 'browser', 'vscode', 'explorer', 'calc', 'settings'], custom: [], zones: [], sortBase: '', ics: '', calAlerts: true, discord: { mute: '', deafen: '' },
   island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true, pos: null, lock: false },
   gameModeShortcut: 'Ctrl+Alt+G',
   openShortcut: '',
@@ -431,7 +432,14 @@ else app.whenReady().then(async () => {
     const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { properties: kind === 'file' ? ['openFile'] : ['openDirectory', 'createDirectory'] });
     return r.canceled ? '' : r.filePaths[0];
   });
-  ipcMain.handle('cal:get', async () => { try { return { ok: true, events: await calendar.upcoming(S.ics) }; } catch (e) { return { ok: false, error: e.message }; } });
+  ipcMain.handle('cal:get', async (_, force) => {
+    try {
+      if (force) calendar.clear();
+      return { ok: true, events: await calendar.upcoming(S.ics, 7, 6, !!force) };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
   const base = () => S.sortBase || path.join(app.getPath('documents'), 'Sorted');
   ipcMain.handle('files:drop', (_, paths, zone) => {
     if (zone === 'type') return { ...files.byType(paths, base()), label: 'by type' };

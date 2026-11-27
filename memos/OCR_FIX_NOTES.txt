@@ -1,0 +1,5 @@
+Fix: Removed duplicate Electron clipboard.readImage OCR handler that always failed in your Electron environment.
+Select area now starts Windows Snipping Tool after a PowerShell STA clipboard watcher is ready, imports the PNG, OCRs it, and displays text.
+Import screenshot reads existing clipboard through the same Windows helper.
+Requires ocr-clipboard.ps1 next to main.js and Tesseract OCR.
+Windows runtime not tested here.

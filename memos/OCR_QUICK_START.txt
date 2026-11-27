@@ -1,0 +1,8 @@
+Nib OCR without Electron clipboard APIs.
+1. Open Screen tools > Text OCR.
+2. Click Select area, then select text with Windows Snipping Tool. OCR runs automatically.
+3. Or use Read clipboard after Win+Shift+S. Or Open image.
+Requires Windows PowerShell 5.1 and Tesseract OCR installed.
+The helper ocr-clipboard.ps1 MUST be beside main.js.
+Close Nib fully, back up your folder, replace all files from this ZIP, then npm start.
+Not runtime-tested on Windows.
