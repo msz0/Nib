@@ -386,14 +386,25 @@ svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:va
 .release-note-text>div{min-width:0;width:100%}
 .release-note-text b{font-size:12px}
 .release-note-text small{display:block!important;font-size:10px;opacity:.7;margin-top:4px}
+.release-note-text .release-copy{margin:0!important;white-space:normal!important}
+.release-note-text .release-markdown{margin-top:8px!important;font:12px/1.55 'Segoe UI',sans-serif!important;white-space:normal!important;overflow-wrap:anywhere;user-select:text}
+.release-markdown>*{margin:0 0 9px}
+.release-markdown>*:last-child{margin-bottom:0}
+.release-markdown h3,.release-markdown h4,.release-markdown h5,.release-markdown h6{font-size:13px;line-height:1.35}
+.release-markdown ul,.release-markdown ol{padding-left:22px}
+.release-markdown li+li{margin-top:4px}
+.release-markdown code{padding:1px 5px;border-radius:5px;background:rgba(255,255,255,.1);font:11px "Cascadia Mono",Consolas,monospace}
+.release-markdown pre{padding:9px 10px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(0,0,0,.2);white-space:pre-wrap;overflow-wrap:anywhere}
 /* What's New: compact layout without window clipping. */
 #pin:has(.release-page){overflow:hidden!important;max-height:290px!important;min-height:0!important;}
 .release-page{display:flex!important;flex-direction:column!important;min-height:0!important;max-height:280px!important;height:280px!important;overflow:hidden!important;padding:2px 4px 4px!important;}
 .release-head{flex:0 0 auto!important;padding:1px 0 6px!important;}
 .release-head h2{font-size:16px!important;margin:5px 0 2px!important;}
 .release-head p{display:none!important;}
-.release-items{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin;}
-.release-note-text{display:block!important;}
+.release-items{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important;gap:6px!important;}
+.release-history-tabs{position:relative;z-index:1;flex:0 0 auto!important;overflow-x:auto;overflow-y:hidden;}
+.release-note-text{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;scrollbar-width:thin;}
+.release-note-text>div{flex:0 0 auto!important;}
 .release-note-text div{font:12px/1.45 'Segoe UI',sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text;margin-top:7px;}
 .release-actions{flex:0 0 auto!important;margin-top:7px!important;padding-top:3px!important;}
 
@@ -447,7 +458,7 @@ const tier = m => TIERS.find(t => m <= t[0]);
 let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: [], widgets: [], icons: { fill: {}, stroke: {} } };
 let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false, gameMode = false;
 let snd = true, t0 = 0, idleT, leaveT, ctx, focusEnd = 0, fSel = 25, focusMin = 25, cx = 0, cy = 0, lastMove = performance.now(), dizzyUntil = 0;
-let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaAppVolume = 50, mediaVolumeTarget = '', mediaVolumeMessage = 'Reading app volume…', mediaVolumeAvailable = false, mediaScrubbing = false, mediaSeekBar = null, evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null;
+let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaAppVolume = 50, mediaVolumeTarget = '', mediaVolumeMessage = 'Reading app volume…', mediaVolumeAvailable = false, mediaScrubbing = false, mediaSeekBar = null, evs = [], calendarConnected = false, alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null;
 let voiceRecorder = null, voiceParts = [], voiceStream = null;
 let memoAudio = null, memoPlaying = '', currentOutput = 'default';
 function stopMemoAudio(){ if(memoAudio){memoAudio.pause();memoAudio.removeAttribute('src');memoAudio.load();memoAudio=null;} memoPlaying=''; }
@@ -561,7 +572,7 @@ const TILES = {
   notes: () => tile('notes', '#f5c542', `<span class="tic">${ico('notepad', 20)}</span><div class="tb">${esc(((notes[0] || {}).text || '').split('\n')[0] || 'New note').slice(0, 40)}<small>${notes.length} note${notes.length === 1 ? '' : 's'}</small></div>`),
   clip: () => tile('clip', '#4cc9f0', `<span class="tic">${ico('clip', 20)}</span><div class="tb">${clips.length ? esc(clips[0].slice(0, 36)) : 'Copy something'}<small>${clips.length} saved</small></div>`),
   files: () => tile('files', '#f5b942', `<span class="tic">${ico('folder', 20)}</span><div class="tb">Drop files<small>to sort them</small></div>`),
-  calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', '#4285F4', `<span class="tic">${ico('googlecalendar', 20)}</span><div class="tb">${e ? esc(e.title.slice(0, 28)) : S.ics ? 'Nothing soon' : 'Add a link'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'in Settings'}</small></div>`); },
+  calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', '#9fc28f', `<span class="tic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7.5 3v4M16.5 3v4M4 9.5h16M8 13h3M8 16h3"/></svg></span><div class="tb">${e ? esc(e.title.slice(0, 28)) : calendarConnected ? 'Nothing soon' : 'Connect Apple'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : calendarConnected ? 'this week' : 'in Settings'}</small></div>`); },
   apps: () => tile('apps', '#8b93a7', `<span class="tic">${ico('apps', 20)}</span><div class="tb">Apps<small>${appList().length} ready</small></div>`),
   discord: () => tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>Mute and deafen controls</small></div>`),
   chat: () => tile('chat', '#e6cf72', `<span class="tic">${ico('chat', 20)}</span><div class="tb">Ask ${esc(NAME())}<small>anything</small></div>`),
@@ -583,6 +594,36 @@ const seenKey=()=> 'nib-whats-new-read-v'+NIB_RELEASE;
 const releaseSeen=()=>{try{return localStorage.getItem(seenKey())==='1';}catch{return true;}};
 const markReleaseSeen=()=>{try{localStorage.setItem(seenKey(),'1');}catch{}};
 const releaseCard=()=>`<section class="release-card"><div><b>✨ What's New in Nib v${esc(NIB_RELEASE)}</b><small>See the changes in your installed version</small></div><button class="s release-view" data-a="whatsnew">View update</button></section>`;
+const releaseInline=source=>{
+  const code=[];
+  let text=esc(source).replace(/`([^`\n]+)`/g,(_,value)=>{code.push(value);return `\u0000${code.length-1}\u0000`;});
+  text=text.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/__([^_]+)__/g,'<strong>$1</strong>');
+  text=text.replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>').replace(/(^|[^_])_([^_\n]+)_/g,'$1<em>$2</em>');
+  return text.replace(/\u0000(\d+)\u0000/g,(_,index)=>`<code>${code[Number(index)]}</code>`);
+};
+const releaseMarkdown=source=>{
+  const blocks=[],lines=String(source||'').replace(/\r\n?/g,'\n').split('\n');
+  let paragraph=[],listType='',listItems=[],fence=null;
+  const flushParagraph=()=>{if(paragraph.length){blocks.push(`<p>${paragraph.map(releaseInline).join(' ')}</p>`);paragraph=[];}};
+  const flushList=()=>{if(listType){blocks.push(`<${listType}>${listItems.map(item=>`<li>${releaseInline(item)}</li>`).join('')}</${listType}>`);listType='';listItems=[];}};
+  for(const line of lines){
+    if(/^\s*```/.test(line)){
+      flushParagraph();flushList();
+      if(fence){blocks.push(`<pre><code>${esc(fence.join('\n'))}</code></pre>`);fence=null;}else fence=[];
+      continue;
+    }
+    if(fence){fence.push(line);continue;}
+    if(!line.trim()){flushParagraph();flushList();continue;}
+    const heading=line.match(/^\s{0,3}(#{1,4})\s+(.+?)\s*#*\s*$/);
+    if(heading){flushParagraph();flushList();const level=Math.min(6,heading[1].length+2);blocks.push(`<h${level}>${releaseInline(heading[2])}</h${level}>`);continue;}
+    const item=line.match(/^\s*(?:[-*+]\s+(.+)|\d+[.)]\s+(.+))$/);
+    if(item){flushParagraph();const type=item[2]?'ol':'ul';if(listType!==type){flushList();listType=type;}listItems.push(item[1]||item[2]);continue;}
+    flushList();paragraph.push(line.trim());
+  }
+  if(fence)blocks.push(`<pre><code>${esc(fence.join('\n'))}</code></pre>`);
+  flushParagraph();flushList();
+  return blocks.join('');
+};
 const releasePage=()=>{
   const entries=nibReleaseHistory.length?nibReleaseHistory:[{version:NIB_RELEASE,name:'Nib v'+NIB_RELEASE,date:'',body:releaseInfo.body}];
   const current=entries.find(x=>x.version===(selectedRelease||NIB_RELEASE))||entries[0];
@@ -590,8 +631,8 @@ const releasePage=()=>{
   const info=current.version===NIB_RELEASE?releaseInfo:({body:current.body,source:releaseHistorySource});
   return `<div class="release-page"><div class="release-head"><span class="release-tag">✨ NIB v${esc(NIB_RELEASE)} INSTALLED</span><h2>Update History</h2></div>
     <div class="release-items"><div class="release-history-tabs">${entries.map(x=>`<button type="button" class="release-version-btn ${x.version===current.version?'active':''}" data-a="releaseSelect" data-v="${esc(x.version)}">v${esc(x.version)}${x.version===NIB_RELEASE?' · Installed':''}</button>`).join('')}</div>
-    <div class="release-item release-note-text"><div><b>${esc(current.name||'Nib v'+selected)}</b><small>${current.date?'Released '+esc(current.date)+' · ':''}v${selected} · ${info.source==='github'?'GitHub Releases':info.source==='cache'?'Offline cache':info.source==='loading'?'Loading…':'Available details'}</small><div>${esc(current.version===NIB_RELEASE?releaseInfo.body:current.body)}</div></div></div></div>
-    <div class="release-actions"><button class="s pri" data-a="whatsnewDone">Done</button><button class="s" data-a="update">Check for updates</button></div></div>`;
+    <div class="release-item release-note-text"><div class="release-copy"><b>${esc(current.name||'Nib v'+selected)}</b><small>${current.date?'Released '+esc(current.date)+' · ':''}v${selected} · ${info.source==='github'?'GitHub Releases':info.source==='cache'?'Offline cache':info.source==='loading'?'Loading…':'Available details'}</small><div class="release-markdown">${releaseMarkdown(current.version===NIB_RELEASE?releaseInfo.body:current.body)}</div></div></div></div>
+    <div class="release-actions"><button class="s pri" data-a="whatsnewDone" ${releaseInfo.source==='loading'?'disabled':''}>Done</button><button class="s" data-a="update">Check for updates</button></div></div>`;
 };
 async function loadReleaseHistory(){
   if(typeof nib.releaseHistory!=='function')return;
@@ -609,7 +650,7 @@ async function loadCurrentReleaseNotes(){
       // Open once per installed version. The user dismisses it with Done.
       tab='whatsnew';pinned=true;hover=true;layout();paintPin();
     } else if(wasOpen&&(tab==='home'||tab==='whatsnew'))paintPin();
-  }catch(e){releaseInfo={body:'Unable to read update details: '+e.message,source:'unavailable'};}
+  }catch(e){releaseInfo={body:'Unable to read update details: '+e.message,source:'unavailable'};if(wasOpen&&tab==='whatsnew')paintPin();}
 }
 const TPL = {
   home: () => `<div class="home-intro"><div><h2>My workspace</h2><p>Your essentials, one click away</p></div><span class="home-tag"><i class="home-dot"></i>Ready</span></div>` + statusCard() + (!releaseSeen() ? releaseCard() : '') + `<div class="tiles">${order().filter(on).slice(0, 6).map(id => TILES[id]()).join('')}</div>`,
@@ -791,17 +832,35 @@ async function pollNP() {
   }
   setTimeout(pollNP, (tab === 'music' && wasOpen) || playing() ? 1500 : 3500);
 }
-let calT; async function pollCal() { clearTimeout(calT); if (S.ics) { const r = await nib.cal(); evs = r.ok ? r.events : []; } calT = setTimeout(pollCal, 300000); }
+let calT; async function pollCal() {
+  clearTimeout(calT);
+  try {
+    const status = await nib.calendarStatus();
+    calendarConnected = !!status.connected;
+    if (calendarConnected) {
+      const r = await nib.cal();
+      evs = r.ok ? r.events : [];
+      if (!r.ok) console.error('[Nib calendar] Could not refresh events:', r.error);
+    } else evs = [];
+    if (wasOpen && (tab === 'home' || tab === 'calendar')) paintPin();
+  } catch (error) { console.error('[Nib calendar] Could not refresh connection status:', error); }
+  calT = setTimeout(pollCal, 30000);
+}
 let sysT; async function pollSys() { clearTimeout(sysT); const need = ['cpu','ram','gpuTemp'].includes(S.island.left) || ['cpu','ram','gpuTemp'].includes(S.island.right) || on('sys'); if (need) { sys = await nib.sys(); if (tab === 'sys' && wasOpen) { paintPin(); for (const k of ['CPU','RAM']) {const el=$('#s'+k),bar=$('#b'+k);if(el)el.textContent=sys[k.toLowerCase()]+'%';if(bar)bar.style.width=sys[k.toLowerCase()]+'%';} } } sysT = setTimeout(pollSys, 2000); }
 if (navigator.getBattery) navigator.getBattery().then(b => { bat = b; });
 const evRow = e => { const d = new Date(e.t), lab = d.toDateString() === new Date().toDateString() ? '' : d.toLocaleDateString([], { weekday: 'short' }) + ' '; return `<div class="ev"><b>${esc(lab + (e.allDay ? 'All day' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })))}</b><span>${esc(e.title)}</span></div>`; };
 async function loadCal() {
   const box = $('#cal'); if (!box) return;
-  if (!S.ics) { box.innerHTML = 'Add your calendar link in Settings to see events here.<div class="row" style="margin-top:8px"><button class="s" data-a="settings">Open Settings</button><button class="s" data-a="launch" data-t="https://calendar.google.com">Google Calendar</button></div>'; return; }
+  if (!calendarConnected) { box.innerHTML = 'Connect Apple Calendar in Settings to see your upcoming events.<div class="row" style="margin-top:8px"><button class="s" data-a="settings">Open Settings</button></div>'; return; }
   box.textContent = 'Loading...'; const r = await nib.cal(); if (tab !== 'calendar' || !$('#cal')) return;
   box.innerHTML = r.ok ? (r.events.length ? r.events.map(evRow).join('') : 'Nothing in the next 7 days.') : 'Could not load the calendar: ' + esc(r.error);
 }
 nib.onClip(v => { clips = v; if (wasOpen && (tab === 'clip' || tab === 'home')) paintPin(); });
+nib.onCalendarUpdate(v => {
+  if (v.status) calendarConnected = !!v.status.connected;
+  if (v.ok) evs = v.events || [];
+  if (wasOpen && (tab === 'calendar' || tab === 'home')) paintPin();
+});
 
 async function loadMemos(){const box=$('#memos');if(!box)return;try{const list=await nib.extrasListAudio();if(!box.isConnected)return;
   window.nibMemoList=list;

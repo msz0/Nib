@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, safeStorage, dialog, shell, clipboard, powerSaveBlocker, powerMonitor, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, safeStorage, dialog, shell, clipboard, powerSaveBlocker, powerMonitor, globalShortcut, Notification } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const os = require('os');
 const path = require('path'), fs = require('fs'), { execFile } = require('child_process');
@@ -14,7 +14,7 @@ const W = 520, H = 400;
 const GATE = new Set(['Bash', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
 const CATALOG = {
   widgets: [['music', 'Media controls', 'Control Spotify or YouTube from one place', 'spotify'], ['focus', 'Focus timer', 'A timer for focused work, in the island', 'focus'], ['notes', 'Notes', 'A quick notepad, always at hand', 'notepad'],
-    ['clip', 'Clipboard', 'Your last copies. Click one to copy it again', 'clip'], ['files', 'Files', 'Drop files to sort them, tidy Downloads', 'folder'], ['calendar', 'Calendar', 'Your next events, with a chime when one starts', 'googlecalendar'],
+    ['clip', 'Clipboard', 'Your last copies. Click one to copy it again', 'clip'], ['files', 'Files', 'Drop files to sort them, tidy Downloads', 'folder'], ['calendar', 'Calendar', 'Your next events, with a chime when one starts', 'outlookcal'],
     ['apps', 'Apps', 'A launcher with your favourite apps', 'apps'], ['chat', 'Chat', 'Ask your companion anything (your own API key)', 'chat'], ['coffee', 'Coffee', 'Keep the PC awake for a while', 'coffee'],
     ['discord', 'Discord', 'Mute and deafen with your keybinds', 'discord'], ['sys', 'System', 'CPU, memory, battery and GPU', 'sys'], ['screen', 'Screen tools', 'Color picker, text OCR and draw on screen', 'apps'], ['voice', 'Voice memo', 'Record a private audio note', 'chat'], ['claude', 'Claude Code', 'See what Claude is doing, approve things from the island', 'claude']].map(([id, name, desc, ik]) => ({ id, name, desc, ik })),
   apps: [['spotify', 'Spotify', 'spotify:', 'spotify'], ['discord', 'Discord', 'discord:', 'discord'], ['gcal', 'Google Calendar', 'https://calendar.google.com', 'googlecalendar'],
@@ -28,23 +28,35 @@ const CATALOG = {
 };
 const DEF = { v: 3, name: 'Nib', you: '', spotifyId: '', player: 'Spotify', youtubeBrowser: 'chrome', youtubeConnected: false, youtubePreviousPlayer: 'Spotify', lyricOffset: 0,
   widgets: ['music', 'focus', 'notes', 'clip', 'files', 'calendar', 'apps', 'chat', 'coffee', 'claude'], widgetOrder: [], theme: 'dark', profile: 'normal', greetings: true,
-  apps: ['spotify', 'discord', 'gcal', 'browser', 'vscode', 'explorer', 'calc', 'settings'], custom: [], zones: [], sortBase: '', ics: '', discord: { mute: '', deafen: '' },
+  apps: ['spotify', 'discord', 'gcal', 'browser', 'vscode', 'explorer', 'calc', 'settings'], custom: [], zones: [], sortBase: '', discord: { mute: '', deafen: '' },
   island: { size: 'normal', style: 'attached', alpha: 0, open: 'hover', left: 'nothing', right: 'time', eyes: true, clock: 'auto', lyrics: true, music: true, pos: null, lock: false },
   gameModeShortcut: 'Ctrl+Alt+G',
   openShortcut: '',
   collapseShortcut: '',
   gameModeAuto: false,
   sounds: { on: true, vol: .7, done: 'chime', ask: 'bell', focus: 'marimba', event: 'soft' } };
-let win, sw, tray, server, spotify, S = { ...DEF }, gateOn = true, history = [];
+let win, sw, tray, server, spotify, appleCalendarTimer, appleCalendarBusy = false, appleCalendarLoggedError = '', S = { ...DEF }, gateOn = true, history = [];
 
 const sfile = () => path.join(app.getPath('userData'), 'settings.json');
 const keyFile = () => path.join(app.getPath('userData'), 'key.bin');
+const appleCalendarFile = () => path.join(app.getPath('userData'), 'apple-calendar-url.bin');
+const legacyAppleCalendarFile = () => path.join(app.getPath('userData'), 'apple-calendar.bin');
 const readKey = () => { try { return safeStorage.decryptString(fs.readFileSync(keyFile())); } catch { return ''; } };
+const readAppleCalendarUrl = () => {
+  try {
+    const data = JSON.parse(safeStorage.decryptString(fs.readFileSync(appleCalendarFile())));
+    return data && typeof data.url === 'string' ? data.url : '';
+  } catch (error) {
+    if (fs.existsSync(appleCalendarFile())) logCrash('apple-calendar-link-read', error);
+    return '';
+  }
+};
 const load = () => {
   try { const j = JSON.parse(fs.readFileSync(sfile(), 'utf8')); S = { ...DEF, ...j, island: { ...DEF.island, ...(j.island || {}) }, sounds: { ...DEF.sounds, ...(j.sounds || {}) } }; } catch {}
   if (!Array.isArray(S.widgetOrder)) S.widgetOrder = [];
   if ((S.v || 0) < 3) { S.v = 3; for (const w of ['notes', 'clip', 'coffee', 'claude']) if (!S.widgets.includes(w)) S.widgets.push(w); }
   for (const c of S.custom || []) if (!S.apps.includes(c.id)) S.apps.push(c.id);
+  if (Object.prototype.hasOwnProperty.call(S, 'ics')) { delete S.ics; save(); }
 };
 const save = () => { fs.mkdirSync(path.dirname(sfile()), { recursive: true }); fs.writeFileSync(sfile(), JSON.stringify(S, null, 2)); };
 const send = e => win && !win.isDestroyed() && win.webContents.send('ev', e);
@@ -70,7 +82,7 @@ function launch(t) {
 }
 function openSettings() {
   if (sw && !sw.isDestroyed()) return sw.focus();
-  sw = new BrowserWindow({ width: 940, height: 680, minWidth: 760, minHeight: 520, title: 'Settings', backgroundColor: '#0b0d11', autoHideMenuBar: true,
+  sw = new BrowserWindow({ width: 1080, height: 720, minWidth: 860, minHeight: 600, title: 'Settings', backgroundColor: '#070707', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js') } });
   sw.setMenu(null); sw.loadFile(path.join(__dirname, 'settings.html'));
 }
@@ -91,6 +103,13 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else app.whenReady().then(async () => {
   if (process.argv.includes('--at-login')) await new Promise(r => setTimeout(r, 5000));   // let Windows finish loading the desktop first
   load();
+  const savedCalendarUrl = readAppleCalendarUrl();
+  if (savedCalendarUrl) {
+    try { calendar.configure(savedCalendarUrl); }
+    catch (error) { logCrash('apple-calendar-link-configure', error); }
+  }
+  try { fs.rmSync(legacyAppleCalendarFile(), { force: true }); }
+  catch (error) { logCrash('apple-calendar-legacy-credential-remove', error); }
   const legacyDiscordToken = path.join(app.getPath('userData'), 'discord-bot.bin');
   try { fs.rmSync(legacyDiscordToken, { force: true }); }
   catch (e) { console.error('[discord] Could not remove the previously saved bot token:', e); }
@@ -426,12 +445,87 @@ else app.whenReady().then(async () => {
       delete a.icon;
       if (!a.logo && a.target && fs.existsSync(a.target)) { try { a.icon = (await app.getFileIcon(a.target, { size: 'large' })).resize({ width: 64, height: 64 }).toDataURL(); } catch {} }
     }
-    save(); calendar.clear(); tray.setToolTip(S.name || 'Nib'); place(); win.webContents.send('settings', S); return true; });
+    save(); tray.setToolTip(S.name || 'Nib'); place(); win.webContents.send('settings', S); return true; });
   ipcMain.handle('pick', async (e, kind) => {
     const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { properties: kind === 'file' ? ['openFile'] : ['openDirectory', 'createDirectory'] });
     return r.canceled ? '' : r.filePaths[0];
   });
-  ipcMain.handle('cal:get', async () => { try { return { ok: true, events: await calendar.upcoming(S.ics) }; } catch (e) { return { ok: false, error: e.message }; } });
+  ipcMain.handle('calendar:status', () => calendar.status());
+  ipcMain.handle('calendar:connect', async (_, input) => {
+    const publicUrl = String(input && input.url || '').trim();
+    if (!publicUrl) return { ok: false, error: 'Paste your public Apple Calendar link.' };
+    if (!safeStorage.isEncryptionAvailable()) return { ok: false, error: 'Secure credential storage is unavailable on this device.' };
+    const previous = readAppleCalendarUrl();
+    try {
+      const url = calendar.configure(publicUrl);
+      await calendar.sync();
+      const file = appleCalendarFile(), temp = file + '.tmp', backup = file + '.bak';
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(temp, safeStorage.encryptString(JSON.stringify({ url })));
+      if (fs.existsSync(backup)) fs.rmSync(backup, { force: true });
+      if (fs.existsSync(file)) fs.renameSync(file, backup);
+      try { fs.renameSync(temp, file); }
+      catch (error) {
+        if (fs.existsSync(backup)) {
+          if (fs.existsSync(file)) fs.rmSync(file, { force: true });
+          fs.renameSync(backup, file);
+        }
+        throw error;
+      }
+      if (fs.existsSync(backup)) fs.rmSync(backup, { force: true });
+      const result = { ok: true, status: calendar.status(), events: await calendar.upcoming() };
+      if (win && !win.isDestroyed()) win.webContents.send('calendar:updated', result);
+      return result;
+    } catch (error) {
+      try { fs.rmSync(appleCalendarFile() + '.tmp', { force: true }); } catch {}
+      if (previous) calendar.configure(previous);
+      else calendar.disconnect();
+      return { ok: false, error: error.message || 'Apple Calendar connection failed.' };
+    }
+  });
+  ipcMain.handle('calendar:disconnect', () => {
+    try { fs.rmSync(appleCalendarFile(), { force: true }); }
+    catch (error) { return { ok: false, error: 'Could not remove the saved Apple Calendar connection.' }; }
+    calendar.disconnect();
+    const result = { ok: true, status: calendar.status(), events: [] };
+    if (win && !win.isDestroyed()) win.webContents.send('calendar:updated', result);
+    return result;
+  });
+  ipcMain.handle('cal:get', async () => {
+    try { return { ok: true, events: await calendar.upcoming() }; }
+    catch (e) { return { ok: false, error: e.message }; }
+  });
+  const syncAppleCalendar = async () => {
+    if (!calendar.status().connected || appleCalendarBusy) return;
+    appleCalendarBusy = true;
+    try {
+      const result = await calendar.sync();
+      appleCalendarLoggedError = '';
+      if (result.changes.length && Notification.isSupported()) {
+        for (const change of result.changes.slice(0, 4)) {
+          new Notification({
+            title: change.type === 'added' ? 'New Apple Calendar event' : 'Apple Calendar event changed',
+            body: change.title.slice(0, 180)
+          }).show();
+        }
+        if (result.changes.length > 4) {
+          new Notification({ title: 'Apple Calendar updated', body: `${result.changes.length - 4} more event changes` }).show();
+        }
+      }
+      if (win && !win.isDestroyed()) win.webContents.send('calendar:updated', { ok: true, events: result.events, status: calendar.status() });
+    } catch (error) {
+      const message = calendar.status().error || error && error.message || 'Apple Calendar sync failed.';
+      if (message !== appleCalendarLoggedError) logCrash('apple-calendar-sync', error);
+      appleCalendarLoggedError = message;
+      if (win && !win.isDestroyed()) win.webContents.send('calendar:updated', {
+        ok: false, error: message, status: calendar.status()
+      });
+    } finally {
+      appleCalendarBusy = false;
+    }
+  };
+  appleCalendarTimer = setInterval(syncAppleCalendar, 30000);
+  if (calendar.status().connected) setTimeout(syncAppleCalendar, 1000);
   const base = () => S.sortBase || path.join(app.getPath('documents'), 'Sorted');
   ipcMain.handle('files:drop', (_, paths, zone) => {
     if (zone === 'type') return { ...files.byType(paths, base()), label: 'by type' };
@@ -571,7 +665,7 @@ else app.whenReady().then(async () => {
   ipcMain.handle('claude:set', (_, o) => { try { if ('connect' in o) { if (o.connect) hooks.connect(); else hooks.disconnect(); } } catch (e) { return { error: e.message }; } if ('gate' in o) gateOn = !!o.gate; return { connected: hooks.isConnected(), gate: gateOn }; });
   ipcMain.on('sound:preview', (_, o) => win.webContents.send('preview', o));
   ipcMain.on('app:quit', () => { media.stop(); app.quit(); });
-  app.on('will-quit', () => { globalShortcut.unregisterAll(); if (autoGameTimer) clearInterval(autoGameTimer); });
+  app.on('will-quit', () => { globalShortcut.unregisterAll(); if (autoGameTimer) clearInterval(autoGameTimer); if (appleCalendarTimer) clearInterval(appleCalendarTimer); });
   const enc = t => safeStorage.encryptString(t), dec = b => safeStorage.decryptString(b);
   spotify = spotifyApi.create({ file: path.join(app.getPath('userData'), 'spotify.bin'), enc, dec, open: u => shell.openExternal(u), clientId: () => S.spotifyId,
     onChange: v => { if (sw && !sw.isDestroyed()) sw.webContents.send('spotify', v); win.webContents.send('spotify', v); } });

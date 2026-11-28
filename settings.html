@@ -1,7 +1,7 @@
 <!doctype html><meta charset="utf-8"><title>Settings</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
 <style>
-:root{--ac:#c8e38a;--bg:#0d0f13;--card:#14171d;--line:#1d212a;color-scheme:dark}*{box-sizing:border-box}
+:root{--ac:#c8e38a;--bg:#0d0f13;--card:#14171d;--line:#1d212a;--cal-ink:#e7eee6;--cal-muted:#a1ada2;--cal-green:#b4d7a4;--cal-surface:#101613;--cal-line:#303a33;color-scheme:dark}*{box-sizing:border-box}
 html,body{height:100%;margin:0}body{display:flex;background:var(--bg);color:#eceef3;font:14px/1.4 "Segoe UI Variable Text","Segoe UI",sans-serif}
 #side{width:220px;flex:none;background:#0a0b0e;border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px}
 #side .brand{display:flex;gap:10px;align-items:center;padding:4px 10px 16px;font-weight:700}#side .brand small{display:block;font-weight:400;color:#7d8496;font-size:12px}
@@ -23,10 +23,88 @@ input[type=text]{height:34px;min-width:260px;padding:0 12px;border-radius:9px;bo
 .lg{width:26px;height:26px;flex:none;display:grid;place-items:center;color:#cfd3dd}.lg img{width:24px;height:24px;object-fit:contain;filter:grayscale(1) brightness(1.2)}
 .arow .btn{padding:0 7px;white-space:nowrap;max-width:100%}.arow .bl{font-size:11px}.arow .h{flex:none}.ac .draghandle{cursor:grab;color:#9ba5b8;font-size:21px;user-select:none;flex:none}.ac .draghandle:active{cursor:grabbing}.ac .ic{flex:none}.ac{min-width:0}.ac .h>div:nth-child(3){min-width:0;flex:1}.btn.on{background:var(--ac);color:#10130a;border-color:var(--ac)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px}.mini{width:30px;padding:0}code{background:#1a1e26;padding:2px 6px;border-radius:6px;font-size:12.5px}
+.apple-calendar{position:relative;overflow:hidden;padding:22px;border:1px solid var(--cal-line);border-radius:18px;background:radial-gradient(ellipse at 92% 8%,#26372b 0,transparent 38%),linear-gradient(145deg,#171e19,#101411 72%);color:var(--cal-ink);box-shadow:0 18px 40px #0003}
+.apple-calendar::after{content:"";position:absolute;right:-30px;bottom:-84px;width:210px;height:210px;border:1px solid #d5e8d00c;border-radius:50%;box-shadow:0 0 0 22px #d5e8d008,0 0 0 46px #d5e8d006;pointer-events:none}
+.apple-cal-top{display:flex;align-items:flex-start;gap:15px;position:relative;z-index:1}.apple-cal-mark{display:grid;place-items:center;flex:none;width:48px;height:48px;border:1px solid #9cbe9138;border-radius:15px;background:#b4d7a411;color:var(--cal-green)}
+.apple-cal-copy{flex:1;min-width:0}.apple-cal-eyebrow{font:700 10px/1.2 "Cascadia Mono",Consolas,monospace;letter-spacing:.16em;color:var(--cal-green)}.apple-cal-title{margin:5px 0 6px;font:400 25px/1.1 Georgia,serif;letter-spacing:-.025em;color:#eef3ed}.apple-cal-copy p{max-width:560px;margin:0;color:var(--cal-muted);font-size:12.5px;line-height:1.55}
+.apple-cal-state{display:flex;align-items:center;gap:7px;flex:none;margin-top:3px;padding:6px 9px;border:1px solid #ffffff12;border-radius:999px;background:#ffffff08;color:#c0c9c0;font-size:11px}
+.apple-cal-dot{width:7px;height:7px;border-radius:50%;background:#69746b;box-shadow:0 0 0 3px #69746b22}.apple-cal-state.connected{color:#c6e5bb;border-color:#a9d39233;background:#a9d3920c}.apple-cal-state.connected .apple-cal-dot{background:#afd49d;box-shadow:0 0 0 3px #afd49d25}
+.apple-cal-form{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 0}.apple-cal-field label{display:block;margin:0 0 6px;color:#b5c0b5;font-size:11px;font-weight:600}.apple-cal-field input{width:100%;height:38px;min-width:0;padding:0 12px;border:1px solid #39443a;border-radius:10px;background:var(--cal-surface);color:#e8eee8;font:13px "Segoe UI",sans-serif;outline:none}.apple-cal-field input:focus{border-color:#9bbf88;box-shadow:0 0 0 3px #9bbf8820}.apple-cal-actions{position:relative;z-index:1;display:flex;align-items:center;gap:9px;margin-top:14px}.apple-cal-connect{height:36px;border:1px solid var(--cal-green);background:var(--cal-green);color:#142014;font-size:12px}.apple-cal-connect:hover{background:#c9e6bb}.apple-cal-disconnect{height:36px;background:#ffffff09;color:#cad2c9}.apple-cal-message{position:relative;z-index:1;min-height:17px;margin-top:10px;color:#879387;font-size:11.5px}.apple-cal-message.error{color:#ff929b}.apple-cal-foot{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;padding-top:12px;border-top:1px solid #ffffff12;color:#89968a;font-size:11px}.apple-cal-foot span::before{content:"";display:inline-block;width:4px;height:4px;margin:0 7px 2px 0;border-radius:50%;background:#a5c696}.apple-calendar button:focus-visible{outline:2px solid #d5edc7;outline-offset:3px}
+@media(max-width:850px){.apple-cal-top{flex-wrap:wrap}.apple-cal-state{margin-left:63px}.apple-cal-form{grid-template-columns:1fr}}
+/* Monochrome editorial settings */
+:root{--bg:#070707;--card:#111;--line:#292929;--ac:#f2f2f2;--cal-ink:#f1f1f1;--cal-muted:#a1a1a1;--cal-green:var(--ac);--cal-surface:#0c0c0c;--cal-line:#333;--settings-surface:#111;--settings-raised:#171717;--settings-input:#0b0b0b;--settings-text:#f2f2f2;--settings-muted:#a3a3a3;--settings-dim:#777;--settings-line:#2b2b2b;color-scheme:dark}
+html,body{scrollbar-color:#555 transparent;scrollbar-width:thin}
+body{background:radial-gradient(ellipse at 86% 0,#1b1b1b 0,transparent 36%),linear-gradient(145deg,var(--bg),#0b0b0b 72%);color:var(--settings-text);font-family:"Segoe UI Variable Text","Segoe UI",sans-serif}
+#side{width:205px;padding:24px 12px 18px;background:rgba(8,8,8,.82);border-right:1px solid var(--settings-line);backdrop-filter:blur(16px)}
+#side .brand{position:relative;gap:12px;align-items:center;margin:0 6px 12px;padding:5px 8px 18px;border-bottom:1px solid var(--settings-line);font:500 17px/1.1 Georgia,"Times New Roman",serif;letter-spacing:-.25px}
+#side .brand-mark{display:block;width:36px;height:36px;flex:none;border:1px solid #ffffff35;border-radius:11px}
+#side .brand small{margin-top:5px;color:var(--settings-muted);font:600 9px "Cascadia Mono",Consolas,monospace;letter-spacing:.13em;text-transform:uppercase}
+.nav-search{position:relative;display:flex;align-items:center;margin:5px 5px 14px;padding:0 11px;height:40px;border:1px solid var(--settings-line);border-radius:11px;background:var(--settings-input);color:var(--settings-dim)}
+.nav-search svg{flex:none}.nav-search input{width:100%;min-width:0;height:38px;padding:0 0 0 9px;border:0;background:transparent;color:var(--settings-text);font:12px "Segoe UI Variable Text","Segoe UI",sans-serif;outline:0}
+.nav-search input::placeholder{color:var(--settings-dim)}
+.nav-groups{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:#444 transparent}
+.nav-group{margin-bottom:13px}
+.nav-label{padding:0 11px 5px;color:var(--settings-dim);font:600 9px "Cascadia Mono",Consolas,monospace;letter-spacing:.13em;text-transform:uppercase}
+.ni{position:relative;width:100%;height:43px;margin:2px 0;padding:0 12px;border:1px solid transparent;border-radius:11px;color:var(--settings-muted);font:500 13px "Segoe UI Variable Text","Segoe UI",sans-serif;transition:background .18s,color .18s,border-color .18s,transform .18s}
+.ni:hover{transform:translateX(2px);background:#ffffff0b;color:var(--settings-text)}
+.ni.on{border-color:#ffffff1a;background:#f2f2f2;color:#111}
+.ni.on::before{content:"";position:absolute;left:-12px;top:10px;width:2px;height:18px;border-radius:0 2px 2px 0;background:var(--ac)}
+.nav-empty{margin:8px 10px;color:var(--settings-muted);font-size:12px}
+.nav-foot{padding:12px 10px 0;border-top:1px solid var(--settings-line);color:var(--settings-dim);font-size:10px}
+#main{padding:44px 54px 64px;background:radial-gradient(ellipse at 94% 0,#ffffff05 0,transparent 34%);scrollbar-width:thin}
+#main h1{color:var(--settings-text);font:500 34px/1.08 Georgia,"Times New Roman",serif;letter-spacing:-.7px}
+#main .sub{margin:8px 0 30px;color:var(--settings-muted);font-size:13px;letter-spacing:.01em}
+#main h3{margin:31px 0 12px;color:var(--settings-muted);font:600 10px "Cascadia Mono",Consolas,monospace;letter-spacing:.15em;text-transform:uppercase}
+.card,.ac{border:1px solid var(--settings-line);border-radius:14px;background:linear-gradient(145deg,var(--settings-raised),var(--settings-surface));box-shadow:0 8px 22px #00000024}
+.r{gap:16px;min-height:66px;padding:17px 19px;border-color:#ffffff0b}
+.rt b{color:var(--settings-text);font-size:13px;font-weight:600;letter-spacing:.005em}
+.rt small{color:var(--settings-muted);font-size:12px;line-height:1.5}
+.seg button,.btn{height:36px;padding:0 15px;border:1px solid #333;border-radius:10px;background:var(--settings-input);color:#dedede;font:600 12px "Segoe UI Variable Text","Segoe UI",sans-serif;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.seg button:hover,.btn:hover{border-color:#888;background:#242424}
+.seg button.on,.btn.on{border-color:var(--ac);background:var(--ac);color:#111}
+.tg{border:0;background:#333}
+.tg::after{background:#aaa}
+.tg.on{background:var(--ac)}
+.tg.on::after{background:#111}
+.rg span{color:var(--settings-muted);font:10px "Cascadia Mono",Consolas,monospace}
+input[type=text],input[type=email],input[type=password],select,textarea{border:1px solid #333;border-radius:9px;background:var(--settings-input);color:var(--settings-text);outline:none}
+input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,select:focus,textarea:focus{border-color:#aaa;box-shadow:0 0 0 3px #ffffff12}
+input::placeholder,textarea::placeholder{color:var(--settings-dim)}
+.ac{padding:19px 19px 17px;transition:border-color .18s,transform .18s,box-shadow .18s}
+.ac:hover{transform:translateY(-1px);border-color:#666;box-shadow:0 12px 26px #0003}
+.ac .ic{border:1px solid #ffffff18;border-radius:12px;background:#ffffff0a;color:#ddd}
+.ac b{color:var(--settings-text);font-size:12px}
+.ac .st{color:#eee;font:600 9px "Cascadia Mono",Consolas,monospace;letter-spacing:.035em;text-transform:uppercase}
+.ac .st.off{color:var(--settings-dim)}
+.ac p,.hint{color:var(--settings-muted);font-size:12px;line-height:1.55}
+.arow{gap:7px;padding:9px 10px;border-color:#ffffff0b}
+.arow .h,.ac .draghandle{color:#aaa}
+.lg{color:#ddd}
+.chips{gap:7px;padding:11px}
+.apple-calendar{padding:26px;border-color:var(--cal-line);background:radial-gradient(ellipse at 92% 8%,#ffffff0d 0,transparent 42%),linear-gradient(145deg,#171717,#101010 72%);box-shadow:0 18px 40px #0003}
+.apple-cal-title{font:500 26px/1.08 Georgia,"Times New Roman",serif;letter-spacing:-.45px}
+.apple-cal-mark{border-color:#ffffff28;background:#ffffff0a;color:var(--cal-green)}
+.apple-cal-field input{border-color:#3a3a3a;background:var(--cal-surface)}
+.apple-cal-field input:focus{border-color:#aaa;box-shadow:0 0 0 3px #ffffff12}
+.apple-cal-connect{border-color:var(--ac);background:var(--ac);color:#111}
+.apple-cal-connect:hover{background:#fff}
+.apple-cal-state.connected{border-color:#ffffff20;background:#ffffff09;color:#eee}
+.apple-cal-dot{background:#666}
+.apple-cal-state.connected .apple-cal-dot{background:var(--ac);box-shadow:0 0 0 3px #ffffff20}
+.apple-cal-foot span::before{background:#aaa}
+.apple-calendar button:focus-visible{outline-color:#fff}
+#main a{color:var(--ac)}
+button:focus-visible,.ni:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+@keyframes settings-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+#main>*{animation:settings-enter .24s ease both}
+.nav-group,.nav-search,#main .card,#main .ac,#main .apple-calendar{transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+@media(max-width:900px){#side{width:225px}#main{padding:34px 30px 48px}.cards{grid-template-columns:1fr}}
+@media(max-width:700px){#side{width:195px;padding:18px 9px}#main{padding:26px 20px 40px}#main h1{font-size:29px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
 <div id="side"></div><div id="main"></div>
 <script>
-const $ = s => document.querySelector(s); let S, C, page = 'apps', dragEl = null, saveT;
+const $ = s => document.querySelector(s); let S, C, page = 'apps', navQuery = '', dragEl = null, saveT, appleCalendarUnsubscribe = null;
 const PAGES = [['apps', 'Apps', 'apps'], ['island', 'Island', 'sliders'], ['music', 'Music', 'equalizer'], ['sounds', 'Sounds', 'chat'], ['launcher', 'Launcher', 'folder'], ['connect', 'Connections', 'claude'], ['general', 'General', 'sys']];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ico = (k, sz = 18) => { const I = C.icons; if (I.fill[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="currentColor"><path d="${I.fill[k].f}"/></svg>`; if (I.stroke[k]) return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I.stroke[k]}</svg>`; return ''; };
@@ -66,16 +144,50 @@ const keyrec = (get, set, ph) => {
 const head = (t, s) => [mk('h1', '', t), mk('p', 'sub', s)];
 
 function nav() {
-  $('#side').innerHTML = `<div class="brand"><div>${esc(S.name || 'Nib')}<small>Settings</small></div></div>` + PAGES.map(([id, n, ik]) => `<button class="ni ${id === page ? 'on' : ''}" data-p="${id}">${ico(ik, 17)}${n}</button>`).join('');
-  $('#side').querySelectorAll('.ni').forEach(b => b.onclick = () => { page = b.dataset.p; show(); });
+  const groups = [
+    ['Workspace', ['apps', 'launcher']],
+    ['Appearance', ['island', 'sounds']],
+    ['Integrations', ['music', 'connect']],
+    ['System', ['general']]
+  ];
+  const terms = { apps: 'widgets tiles', launcher: 'custom apps shortcuts', island: 'appearance theme size transparency cat', sounds: 'volume notification sound', music: 'spotify lyrics media', connect: 'apple calendar icloud public link discord claude', general: 'name files folders drop zones' };
+  const byId = new Map(PAGES.map(item => [item[0], item]));
+  const groupMarkup = groups.map(([label, ids]) => `<section class="nav-group" role="group" aria-label="${label}"><div class="nav-label">${label}</div>${ids.map(id => {
+    const [key, name, icon] = byId.get(id);
+    return `<button class="ni ${key === page ? 'on' : ''}" data-p="${key}" data-search="${name} ${terms[key]}" aria-current="${key === page ? 'page' : 'false'}">${ico(icon, 18)}<span>${name}</span></button>`;
+  }).join('')}</section>`).join('');
+  const logo = `<svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#080808"/><rect x="12" y="17" width="15" height="29" rx="2" fill="#fff"/><rect x="37" y="17" width="15" height="29" rx="2" fill="#fff"/></svg>`;
+  $('#side').innerHTML = `<div class="brand">${logo}<div>Nib<small>Settings</small></div></div><label class="nav-search"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.2 4.2"/></svg><input id="nav-page-search" type="search" aria-label="Search settings" placeholder="Find a setting…" value="${esc(navQuery)}"></label><div class="nav-groups">${groupMarkup}</div><div class="nav-empty" hidden>No matching setting.</div><div class="nav-foot">Changes save automatically</div>`;
+  const applyFilter = () => {
+    const query = navQuery.trim().toLowerCase();
+    let visible = 0;
+    $('#side').querySelectorAll('.nav-group').forEach(group => {
+      let groupVisible = 0;
+      group.querySelectorAll('.ni').forEach(button => {
+        const show = button.dataset.search.toLowerCase().includes(query);
+        button.hidden = !show;
+        if (show) groupVisible++;
+      });
+      group.hidden = groupVisible === 0;
+      visible += groupVisible;
+    });
+    $('#side .nav-empty').hidden = visible > 0;
+  };
+  const search = $('#nav-page-search');
+  search.oninput = () => { navQuery = search.value; applyFilter(); };
+  search.onkeydown = event => {
+    if (event.key === 'Escape' && search.value) { search.value = ''; navQuery = ''; applyFilter(); }
+  };
+  applyFilter();
+  $('#side').querySelectorAll('.ni').forEach(button => button.onclick = () => { page = button.dataset.p; show(); });
 }
-function show() { document.documentElement.style.setProperty('--ac',/^#[0-9a-f]{6}$/i.test(S.themeColor||'')?S.themeColor:'#c8e38a'); nav(); const m = $('#main'); m.innerHTML = ''; PG[page]().forEach(n => m.appendChild(n)); m.scrollTop = 0; }
+function show() { if (appleCalendarUnsubscribe) { appleCalendarUnsubscribe(); appleCalendarUnsubscribe = null; } document.documentElement.style.setProperty('--ac',/^#[0-9a-f]{6}$/i.test(S.themeColor||'')?S.themeColor:'#f2f2f2'); nav(); const m = $('#main'); m.innerHTML = ''; PG[page]().forEach(n => m.appendChild(n)); m.scrollTop = 0; }
 
 function themeColorEditor(){
  const box=mk('div','seg');const inp=mk('input');inp.type='color';inp.value=/^#[0-9a-f]{6}$/i.test(S.themeColor||'')?S.themeColor:'#8b93a7';inp.title='Custom theme accent';
  const label=mk('input');label.type='text';label.style.minWidth='115px';label.style.width='115px';label.value=S.themeColor||'';label.placeholder='#8B93A7';
  const reset=mk('button','btn','Use default');const apply=v=>{if(!/^#[0-9a-f]{6}$/i.test(v))return;S.themeColor=v.toUpperCase();inp.value=S.themeColor;label.value=S.themeColor;document.documentElement.style.setProperty('--ac',S.themeColor);queue();};
- inp.oninput=()=>apply(inp.value);label.onchange=()=>apply(label.value.trim());reset.onclick=()=>{S.themeColor='';label.value='';document.documentElement.style.setProperty('--ac','#c8e38a');queue();};box.append(inp,label,reset);return box;
+ inp.oninput=()=>apply(inp.value);label.onchange=()=>apply(label.value.trim());reset.onclick=()=>{S.themeColor='';label.value='';document.documentElement.style.setProperty('--ac','#f2f2f2');queue();};box.append(inp,label,reset);return box;
 }
 function notchColorEditor(){
  const wrap=mk('div','seg');
@@ -157,6 +269,97 @@ function catStudio(){
  const range=rng(1,30,1,()=>S.catSleepMinutes||3,v=>S.catSleepMinutes=v,v=>v+' min');
  section('Sleep after','Idle time until the cat sleeps (1–30 minutes).',range);
  return wrap;
+}
+
+function appleCalendarPanel() {
+  const panel = mk('section', 'apple-calendar');
+  panel.innerHTML = `<div class="apple-cal-top">
+    <div class="apple-cal-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7.5 3v4M16.5 3v4M4 9.5h16M8 13h3M8 16h3M14 13h2"/></svg></div>
+    <div class="apple-cal-copy"><div class="apple-cal-eyebrow">APPLE CALENDAR / PUBLIC LINK</div><h2 class="apple-cal-title">Your week, in one quiet place.</h2><p>Paste a public iCloud calendar link. Nib reads the events directly; no Apple ID sign-in or password is needed.</p></div>
+    <div class="apple-cal-state" role="status"><i class="apple-cal-dot"></i><span>Checking</span></div>
+  </div>
+  <div class="apple-cal-form">
+    <div class="apple-cal-field"><label for="apple-cal-url">Public iCloud calendar link</label><input id="apple-cal-url" type="text" autocomplete="off" spellcheck="false" placeholder="webcal://…icloud.com/published/…"></div>
+  </div>
+  <div class="apple-cal-actions"><button class="apple-cal-connect" type="button">Connect &amp; sync</button><button class="apple-cal-disconnect" type="button" hidden>Disconnect</button></div>
+  <div class="apple-cal-message" aria-live="polite">In Apple Calendar, enable “Public Calendar” in the calendar’s sharing options and copy its link. Anyone with that link can read its events, so keep it private.</div>
+  <div class="apple-cal-foot"><span>Link encrypted on this PC</span><span>Read-only access</span><span>30-second updates</span></div>`;
+
+  const url = panel.querySelector('#apple-cal-url');
+  const state = panel.querySelector('.apple-cal-state');
+  const stateText = state.querySelector('span');
+  const message = panel.querySelector('.apple-cal-message');
+  const connect = panel.querySelector('.apple-cal-connect');
+  const disconnect = panel.querySelector('.apple-cal-disconnect');
+  const setStatus = s => {
+    const connected = !!s.connected;
+    state.classList.toggle('connected', connected);
+    stateText.textContent = connected ? 'Connected' : 'Not connected';
+    connect.textContent = connected ? 'Update calendar link' : 'Connect & sync';
+    disconnect.hidden = !connected;
+    if (s.error) {
+      message.className = 'apple-cal-message error';
+      message.textContent = s.error;
+    } else if (connected) {
+      message.className = 'apple-cal-message';
+      const last = s.lastSync ? ' Last sync: ' + new Date(s.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '.' : '';
+      message.textContent = `Connected to your public Apple Calendar link.${last} Anyone who has this link can read its events.`;
+    } else {
+      message.className = 'apple-cal-message';
+      message.textContent = 'In Apple Calendar, enable “Public Calendar” in the calendar’s sharing options and copy its link. Anyone with that link can read its events, so keep it private.';
+    }
+  };
+  const busy = on => {
+    connect.disabled = on;
+    disconnect.disabled = on;
+    connect.textContent = on ? 'Connecting…' : state.classList.contains('connected') ? 'Update calendar link' : 'Connect & sync';
+  };
+  connect.onclick = async () => {
+    busy(true);
+    message.className = 'apple-cal-message';
+    message.textContent = 'Checking the public iCloud link…';
+    try {
+      const result = await nib.calendarConnect({ url: url.value.trim() });
+      if (!result.ok) {
+        message.className = 'apple-cal-message error';
+        message.textContent = result.error;
+        return;
+      }
+      url.value = '';
+      setStatus(result.status);
+    } catch (error) {
+      message.className = 'apple-cal-message error';
+      message.textContent = error.message || 'Apple Calendar connection failed.';
+    } finally { busy(false); }
+  };
+  disconnect.onclick = async () => {
+    busy(true);
+    try {
+      const result = await nib.calendarDisconnect();
+      if (!result.ok) {
+        message.className = 'apple-cal-message error';
+        message.textContent = result.error;
+        return;
+      }
+      url.value = '';
+      setStatus(result.status);
+    } catch (error) {
+      message.className = 'apple-cal-message error';
+      message.textContent = error.message || 'Could not disconnect Apple Calendar.';
+    } finally { busy(false); }
+  };
+  nib.calendarStatus().then(setStatus).catch(error => {
+    message.className = 'apple-cal-message error';
+    message.textContent = error.message || 'Could not read Apple Calendar connection status.';
+  });
+  appleCalendarUnsubscribe = nib.onCalendarUpdate(result => {
+    if (result.status) setStatus(result.status);
+    if (!result.ok && result.error) {
+      message.className = 'apple-cal-message error';
+      message.textContent = result.error;
+    }
+  });
+  return panel;
 }
 
 const PG = {
@@ -260,7 +463,7 @@ const PG = {
     const paint = s => { $('#cls').textContent = s.connected ? 'Connected. The eyes show what Claude is doing.' : 'Not connected'; cb.textContent = s.connected ? 'Disconnect' : 'Connect'; cb.onclick = async () => paint(await nib.claudeSet({ connect: !s.connected })); };
     setTimeout(async () => paint(await nib.claude()), 0);
     return [...head('Connections', 'Calendar, Discord and Claude Code'),
-      mk('h3', '', 'Calendar'), card([row('Calendar link', 'Google Calendar: Settings, your calendar, Integrate calendar, Secret address in iCal format. Anyone with the link can read it, so keep it private.', txt(() => S.ics, v => S.ics = v, 'https://... .ics', '300px'))]),
+      appleCalendarPanel(),
       mk('h3', '', 'Discord'), card([row('Mute hotkey', 'Click Record and press the keys, combinations work. Add Toggle Mute in Discord > Keybinds with the same keys', keyrec(() => S.discord.mute, v => S.discord.mute = v, 'Ctrl+Shift+M')), row('Deafen hotkey', 'Click Record and press the keys. Add Toggle Deafen in Discord > Keybinds with the same keys', keyrec(() => S.discord.deafen, v => S.discord.deafen = v, 'Ctrl+Shift+D'))]),
       mk('div', 'hint', 'No Discord bot token is used or stored. Discord does not expose voice-channel participants through its local desktop connection, so Nib keeps the mute/deafen hotkeys but does not show participant lists, join alerts, or avatars.'),
       mk('h3', '', 'Claude Code'), card([top])];
