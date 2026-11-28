@@ -31,6 +31,13 @@ input[type=text]{height:34px;min-width:260px;padding:0 12px;border-radius:9px;bo
 .apple-cal-dot{width:7px;height:7px;border-radius:50%;background:#69746b;box-shadow:0 0 0 3px #69746b22}.apple-cal-state.connected{color:#c6e5bb;border-color:#a9d39233;background:#a9d3920c}.apple-cal-state.connected .apple-cal-dot{background:#afd49d;box-shadow:0 0 0 3px #afd49d25}
 .apple-cal-form{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 0}.apple-cal-field label{display:block;margin:0 0 6px;color:#b5c0b5;font-size:11px;font-weight:600}.apple-cal-field input{width:100%;height:38px;min-width:0;padding:0 12px;border:1px solid #39443a;border-radius:10px;background:var(--cal-surface);color:#e8eee8;font:13px "Segoe UI",sans-serif;outline:none}.apple-cal-field input:focus{border-color:#9bbf88;box-shadow:0 0 0 3px #9bbf8820}.apple-cal-actions{position:relative;z-index:1;display:flex;align-items:center;gap:9px;margin-top:14px}.apple-cal-connect{height:36px;border:1px solid var(--cal-green);background:var(--cal-green);color:#142014;font-size:12px}.apple-cal-connect:hover{background:#c9e6bb}.apple-cal-disconnect{height:36px;background:#ffffff09;color:#cad2c9}.apple-cal-message{position:relative;z-index:1;min-height:17px;margin-top:10px;color:#879387;font-size:11.5px}.apple-cal-message.error{color:#ff929b}.apple-cal-foot{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;padding-top:12px;border-top:1px solid #ffffff12;color:#89968a;font-size:11px}.apple-cal-foot span::before{content:"";display:inline-block;width:4px;height:4px;margin:0 7px 2px 0;border-radius:50%;background:#a5c696}.apple-calendar button:focus-visible{outline:2px solid #d5edc7;outline-offset:3px}
 @media(max-width:850px){.apple-cal-top{flex-wrap:wrap}.apple-cal-state{margin-left:63px}.apple-cal-form{grid-template-columns:1fr}}
+.google-calendar{padding:21px;border:1px solid #2e2e2e;border-radius:18px;background:linear-gradient(145deg,#171717,#0f0f0f);color:#f1f1f1}
+.google-cal-head{display:flex;align-items:flex-start;gap:14px}.google-cal-mark{display:grid;place-items:center;flex:none;width:46px;height:46px;border:1px solid #ffffff19;border-radius:14px;background:#ffffff08}
+.google-cal-copy{flex:1;min-width:0}.google-cal-eyebrow{font:700 10px/1.2 "Cascadia Mono",Consolas,monospace;letter-spacing:.15em;color:#a8a8a8}.google-cal-title{margin:5px 0 6px;font:400 25px/1.1 Georgia,serif;letter-spacing:-.02em;color:#f4f4f4}.google-cal-copy p{max-width:600px;margin:0;color:#a3a3a3;font-size:12.5px;line-height:1.55}
+.google-cal-state{display:flex;align-items:center;gap:7px;flex:none;margin-top:3px;padding:6px 9px;border:1px solid #ffffff14;border-radius:999px;background:#ffffff07;color:#aaa;font-size:11px}.google-cal-dot{width:7px;height:7px;border-radius:50%;background:#777}
+.google-cal-state.connected{color:#e8e8e8;border-color:#ffffff30}.google-cal-state.connected .google-cal-dot{background:#a9d392}
+.google-cal-field{display:block;margin-top:18px}.google-cal-field label{display:block;margin:0 0 6px;color:#b5b5b5;font-size:11px;font-weight:600}.google-cal-field input{width:100%;height:38px;min-width:0;padding:0 12px;border:1px solid #383838;border-radius:10px;background:#0b0b0b;color:#eee;font:13px "Segoe UI",sans-serif;outline:none}.google-cal-field input:focus{border-color:#aaa;box-shadow:0 0 0 3px #ffffff18}
+.google-cal-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}.google-cal-actions button{height:34px}.google-cal-connect{background:#eee;color:#111}.google-cal-connect:hover{background:#fff}.google-cal-message{min-height:17px;margin-top:10px;color:#888;font-size:11.5px}.google-cal-message.error{color:#ff929b}.google-cal-message a{color:#ddd}.google-calendar button:focus-visible{outline:2px solid #eee;outline-offset:3px}
 /* Monochrome editorial settings */
 :root{--bg:#070707;--card:#111;--line:#292929;--ac:#f2f2f2;--cal-ink:#f1f1f1;--cal-muted:#a1a1a1;--cal-green:var(--ac);--cal-surface:#0c0c0c;--cal-line:#333;--settings-surface:#111;--settings-raised:#171717;--settings-input:#0b0b0b;--settings-text:#f2f2f2;--settings-muted:#a3a3a3;--settings-dim:#777;--settings-line:#2b2b2b;color-scheme:dark}
 html,body{scrollbar-color:#555 transparent;scrollbar-width:thin}
@@ -255,7 +262,7 @@ function catStudio(){
   const paint=()=>[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.value===(S[key]??defaultValue)));
   options.forEach(([value,label])=>{const b=mk('button','btn',label);b.dataset.value=value;b.onclick=()=>{S[key]=value;paint();queue()};el.append(b)});paint();return el;
  };
- section('Personality','Controls cat idle expressions and animation timing.',choice([['friendly','Friendly'],['playful','Playful'],['sleepy','Sleepy'],['grumpy','Grumpy'],['minimal','Minimal']], 'catPersonality','friendly'));
+ section('Personality','Changes the cat’s expression and idle behavior.',choice([['friendly','Friendly'],['playful','Playful'],['sleepy','Sleepy'],['grumpy','Grumpy'],['minimal','Minimal']], 'catPersonality','friendly'));
  section('Accessories','Decorations shown on the expanded cat.',choice([['none','None'],['headphones','Headphones'],['glasses','Glasses'],['bow','Bow'],['crown','Crown']], 'catAccessory','none'));
  const eye=mk('div');eye.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap';
  const ep=mk('input');ep.type='color';ep.value=/^#[0-9a-f]{6}$/i.test(S.catEyeColor||'')?S.catEyeColor:'#ffffff';ep.title='Select cat eye color';
@@ -265,7 +272,7 @@ function catStudio(){
  section('Eye color','Choose any eye color or return to automatic contrast.',eye);
  section('Pet interaction','Click the cat for a happy reaction.',tog(()=>S.catPetting!==false,v=>S.catPetting=v));
  section('Idle sleep','Cat closes its eyes after a period of inactivity.',tog(()=>S.catSleepEnabled!==false,v=>S.catSleepEnabled=v));
- section('Random animations','Enable blinking and ear twitches.',tog(()=>S.catAnimations!==false,v=>S.catAnimations=v));
+ section('Random animations','Enable blinks, playful winks, ear twitches and idle gaze.',tog(()=>S.catAnimations!==false,v=>S.catAnimations=v));
  const range=rng(1,30,1,()=>S.catSleepMinutes||3,v=>S.catSleepMinutes=v,v=>v+' min');
  section('Sleep after','Idle time until the cat sleeps (1–30 minutes).',range);
  return wrap;
@@ -358,6 +365,94 @@ function appleCalendarPanel() {
       message.className = 'apple-cal-message error';
       message.textContent = result.error;
     }
+  });
+  return panel;
+}
+
+function googleCalendarPanel() {
+  const panel = mk('section', 'google-calendar');
+  panel.innerHTML = `<div class="google-cal-head">
+    <div class="google-cal-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="25" height="25"><path fill="#4285F4" d="M21.6 12.23c0-.72-.06-1.42-.18-2.1H12v3.98h5.39a4.62 4.62 0 0 1-2 3.03v2.48h3.24c1.9-1.75 2.97-4.33 2.97-7.39Z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.63-2.43l-3.24-2.48c-.9.6-2.05.96-3.39.96-2.6 0-4.8-1.76-5.58-4.12H3.08v2.56A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.42 13.93a6 6 0 0 1 0-3.86V7.5H3.08a10 10 0 0 0 0 9Z"/><path fill="#EA4335" d="M12 5.95c1.47 0 2.8.5 3.84 1.5l2.88-2.88A9.64 9.64 0 0 0 12 2a10 10 0 0 0-8.92 5.5l3.34 2.57C7.2 7.71 9.4 5.95 12 5.95Z"/></svg></div>
+    <div class="google-cal-copy"><div class="google-cal-eyebrow">GOOGLE CALENDAR / YOUR ACCOUNT</div><h2 class="google-cal-title">Bring your Google calendar in.</h2><p>Sign in with your Google account to view and manage its events. Events you create in Nib are saved locally and also added to Google when connected.</p></div>
+    <div class="google-cal-state" role="status"><i class="google-cal-dot"></i><span>Checking</span></div>
+  </div>
+  <div class="google-cal-field"><label for="google-cal-client-id">Google OAuth Client ID <span style="font-weight:400;color:#858585">(public app ID, not a password)</span></label><input id="google-cal-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="…apps.googleusercontent.com"></div>
+  <div class="google-cal-actions"><button class="google-cal-connect" type="button">Connect Google</button><button class="google-cal-disconnect" type="button" hidden>Disconnect</button><button class="google-cal-open" type="button">Open Nib Calendar</button><button class="google-cal-setup" type="button">OAuth setup</button></div>
+  <div class="google-cal-message" aria-live="polite">Set up a Desktop OAuth client in Google Cloud, enable the Google Calendar API, then paste its Client ID here. Each person signs in to their own account; Nib encrypts the refresh token on this PC.</div>`;
+
+  const clientId = panel.querySelector('#google-cal-client-id');
+  const state = panel.querySelector('.google-cal-state');
+  const stateText = state.querySelector('span');
+  const message = panel.querySelector('.google-cal-message');
+  const connect = panel.querySelector('.google-cal-connect');
+  const disconnect = panel.querySelector('.google-cal-disconnect');
+  const open = panel.querySelector('.google-cal-open');
+  clientId.value = String(S.googleCalendarClientId || '');
+  const setStatus = s => {
+    state.classList.toggle('connected', !!s.connected);
+    stateText.textContent = s.connected ? 'Connected' : s.configured ? 'Not connected' : 'Needs setup';
+    disconnect.hidden = !s.connected;
+    clientId.disabled = !!s.connected;
+    if (s.error) {
+      message.className = 'google-cal-message error';
+      message.textContent = s.error;
+    } else if (s.connected) {
+      message.className = 'google-cal-message';
+      message.textContent = 'Connected to your Google account. New Nib events will also be created in Google Calendar.';
+    } else if (!s.configured) {
+      message.className = 'google-cal-message';
+      message.textContent = 'Add a Google OAuth Client ID above. It is an app identifier, not a personal key or password.';
+    }
+  };
+  const busy = on => {
+    connect.disabled = on;
+    disconnect.disabled = on;
+    clientId.disabled = on || state.classList.contains('connected');
+    connect.textContent = on ? 'Waiting for Google…' : state.classList.contains('connected') ? 'Reconnect Google' : 'Connect Google';
+  };
+  clientId.addEventListener('input', () => { S.googleCalendarClientId = clientId.value.trim(); queue(); });
+  connect.onclick = async () => {
+    S.googleCalendarClientId = clientId.value.trim();
+    clearTimeout(saveT);
+    busy(true);
+    message.className = 'google-cal-message';
+    message.textContent = 'Opening Google sign-in in your browser…';
+    try {
+      await nib.setSettings(S);
+      const result = await nib.googleCalendarConnect();
+      if (!result.ok) {
+        message.className = 'google-cal-message error';
+        message.textContent = result.error;
+        return;
+      }
+      setStatus(result.status);
+      if (result.warning) message.textContent = result.warning;
+    } catch (error) {
+      message.className = 'google-cal-message error';
+      message.textContent = error.message || 'Google Calendar connection failed.';
+    } finally { busy(false); }
+  };
+  disconnect.onclick = async () => {
+    busy(true);
+    try {
+      const result = await nib.googleCalendarDisconnect();
+      if (!result.ok) {
+        message.className = 'google-cal-message error';
+        message.textContent = result.error;
+        return;
+      }
+      setStatus(result.status);
+      if (result.warning) message.textContent = result.warning;
+    } catch (error) {
+      message.className = 'google-cal-message error';
+      message.textContent = error.message || 'Could not disconnect Google Calendar.';
+    } finally { busy(false); }
+  };
+  open.onclick = () => nib.openCalendar();
+  panel.querySelector('.google-cal-setup').onclick = () => nib.launch('https://console.cloud.google.com/apis/credentials');
+  nib.googleCalendarStatus().then(setStatus).catch(error => {
+    message.className = 'google-cal-message error';
+    message.textContent = error.message || 'Could not read Google Calendar connection status.';
   });
   return panel;
 }
@@ -463,7 +558,7 @@ const PG = {
     const paint = s => { $('#cls').textContent = s.connected ? 'Connected. The eyes show what Claude is doing.' : 'Not connected'; cb.textContent = s.connected ? 'Disconnect' : 'Connect'; cb.onclick = async () => paint(await nib.claudeSet({ connect: !s.connected })); };
     setTimeout(async () => paint(await nib.claude()), 0);
     return [...head('Connections', 'Calendar, Discord and Claude Code'),
-      appleCalendarPanel(),
+      appleCalendarPanel(), googleCalendarPanel(),
       mk('h3', '', 'Discord'), card([row('Mute hotkey', 'Click Record and press the keys, combinations work. Add Toggle Mute in Discord > Keybinds with the same keys', keyrec(() => S.discord.mute, v => S.discord.mute = v, 'Ctrl+Shift+M')), row('Deafen hotkey', 'Click Record and press the keys. Add Toggle Deafen in Discord > Keybinds with the same keys', keyrec(() => S.discord.deafen, v => S.discord.deafen = v, 'Ctrl+Shift+D'))]),
       mk('div', 'hint', 'No Discord bot token is used or stored. Discord does not expose voice-channel participants through its local desktop connection, so Nib keeps the mute/deafen hotkeys but does not show participant lists, join alerts, or avatars.'),
       mk('h3', '', 'Claude Code'), card([top])];

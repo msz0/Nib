@@ -1,6 +1,6 @@
 # Apple Calendar integration notes
 
-This change is for the **Nib copy** only. It reads a **public iCloud Apple Calendar link**. It does not sign in to an Apple ID or connect to Google Calendar, Outlook Calendar, or arbitrary `.ics` providers.
+This section documents the Apple source in Nib’s integrated calendar. It reads a **public iCloud Apple Calendar link**; it does not sign in to an Apple ID, and the Apple source remains read-only. For the complete local + Google + Apple feature and the current file map, see [`README-CALENDAR.md`](README-CALENDAR.md).
 
 ## Connect a public calendar link
 
@@ -33,9 +33,9 @@ No Apple ID email or password is needed. Each Windows user can save their own pu
 
 `package.json` and `package-lock.json` were already modified before this integration; they were left untouched.
 
-## Moving the change to the main repository
+## Moving the Apple integration to the main repository
 
-Copy the five implementation files listed above (`calendar.js`, `main.js`, `preload.js`, `settings.html`, and `index.html`) into the corresponding paths in the main repository. Copy `PRIVACY.md` if you want the privacy documentation updated there, and copy this note separately if you want to keep the setup and file map. No new package dependency, Apple password, or shared API key is required; `ical.js` was already present in this Nib copy.
+The Apple integration shares `main.js`, `preload.js`, `settings.html`, and `index.html` with the local and Google calendar features. To move the complete calendar implementation, use the full file list and setup instructions in [`README-CALENDAR.md`](README-CALENDAR.md), rather than copying only these Apple-specific files. No Apple password or shared API key is required; `ical.js` was already present in this Nib copy.
 
 ## Local checks
 

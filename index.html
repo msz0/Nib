@@ -152,9 +152,18 @@ svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:va
 #nib .cat-sleep{display:none;font:700 12px Segoe UI,sans-serif;fill:#8bb8ea;pointer-events:none}
 #nib.sleeping .cat-sleep{display:block;animation:catSleepPulse 2.4s ease-in-out infinite}
 @keyframes catSleepPulse{50%{opacity:.35;transform:translateY(-3px)}}
-#nib.cat-grumpy #cat-mouth{transform:translateY(2px)}
+#nib #cat-mouth{fill:none;stroke:var(--cat-expression);stroke-width:1.7;stroke-linecap:round;transform-box:fill-box;transform-origin:center;transition:transform .18s ease,opacity .18s ease}
+#nib #cat-tongue{display:none;transform-box:fill-box;transform-origin:center}
+#nib.cat-grumpy #cat-mouth{transform:translateY(1px) scaleY(-1)}
+#nib.cat-grumpy .cat-brow{display:inline}
 #nib.cat-playful #cat-mouth{transform:translateY(-1px)}
-@media (prefers-reduced-motion:reduce){#nib #cat-hearts path,#nib .cat-sleep{animation:none!important}}
+#nib.cat-playful #cat-tongue{display:inline;animation:catTongue .8s ease-in-out infinite alternate}
+#nib.cat-still.cat-playful #cat-tongue{animation:none}
+#nib.cat-minimal #cat-mouth{transform:scaleY(.25)}
+#nib.v-done #cat-mouth,#nib.v-dizzy #cat-mouth{opacity:0}
+.cat-brow{display:none;fill:none;stroke:var(--cat-expression);stroke-width:2;stroke-linecap:round}
+@keyframes catTongue{to{transform:translateY(1px) scaleY(.85)}}
+@media (prefers-reduced-motion:reduce){#nib #cat-hearts path,#nib .cat-sleep,#nib #cat-tongue{animation:none!important}}
 
 /* Custom theme: derive every island tile surface from the chosen notch color.
    Transparent white or black blends retain a consistent color across all six presets. */
@@ -425,7 +434,7 @@ svg{overflow:visible}.eye{fill:var(--c)}.hp,.xx{display:none;fill:none;stroke:va
         <g id="earL"><path d="M10 27L12 6L29 19Z" class="cat-ear" stroke-width="3" stroke-linejoin="round"/></g><g id="earR"><path d="M54 27L52 6L35 19Z" class="cat-ear" stroke-width="3" stroke-linejoin="round"/></g>
         <ellipse class="cat-face" cx="32" cy="37" rx="25" ry="21"/><rect class="eye" id="cA"/><rect class="eye" id="cB"/>
         <path class="hp" d="M14 40Q22 28 30 40M34 40Q42 28 50 40"/><path class="xx" d="M16 30l12 12M28 30L16 42M36 30l12 12M48 30L36 42"/>
-        <path class="cat-nose" d="M29.5 46h5L32 49z"/></g><g id="cat-headphones" class="cat-accessory" fill="none" stroke="#8ab9ff" stroke-width="5"><path d="M9 38V27C9 11 55 11 55 27V38"/><rect x="6" y="30" width="7" height="15" rx="3" fill="#426aab"/><rect x="51" y="30" width="7" height="15" rx="3" fill="#426aab"/></g>
+        <path class="cat-nose" d="M29.5 46h5L32 49z"/><path id="cat-mouth" d="M29.5 51.5Q32 54.5 34.5 51.5"/><path id="cat-tongue" d="M30 53Q32 55 34 53Q34 57 32 57Q30 57 30 53Z" fill="#ef8da7"/><path class="cat-brow" d="M17 29L27 32M47 29L37 32"/></g><g id="cat-headphones" class="cat-accessory" fill="none" stroke="#8ab9ff" stroke-width="5"><path d="M9 38V27C9 11 55 11 55 27V38"/><rect x="6" y="30" width="7" height="15" rx="3" fill="#426aab"/><rect x="51" y="30" width="7" height="15" rx="3" fill="#426aab"/></g>
 <g id="cat-glasses" class="cat-accessory" fill="none" stroke="#6cc8d0" stroke-width="2.8"><circle cx="22" cy="36" r="9"/><circle cx="42" cy="36" r="9"/><path d="M31 35Q32 33 33 35M13 34L7 32M51 34L57 32"/></g>
 <g id="cat-bow" class="cat-accessory"><path d="M29 12Q15 1 17 17Q24 22 31 16Q39 22 48 12Q47 1 33 12Z" fill="#ee8fb5" stroke="#9e456d" stroke-width="1.5"/><circle cx="32" cy="14" r="4" fill="#b65c85"/></g>
 <g id="cat-crown" class="cat-accessory"><path d="M18 21L16 4L26 13L32 2L38 13L48 4L46 21Z" fill="#ffd36f" stroke="#bd852a" stroke-width="2"/><circle cx="32" cy="15" r="2.5" fill="#ec6b8b"/></g>
@@ -458,7 +467,7 @@ const tier = m => TIERS.find(t => m <= t[0]);
 let S = { widgets: [], apps: [], custom: [], zones: [], ...DEF }, CAT = { apps: [], widgets: [], icons: { fill: {}, stroke: {} } };
 let state = 'idle', look = 'idle', pend = 0, stTitle = '', stSub = '', tab = 'home', hover = false, pinned = false, dragging = false, wasOpen = false, gameMode = false;
 let snd = true, t0 = 0, idleT, leaveT, ctx, focusEnd = 0, fSel = 25, focusMin = 25, cx = 0, cy = 0, lastMove = performance.now(), dizzyUntil = 0;
-let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaAppVolume = 50, mediaVolumeTarget = '', mediaVolumeMessage = 'Reading app volume…', mediaVolumeAvailable = false, mediaScrubbing = false, mediaSeekBar = null, evs = [], calendarConnected = false, alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null;
+let np = null, npAt = 0, art = '', artUrl = '', mediaPlayers = [], selectedMediaId = '', mediaPlayersAt = 0, mediaPlayersLoading = false, mediaAppVolume = 50, mediaVolumeTarget = '', mediaVolumeMessage = 'Reading app volume…', mediaVolumeAvailable = false, mediaScrubbing = false, mediaSeekBar = null, evs = [], alerted = new Set(), notes = [], nIdx = 0, clips = [], coffee = { on: false, until: 0 }, cl = { connected: false, gate: true }, sys = { cpu: 0, ram: 0 }, bat = null;
 let voiceRecorder = null, voiceParts = [], voiceStream = null;
 let memoAudio = null, memoPlaying = '', currentOutput = 'default';
 function stopMemoAudio(){ if(memoAudio){memoAudio.pause();memoAudio.removeAttribute('src');memoAudio.load();memoAudio=null;} memoPlaying=''; }
@@ -572,7 +581,7 @@ const TILES = {
   notes: () => tile('notes', '#f5c542', `<span class="tic">${ico('notepad', 20)}</span><div class="tb">${esc(((notes[0] || {}).text || '').split('\n')[0] || 'New note').slice(0, 40)}<small>${notes.length} note${notes.length === 1 ? '' : 's'}</small></div>`),
   clip: () => tile('clip', '#4cc9f0', `<span class="tic">${ico('clip', 20)}</span><div class="tb">${clips.length ? esc(clips[0].slice(0, 36)) : 'Copy something'}<small>${clips.length} saved</small></div>`),
   files: () => tile('files', '#f5b942', `<span class="tic">${ico('folder', 20)}</span><div class="tb">Drop files<small>to sort them</small></div>`),
-  calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', '#9fc28f', `<span class="tic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7.5 3v4M16.5 3v4M4 9.5h16M8 13h3M8 16h3"/></svg></span><div class="tb">${e ? esc(e.title.slice(0, 28)) : calendarConnected ? 'Nothing soon' : 'Connect Apple'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : calendarConnected ? 'this week' : 'in Settings'}</small></div>`); },
+  calendar: () => { const e = evs.find(e => e.end > Date.now()); return tile('calendar', '#9fc28f', `<span class="tic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7.5 3v4M16.5 3v4M4 9.5h16M8 13h3M8 16h3"/></svg></span><div class="tb">${e ? esc(e.title.slice(0, 28)) : 'Add an event'}<small>${e ? new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Open calendar'}</small></div>`); },
   apps: () => tile('apps', '#8b93a7', `<span class="tic">${ico('apps', 20)}</span><div class="tb">Apps<small>${appList().length} ready</small></div>`),
   discord: () => tile('discord', '#5865F2', `<span class="tic">${ico('discord', 20)}</span><div class="tb">Discord<small>Mute and deafen controls</small></div>`),
   chat: () => tile('chat', '#e6cf72', `<span class="tic">${ico('chat', 20)}</span><div class="tb">Ask ${esc(NAME())}<small>anything</small></div>`),
@@ -666,7 +675,7 @@ const TPL = {
   <label class="vm-select">Speaker output <select id="vmOutput" data-a="voiceDevice"></select></label>
   <div class="row"><button class="s pri" data-a="voiceStart">● Record</button><button class="s" data-a="voiceStop">Stop & save</button><button class="s" data-a="voiceRefresh">Refresh devices</button></div>
   <div class="vm-hint">Select a memo to play it in Nib or export it as an audio file.</div><div id="memos" class="memo-list"></div>`,
-  calendar: () => `<div id="cal" class="muted"></div>`,
+  calendar: () => `<div id="cal"></div>`,
   files: () => `<div class="zones"><div class="zone" data-zone="type"><b>Sort by type</b><div class="muted">Images, Documents...</div></div>${(S.zones || []).slice(0, 5).map((z, i) => `<div class="zone" data-zone="${i}"><b>${esc(z.name)}</b><div class="muted">drop here</div></div>`).join('')}</div><div class="row" style="margin-top:10px"><button class="s" data-a="tidy">Tidy Downloads</button><button class="s" data-a="undo">Undo last</button><button class="s" data-a="settings">Zones...</button></div><div id="fm" class="muted" style="margin-top:8px">Drag files onto a zone.</div>`,
   apps: () => { const l = appList(); return l.length ? `<div class="grid">${l.map(a => `<button class="tile" data-a="launch" data-t="${esc(a.target)}">${tileIcon(a)}<span>${esc(a.name)}</span></button>`).join('')}</div>` : '<div class="muted">Pick apps in Settings.</div>'; },
   discord: () => `<div class="row"><button class="pri s" data-a="discord" data-k="mute">Mute</button><button class="pri s" data-a="discord" data-k="deafen">Deafen</button><button class="s" data-a="launch" data-t="discord:">Open Discord</button></div><p class="muted">Mute and deafen use your configured Discord keybinds. Voice participant lists require a bot token, so Nib does not connect to Discord for them.</p>`,
@@ -835,13 +844,12 @@ async function pollNP() {
 let calT; async function pollCal() {
   clearTimeout(calT);
   try {
-    const status = await nib.calendarStatus();
-    calendarConnected = !!status.connected;
-    if (calendarConnected) {
-      const r = await nib.cal();
-      evs = r.ok ? r.events : [];
-      if (!r.ok) console.error('[Nib calendar] Could not refresh events:', r.error);
-    } else evs = [];
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const end = new Date(start); end.setDate(end.getDate() + 7);
+    const r = await nib.calendarEvents({ start: start.toISOString(), end: end.toISOString() });
+    if (!r.ok) throw new Error(r.error || 'Could not refresh calendar events.');
+    evs = r.events || [];
+    if (r.errors && r.errors.length) console.error('[Nib calendar] Some calendars could not refresh:', r.errors.join('; '));
     if (wasOpen && (tab === 'home' || tab === 'calendar')) paintPin();
   } catch (error) { console.error('[Nib calendar] Could not refresh connection status:', error); }
   calT = setTimeout(pollCal, 30000);
@@ -851,15 +859,16 @@ if (navigator.getBattery) navigator.getBattery().then(b => { bat = b; });
 const evRow = e => { const d = new Date(e.t), lab = d.toDateString() === new Date().toDateString() ? '' : d.toLocaleDateString([], { weekday: 'short' }) + ' '; return `<div class="ev"><b>${esc(lab + (e.allDay ? 'All day' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })))}</b><span>${esc(e.title)}</span></div>`; };
 async function loadCal() {
   const box = $('#cal'); if (!box) return;
-  if (!calendarConnected) { box.innerHTML = 'Connect Apple Calendar in Settings to see your upcoming events.<div class="row" style="margin-top:8px"><button class="s" data-a="settings">Open Settings</button></div>'; return; }
-  box.textContent = 'Loading...'; const r = await nib.cal(); if (tab !== 'calendar' || !$('#cal')) return;
-  box.innerHTML = r.ok ? (r.events.length ? r.events.map(evRow).join('') : 'Nothing in the next 7 days.') : 'Could not load the calendar: ' + esc(r.error);
+  box.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px"><div><b style="font-size:14px">A little more room for your plans.</b><div class="muted">Month view, event details and Google sync.</div></div><button class="s pri" data-a="calendarOpen">Open calendar</button></div><div id="calEvents"></div><div class="row" style="margin-top:8px"><button class="s" data-a="settings">Calendar connections</button></div>`;
+  const list = $('#calEvents');
+  if (!list) return;
+  const upcoming = evs.filter(event => event.end > Date.now()).slice(0, 4);
+  list.innerHTML = upcoming.length ? upcoming.map(evRow).join('') : '<div class="muted">No upcoming events. Add one in the calendar.</div>';
 }
 nib.onClip(v => { clips = v; if (wasOpen && (tab === 'clip' || tab === 'home')) paintPin(); });
 nib.onCalendarUpdate(v => {
-  if (v.status) calendarConnected = !!v.status.connected;
-  if (v.ok) evs = v.events || [];
-  if (wasOpen && (tab === 'calendar' || tab === 'home')) paintPin();
+  if (v.refresh) { pollCal(); return; }
+  pollCal();
 });
 
 async function loadMemos(){const box=$('#memos');if(!box)return;try{const list=await nib.extrasListAudio();if(!box.isConnected)return;
@@ -925,7 +934,7 @@ nib.onForceOpen(() => {
   } catch(e) { console.error('[nib] recovery failed',e); }
 });
 const ACT = {
-  tab: d => { menuOff(); openTab(d.t); }, menu: () => $('#menuBox').classList.toggle('on'), resetpos: () => { menuOff(); nib.resetPos(); }, pinpos: () => { nib.setSettings({ island: { ...S.island, lock: !S.island.lock } }); }, fold: () => { clearTimeout(leaveT); menuOff(); pinned = false; hover = false; if(document.activeElement?.blur)document.activeElement.blur(); layout(); },
+  tab: d => { menuOff(); openTab(d.t); }, menu: () => $('#menuBox').classList.toggle('on'), resetpos: () => { menuOff(); nib.resetPos(); }, pinpos: () => { nib.setSettings({ island: { ...S.island, lock: !S.island.lock } }); }, fold: () => { clearTimeout(leaveT); menuOff(); pinned = false; hover = false; if(document.activeElement?.blur)document.activeElement.blur(); layout(); }, calendarOpen: () => nib.openCalendar(),
   whatsnew: () => { menuOff(); selectedRelease=NIB_RELEASE; openTab('whatsnew'); }, releaseSelect: d => { selectedRelease=d.v; paintPin(); }, whatsnewDone: () => { markReleaseSeen(); openTab('home'); },
   update: async () => { menuOff(); try { const r=await nib.checkUpdates(); if(r && !r.ok) alert(r.message||'Update check unavailable'); } catch(e){alert('Update check failed: '+e.message);} },
   quit: () => nib.quit(), settings: () => { menuOff(); nib.openSettings(); }, launch: d => nib.launch(d.t), discord: d => nib.discord(d.k), key: d => nib.key(d.k),
@@ -1153,8 +1162,9 @@ document.addEventListener('drop', () => { clearTimeout(dragT); setTimeout(endDra
 // ---------- the eyes: white rounded squares with springy, smooth motion
 const mA = $('#mA'), mB = $('#mB'), cA = $('#cA'), cB = $('#cB'), bot = $('#bot'), earL = $('#earL'), earR = $('#earR'), miniSvg = $('#mini'), nibSvg = $('#nib');
 const TG = { idle: [1, 1], work: [1, .6], ask: [1.1, 1.15], focus: [1, .78], sleep: [1, .14], done: [1, 1], dizzy: [1, 1] };
-let hopY = 0, hopV = 0, ex = 0, ey = 0, ew = 1, eh = 1, t = 0, last = performance.now(), nextBlink = 2, blinkAt = -9, want = '', pokes = 0, pokeT, aL = 0, aR = 0, nextTw = 4, twT = -9, twSide = 1;
+let hopY = 0, hopV = 0, ex = 0, ey = 0, ew = 1, eh = 1, t = 0, last = performance.now(), nextBlink = 2, blinkAt = -9, want = '', pokes = 0, pokeT, aL = 0, aR = 0, nextTw = 4, twT = -9, twSide = 1, nextWink = 7, winkAt = -9, winkSide = 1;
 let playfulGaze = { x: 0, y: 0, until: 0, next: 0 };
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const hop = v => { hopV = -v * 60; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const poke = () => { pokes++; clearTimeout(pokeT); pokeT = setTimeout(() => pokes = 0, 2500); if (pokes >= 5) { pokes = 0; dizzyUntil = performance.now() + 2600; } else hop(1.8); };
@@ -1169,21 +1179,22 @@ function petCat(){
   hop(.75);
 }
 miniSvg.addEventListener('click',poke);
-nibSvg.addEventListener('click',()=>{petCat();poke();});
+nibSvg.addEventListener('click',()=>{if(S.catPetting===false)return;petCat();poke();});
 nibSvg.addEventListener('pointerenter',()=>{if(S.catPetting!==false && S.catPersonality==='friendly')petCat();});
-function setEye(a, b, c1, c2, cy, bw, bh, rx, w, h, ox, oy) {
-  for (const [el, cx0] of [[a, c1], [b, c2]]) { const W = bw * w, Hh = Math.max(1.4, bh * h); el.setAttribute('x', (cx0 - W / 2 + ox).toFixed(2)); el.setAttribute('y', (cy - Hh / 2 + oy).toFixed(2)); el.setAttribute('width', W.toFixed(2)); el.setAttribute('height', Hh.toFixed(2)); el.setAttribute('rx', Math.min(rx, W / 2, Hh / 2).toFixed(2)); }
+function setEye(a, b, c1, c2, cy, bw, bh, rx, w, h, ox, oy, hB = h) {
+  for (const [el, cx0, eyeHeight] of [[a, c1, h], [b, c2, hB]]) { const W = bw * w, Hh = Math.max(1.4, bh * eyeHeight); el.setAttribute('x', (cx0 - W / 2 + ox).toFixed(2)); el.setAttribute('y', (cy - Hh / 2 + oy).toFixed(2)); el.setAttribute('width', W.toFixed(2)); el.setAttribute('height', Hh.toFixed(2)); el.setAttribute('rx', Math.min(rx, W / 2, Hh / 2).toFixed(2)); }
 }
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
   const personality=S.catPersonality||'friendly';
+  const randomMotion=S.catAnimations!==false&&!reducedMotion.matches;
   const idleMs=clamp(Number(S.catSleepMinutes)||3,1,30)*60000;
   const sleepy=S.catSleepEnabled!==false && state==='idle' && !focusEnd && now-lastMove>idleMs;
   nibSvg.classList.toggle('sleeping',sleepy);
   // Keep idle animation subtle, especially during fullscreen gaming.
   const dizzy=now<dizzyUntil;
   const vis = dizzy ? 'dizzy' : (now<petUntil ? 'done' : sleepy ? 'sleep' : (state === 'idle' && focusEnd && look === 'idle') ? 'focus' : look);
-  if (vis !== want) { want = vis; for (const s of [miniSvg, nibSvg]) s.setAttribute('class', 'v-' + vis); if (vis === 'focus') COL.focus = focusCol(); root.style.setProperty('--c', COL[vis] || '#fff'); }
+  if (vis !== want) { for (const s of [miniSvg, nibSvg]) { if(want)s.classList.remove('v-'+want); s.classList.add('v-'+vis); } want = vis; if (vis === 'focus') COL.focus = focusCol(); root.style.setProperty('--c', COL[vis] || '#fff'); }
   let tx, ty;
   if (vis === 'work') { tx = Math.sin(t * 2.3) * 2.2; ty = Math.sin(t * 1.3) * .4; }
   else {
@@ -1192,7 +1203,7 @@ function frame(now) {
     if (now - lastMove > 4000 && vis === 'idle') { if (t > wander.t) { wander = { x: (Math.random() - .5) * 3.6, y: (Math.random() - .5) * 1.6, t: t + 2 + Math.random() * 3 }; } tx = wander.x; ty = wander.y; }
   }
   // Playful cats briefly dart their gaze around, then settle back on the cursor.
-  if (personality === 'playful' && vis !== 'sleep' && vis !== 'dizzy') {
+  if (randomMotion && personality === 'playful' && vis !== 'sleep' && vis !== 'dizzy') {
     if (t > playfulGaze.next) {
       playfulGaze = Math.random() < .72
         ? { x: (Math.random() - .5) * 7, y: (Math.random() - .5) * 3.4, until: t + .28 + Math.random() * .48, next: t + 1.2 + Math.random() * 2.2 }
@@ -1202,19 +1213,23 @@ function frame(now) {
   }
   const f = 1 - Math.exp(-dt * 12); ex += (tx - ex) * f; ey += (ty - ey) * f;
   const [tw, th] = TG[vis] || [1, 1]; ew += (tw - ew) * (1 - Math.exp(-dt * 10)); eh += (th - eh) * (1 - Math.exp(-dt * 10));
-  if (S.catAnimations!==false && t>nextBlink) {
-    blinkAt=t; nextBlink=t+(personality==='sleepy'?3.8:personality==='playful'?1.8:2.8)+Math.random()*3.4;
+  if (randomMotion && t>nextBlink) {
+    blinkAt=t; nextBlink=t+(personality==='minimal'?6.5:personality==='sleepy'?3.8:personality==='playful'?1.8:2.8)+Math.random()*3.4;
   }
+  if(randomMotion&&personality==='playful'&&vis==='idle'&&t>nextWink){winkAt=t;winkSide=Math.random()<.5?-1:1;nextWink=t+4+Math.random()*5;}
   const bl = 1 - Math.sin(clamp((t - blinkAt) / .16, 0, 1) * Math.PI) * .9;
+  const wink = 1 - .9 * Math.sin(clamp((t - winkAt) / .24, 0, 1) * Math.PI);
   hopV += (-hopY * 240 - hopV * 11) * dt; hopY += hopV * dt; const sq = clamp(-hopV / 500, -.15, .15);
   const h = eh * bl * (1 - sq * .5), w = ew * (1 + sq * .4);
-  setEye(mA, mB, 9, 25, 8, 11, 14, 4, w, h, ex, ey + hopY * .25);
+  const winkA=h*(winkSide<0?wink:1),winkB=h*(winkSide>0?wink:1);
+  setEye(mA, mB, 9, 25, 8, 11, 14, 4, w, winkA, ex, ey + hopY * .25, winkB);
   if (wasOpen) {
-    setEye(cA, cB, 22, 42, 37, 12, 16, 4.5, w, h, ex * 1.5, ey * 1.5);
-    if(S.catAnimations!==false && t>nextTw){twT=t;twSide=Math.random()<.5?-1:1;nextTw=t+(personality==='playful'?2:personality==='sleepy'?8:4)+Math.random()*5;}
+    setEye(cA, cB, 22, 42, 37, 12, 16, 4.5, w, winkA, ex * 1.5, ey * 1.5, winkB);
+    if(randomMotion && personality!=='minimal' && t>nextTw){twT=t;twSide=Math.random()<.5?-1:1;nextTw=t+(personality==='playful'?2:personality==='sleepy'?8:4)+Math.random()*5;}
     const e = Math.sin(clamp((t - twT) / .35, 0, 1) * Math.PI) * 14, fe = 1 - Math.exp(-dt * 12); aL += ((twSide < 0 ? -e : 0) - aL) * fe; aR += ((twSide > 0 ? e : 0) - aR) * fe;
     earL.setAttribute('transform', `rotate(${aL.toFixed(1)} 20 24)`); earR.setAttribute('transform', `rotate(${aR.toFixed(1)} 44 24)`);
-    bot.setAttribute('transform', `translate(32 58) translate(0 ${(hopY * .5).toFixed(2)}) scale(${(1 - sq * .3).toFixed(3)} ${(1 + sq * .4).toFixed(3)}) translate(-32 -58)`);
+    const breath=randomMotion&&vis==='idle'?Math.sin(t*1.8)*.008:0;
+    bot.setAttribute('transform', `translate(32 58) translate(0 ${(hopY * .5).toFixed(2)}) scale(${(1 - sq * .3 + breath).toFixed(3)} ${(1 + sq * .4 - breath).toFixed(3)}) translate(-32 -58)`);
   }
   requestAnimationFrame(frame);
 }
@@ -1240,6 +1255,8 @@ function apply(s) {
   $('#nib').dataset.accessory=accessory;
   $('#nib').classList.toggle('cat-grumpy',S.catPersonality==='grumpy');
   $('#nib').classList.toggle('cat-playful',S.catPersonality==='playful');
+  $('#nib').classList.toggle('cat-minimal',S.catPersonality==='minimal');
+  $('#nib').classList.toggle('cat-still',S.catAnimations===false);
   // A custom cat fur color overrides only the full cat SVG; mini eyes inherit a
   // matching hue but remain readable on the notch in both themes.
   const cat = $('#nib'), mini = $('#mini');

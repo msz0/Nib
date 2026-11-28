@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nib Calendar</title>
+<style>
+:root{
+  --paper:#f6f5f2;--surface:#fff;--ink:#252522;--muted:#85847f;--line:#e4e2dc;
+  --accent:#d94949;--local:#6f7890;--google:#6690d8;--apple:#bd78b9;
+  --shadow:0 24px 70px #1c1b1624;--focus:#315da8;color-scheme:light
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{overflow:hidden;background:var(--paper);color:var(--ink);font:14px/1.35 "Segoe UI Variable Text","Segoe UI",sans-serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{height:100%;display:flex;flex-direction:column;padding:25px 32px 20px;max-width:1680px;margin:0 auto}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:0 0 18px}
+.identity{min-width:0}
+.eyebrow{margin-bottom:5px;color:var(--muted);font:700 10px/1.2 "Cascadia Mono",Consolas,monospace;letter-spacing:.16em;text-transform:uppercase}
+h1{display:flex;align-items:baseline;gap:12px;margin:0;font:400 clamp(32px,4vw,47px)/1 Georgia,"Times New Roman",serif;letter-spacing:-.04em}
+h1 span{font-weight:700}
+h1 em{color:var(--muted);font-style:normal;font-weight:400}
+.subtitle{margin:8px 0 0;color:var(--muted);font-size:12px}
+.controls{display:flex;align-items:center;gap:7px;flex:none}
+.icon-button,.today,.add{height:38px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink);transition:background .16s,transform .16s,border-color .16s}
+.icon-button{width:38px;display:grid;place-items:center;font-size:19px}
+.icon-button:hover,.today:hover{background:#eeede8;border-color:#ceccc5}
+.today{padding:0 13px;font-size:12px;font-weight:600}
+.add{display:flex;align-items:center;gap:8px;padding:0 15px;border-color:var(--ink);background:var(--ink);color:#fff;font-weight:600;font-size:12px}
+.add:hover{background:#3a3935;transform:translateY(-1px)}
+.provider-bar{display:flex;align-items:center;gap:8px;min-height:36px;margin:0 0 11px;color:var(--muted);font-size:11px}
+.provider{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:#ffffffa8}
+.provider i{width:7px;height:7px;border-radius:50%;background:var(--local)}
+.provider.google i{background:var(--google)}.provider.apple i{background:var(--apple)}
+.provider.open{margin-left:auto;border:0;background:transparent;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.notice{display:none;margin:0 0 10px;padding:9px 12px;border:1px solid #e8c99a;border-radius:10px;background:#fff8e9;color:#7a5424;font-size:12px}
+.notice.show{display:block}
+.weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#f8f7f4}
+.weekday{padding:10px 12px;color:var(--muted);font:600 11px "Cascadia Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
+.weekday.weekend{color:#aaa7a0}
+.days{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));border-left:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface)}
+.day{position:relative;display:flex;min-width:0;flex-direction:column;gap:3px;overflow:hidden;padding:7px 7px 5px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface);transition:background .12s}
+.day:hover{background:#fbfaf7}
+.day.outside{background:#f9f8f6;color:#aaa9a4}
+.day.current-day{background:#fffdfa}
+.day-head{display:flex;justify-content:flex-end;align-items:center;min-height:24px;padding:0 3px}
+.day-number{display:grid;place-items:center;min-width:25px;height:25px;padding:0 5px;border:0;border-radius:50%;background:transparent;color:inherit;font-size:13px;font-variant-numeric:tabular-nums}
+.day.current-day .day-number{background:var(--accent);color:#fff;font-weight:700}
+.day-add{position:absolute;top:8px;left:8px;display:grid;place-items:center;width:22px;height:22px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--muted);opacity:0;transition:opacity .12s}
+.day:hover .day-add,.day-add:focus-visible{opacity:1}
+.event-list{display:flex;min-height:0;flex-direction:column;gap:3px}
+.event{display:flex;align-items:center;gap:6px;width:100%;min-width:0;height:22px;padding:0 5px;border:0;border-radius:6px;background:#f0efec;color:#45443f;text-align:left;font-size:11px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event::before{content:"";width:3px;height:13px;flex:none;border-radius:4px;background:var(--local)}
+.event[data-source="google"]{background:#edf3ff;color:#344a6e}.event[data-source="google"]::before{background:var(--google)}
+.event[data-source="apple"]{background:#f7edf7;color:#684c69}.event[data-source="apple"]::before{background:var(--apple)}
+.event-time{color:var(--muted);font-variant-numeric:tabular-nums}
+.more{align-self:flex-start;padding:2px 6px;border:0;background:transparent;color:var(--muted);font-size:10px}
+.more:hover{color:var(--ink);text-decoration:underline}
+.empty{display:none;position:absolute;inset:50% auto auto 50%;width:min(430px,calc(100% - 48px));transform:translate(-50%,-50%);padding:26px 28px;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:var(--shadow);text-align:center}
+.empty.show{display:block}
+.empty-mark{display:grid;place-items:center;width:44px;height:44px;margin:0 auto 13px;border-radius:14px;background:#f1f0eb;color:var(--local);font:24px Georgia,serif}
+.empty h2{margin:0;font:400 25px Georgia,serif}.empty p{margin:8px 0 17px;color:var(--muted);font-size:12px}
+.empty button{height:35px;padding:0 14px;border:0;border-radius:10px;background:var(--ink);color:#fff;font-size:12px;font-weight:600}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-top:11px;color:var(--muted);font-size:10px}
+.foot button{border:0;background:transparent;color:var(--muted);font-size:10px;text-decoration:underline;text-underline-offset:3px}
+dialog{width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 40px);padding:0;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+dialog::backdrop{background:#1b1b19a6;backdrop-filter:blur(3px)}
+.dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:19px 21px 13px;border-bottom:1px solid var(--line)}
+.dialog-head h2{margin:0;font:400 25px/1.1 Georgia,"Times New Roman",serif}
+.dialog-head p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.close{width:30px;height:30px;border:0;border-radius:50%;background:#f1f0ec;color:var(--ink);font-size:17px}
+.event-form{display:grid;gap:12px;padding:17px 21px 20px;overflow:auto}
+.field label{display:block;margin-bottom:5px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.field input,.field textarea{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fbfaf8;color:var(--ink);outline:0;padding:9px 10px;font-size:12px}
+.field input{height:37px}.field textarea{min-height:70px;resize:vertical}
+.field input:focus,.field textarea:focus{border-color:var(--focus);box-shadow:0 0 0 3px #315da81b}
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check-row{display:flex;align-items:center;gap:8px;color:#666;font-size:11px}
+.check-row input{accent-color:var(--ink)}
+.dialog-note{min-height:15px;color:var(--muted);font-size:11px}
+.dialog-note.error{color:#b42732}
+.dialog-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:3px}
+.dialog-actions .right{display:flex;gap:7px}
+.dialog-actions button{height:34px;padding:0 13px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:11px;font-weight:600}
+.dialog-actions .save{border-color:var(--ink);background:var(--ink);color:#fff}
+.dialog-actions .delete{border-color:#e5c4c4;color:#a52e32}
+.readonly{display:none;padding:9px 10px;border-radius:9px;background:#f5f4f1;color:var(--muted);font-size:11px}
+.readonly.show{display:block}
+#dayDialog{width:min(560px,calc(100vw - 32px))}
+.day-events{display:flex;flex-direction:column;gap:6px;padding:14px 18px 20px;max-height:60vh;overflow:auto}
+.day-events .event{height:32px;padding:0 9px;font-size:12px}
+.toast{position:fixed;left:50%;bottom:22px;z-index:5;transform:translate(-50%,20px);padding:10px 15px;border-radius:10px;background:#252522;color:#fff;box-shadow:var(--shadow);font-size:12px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.toast.show{transform:translate(-50%,0);opacity:1}
+@media(max-width:900px){
+  .app{padding:18px 16px 14px}.top{align-items:flex-start;flex-direction:column;gap:12px}.controls{align-self:flex-end;margin-top:-3px}
+  .weekday{padding:8px 4px;font-size:9px;text-align:center}.day{padding:5px 3px 4px}.day-head{min-height:22px}.day-number{min-width:21px;height:21px;font-size:11px}
+  .event{height:18px;padding:0 3px;gap:4px;font-size:9px}.event::before{width:2px;height:11px}.event-time{display:none}
+  .provider-bar{flex-wrap:wrap}.empty{padding:20px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="identity"><div class="eyebrow">Nib / Your calendar</div><h1><span id="monthName">Month</span><em id="yearName">Year</em></h1><p class="subtitle">A clear view of what’s ahead.</p></div>
+    <div class="controls">
+      <button class="today" id="today" type="button">Today</button>
+      <button class="icon-button" id="previous" type="button" aria-label="Previous month">‹</button>
+      <button class="icon-button" id="next" type="button" aria-label="Next month">›</button>
+      <button class="add" id="addEvent" type="button"><span aria-hidden="true">＋</span> Add event</button>
+    </div>
+  </header>
+  <div class="provider-bar" id="providers" aria-label="Connected calendars"></div>
+  <div class="notice" id="notice" role="status"></div>
+  <div class="weekdays" role="row">
+    <div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div>
+    <div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday weekend">Sat</div><div class="weekday weekend">Sun</div>
+  </div>
+  <div class="days" id="days" role="grid" aria-label="Month calendar"></div>
+  <div class="foot"><span>Nib events are saved on this PC. Google events sync to your connected account; Apple events are read-only.</span><button id="openSettings" type="button">Calendar connections</button></div>
+</main>
+<section class="empty" id="empty">
+  <div class="empty-mark" aria-hidden="true">N</div><h2>Your month, at a glance.</h2>
+  <p>Add events in Nib, or connect Google Calendar and Apple Calendar from Settings.</p>
+  <button id="emptyAdd" type="button">Create your first event</button>
+</section>
+<dialog id="eventDialog">
+  <div class="dialog-head"><div><h2 id="formTitle">New event</h2><p id="formSubtitle">A little structure for your day.</p></div><button class="close" type="button" data-close aria-label="Close">×</button></div>
+  <form class="event-form" id="eventForm">
+    <div class="field"><label for="eventTitle">Event name</label><input id="eventTitle" maxlength="180" required placeholder="What are you planning?"></div>
+    <div class="check-row"><input id="allDay" type="checkbox"><label for="allDay">All day</label></div>
+    <div class="time-row"><div class="field"><label for="eventStart">Starts</label><input id="eventStart" type="datetime-local" required></div><div class="field"><label for="eventEnd">Ends</label><input id="eventEnd" type="datetime-local" required></div></div>
+    <div class="field"><label for="eventLocation">Location <span style="font-weight:400;text-transform:none">(optional)</span></label><input id="eventLocation" maxlength="300" placeholder="Add a place"></div>
+    <div class="field"><label for="eventDescription">Notes <span style="font-weight:400;text-transform:none">(optional)</span></label><textarea id="eventDescription" maxlength="2000" placeholder="A few details"></textarea></div>
+    <div class="readonly" id="readonly">Apple Calendar events are read-only. You can still add a Nib event for this day.</div>
+    <div class="dialog-note" id="dialogNote" role="status"></div>
+    <div class="dialog-actions"><button class="delete" id="deleteEvent" type="button" hidden>Delete</button><div class="right"><button type="button" data-close>Cancel</button><button class="save" id="saveEvent" type="submit">Save event</button></div></div>
+  </form>
+</dialog>
+<dialog id="dayDialog"><div class="dialog-head"><div><h2 id="dayTitle">Day</h2><p>Events on this day</p></div><button class="close" type="button" data-close aria-label="Close">×</button></div><div class="day-events" id="dayEvents"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const $ = selector => document.querySelector(selector);
+const months = new Intl.DateTimeFormat(undefined,{month:'long'});
+const monthYear = new Intl.DateTimeFormat(undefined,{month:'long',year:'numeric'});
+const dayLong = new Intl.DateTimeFormat(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+const clock = new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'});
+const esc = value => String(value ?? '').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const localKey = date => [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+const fromKey = key => { const [y,m,d]=key.split('-').map(Number); return new Date(y,m-1,d); };
+const plusDays = (date,count) => { const value=new Date(date);value.setDate(value.getDate()+count);return value; };
+const toInput = value => { const date=new Date(value);return Number.isFinite(date.getTime())?new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16):''; };
+const dateValue = value => value instanceof Date ? value : new Date(value);
+let shownMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1), events=[], providers={apple:{connected:false},google:{connected:false}}, editing=null, formBusy=false, toastTimer=0;
+const monthRange = () => {
+  const first=new Date(shownMonth.getFullYear(),shownMonth.getMonth(),1);
+  const offset=(first.getDay()+6)%7;
+  const start=new Date(first.getFullYear(),first.getMonth(),first.getDate()-offset);
+  return {start,end:plusDays(start,42)};
+};
+const eventStart = event => Number.isFinite(Number(event.t)) ? Number(event.t) : event.allDay ? Date.parse(String(event.startValue||event.start)+'T00:00:00') : Date.parse(event.startValue||event.start);
+const eventEnd = event => Number.isFinite(Number(event.end)) ? Number(event.end) : event.allDay ? Date.parse(String(event.endValue||event.end)+'T00:00:00') : Date.parse(event.endValue||event.end);
+const eventTime = event => event.allDay ? 'All day' : clock.format(new Date(eventStart(event)));
+const sourceLabel = event => event.source==='google'?'Google':event.source==='apple'?'Apple':'Nib';
+const showToast = message => {
+  const node=$('#toast');node.textContent=message;node.classList.add('show');clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>node.classList.remove('show'),3600);
+};
+function paintProviders(){
+  const bar=$('#providers');
+  bar.innerHTML=`<span class="provider"><i></i>Nib · on this PC</span>`+
+    (providers.google?.connected?'<span class="provider google"><i></i>Google Calendar</span>':'')+
+    (providers.apple?.connected?'<span class="provider apple"><i></i>Apple Calendar · read-only</span>':'')+
+    '<button class="provider open" type="button" id="connectMore">Manage connections</button>';
+  $('#connectMore').onclick=()=>nib.openSettings();
+}
+function eventsOn(date){
+  const dayStart=new Date(date.getFullYear(),date.getMonth(),date.getDate()).getTime();
+  const dayEnd=plusDays(date,1).getTime();
+  return events.filter(event=>eventStart(event)<dayEnd&&eventEnd(event)>dayStart).sort((a,b)=>eventStart(a)-eventStart(b));
+}
+function eventButton(event){
+  const source=esc(event.source||'nib');
+  return `<button class="event" type="button" data-event="${esc(event.id)}" data-source="${source}" title="${esc(event.title)} · ${esc(sourceLabel(event))}"><span class="event-time">${esc(eventTime(event))}</span><span style="overflow:hidden;text-overflow:ellipsis">${esc(event.title)}</span></button>`;
+}
+function paint(){
+  $('#monthName').textContent=months.format(shownMonth);
+  $('#yearName').textContent=String(shownMonth.getFullYear());
+  document.title=monthYear.format(shownMonth)+' · Nib Calendar';
+  const {start}=monthRange(),today=localKey(new Date()),grid=$('#days');
+  let html='';
+  for(let i=0;i<42;i++){
+    const date=plusDays(start,i), key=localKey(date), dayEvents=eventsOn(date), outside=date.getMonth()!==shownMonth.getMonth();
+    const visible=dayEvents.slice(0,3), extra=dayEvents.length-visible.length;
+    html+=`<section class="day${outside?' outside':''}${key===today?' current-day':''}" role="gridcell" data-day="${key}">
+      <div class="day-head"><button class="day-number" type="button" data-new-day="${key}" aria-label="Add an event on ${dayLong.format(date)}">${date.getDate()}</button></div>
+      <button class="day-add" type="button" data-new-day="${key}" aria-label="Add event on ${dayLong.format(date)}">＋</button>
+      <div class="event-list">${visible.map(eventButton).join('')}${extra?`<button class="more" type="button" data-more="${key}">+${extra} more</button>`:''}</div>
+    </section>`;
+  }
+  grid.innerHTML=html;
+  $('#empty').classList.toggle('show',events.length===0);
+  $('#empty').style.pointerEvents=events.length===0?'auto':'none';
+}
+async function loadEvents(){
+  const {start,end}=monthRange();
+  const response=await nib.calendarEvents({start:start.toISOString(),end:end.toISOString()});
+  if(!response.ok)throw new Error(response.error||'Could not load calendar events.');
+  events=response.events||[];
+  providers=response.providers||providers;
+  paintProviders();
+  const notice=$('#notice');
+  const errors=response.errors||[];
+  notice.textContent=errors.join('  ·  ');
+  notice.classList.toggle('show',errors.length>0);
+  paint();
+}
+function setAllDay(checked){
+  for(const input of [$('#eventStart'),$('#eventEnd')]){
+    if(checked&&input.type!=='date'){input.value=input.value.slice(0,10);input.type='date';}
+    else if(!checked&&input.type!=='datetime-local'){input.value=input.value?input.value+'T09:00':'';input.type='datetime-local';}
+  }
+}
+function openEvent(event=null,date=new Date()){
+  editing=event;
+  const dateKey=localKey(date),start=$('#eventStart'),end=$('#eventEnd'),allDay=$('#allDay');
+  $('#eventForm').reset();
+  $('#dialogNote').textContent=event?.syncError?`Google sync pending: ${event.syncError}`:'';$('#dialogNote').className=event?.syncError?'dialog-note error':'dialog-note';
+  $('#formTitle').textContent=event?'Edit event':'New event';
+  $('#formSubtitle').textContent=event?`${dayLong.format(new Date(eventStart(event)))} · ${sourceLabel(event)}`:'A little structure for your day.';
+  $('#eventTitle').value=event?.title||'';
+  $('#eventLocation').value=event?.location||'';
+  $('#eventDescription').value=event?.description||'';
+  allDay.checked=!!event?.allDay;
+  start.type=allDay.checked?'date':'datetime-local';
+  end.type=allDay.checked?'date':'datetime-local';
+  if(event){
+    if(event.allDay){
+      start.value=event.startValue||event.start;
+      end.value=localKey(plusDays(new Date(String(event.endValue||event.end)+'T00:00:00'),-1));
+    }else{
+      start.value=toInput(event.startValue||new Date(eventStart(event)).toISOString());
+      end.value=toInput(event.endValue||new Date(eventEnd(event)).toISOString());
+    }
+  }else{
+    const now=new Date(),startAt=new Date(date.getFullYear(),date.getMonth(),date.getDate(),Math.ceil(now.getHours()/1)*1,0,0,0);
+    if(startAt<now)startAt.setTime(now.getTime()+Math.max(0,30-now.getMinutes()%30)*60000);
+    const endAt=new Date(startAt.getTime()+3600000);
+    start.value=allDay.checked?dateKey:toInput(startAt.toISOString());
+    end.value=allDay.checked?localKey(plusDays(date,0)):toInput(endAt.toISOString());
+  }
+  const readOnly=event?.source==='apple';
+  $('#readonly').classList.toggle('show',readOnly);
+  $('#eventTitle').readOnly=readOnly;$('#eventLocation').readOnly=readOnly;$('#eventDescription').readOnly=readOnly;
+  start.readOnly=readOnly;end.readOnly=readOnly;allDay.disabled=readOnly;
+  $('#saveEvent').hidden=readOnly;$('#deleteEvent').hidden=!event||readOnly;
+  $('#eventDialog').showModal();
+  if(!readOnly)setTimeout(()=>$('#eventTitle').focus(),0);
+}
+function openDay(key){
+  const date=fromKey(key),items=eventsOn(date);
+  $('#dayTitle').textContent=dayLong.format(date);
+  $('#dayEvents').innerHTML=items.length?items.map(eventButton).join(''):'<p class="subtitle">Nothing planned yet.</p>';
+  $('#dayDialog').showModal();
+}
+document.addEventListener('click',event=>{
+  const target=event.target.closest('button');
+  if(!target)return;
+  if(target.matches('[data-close]')){target.closest('dialog').close();return;}
+  if(target.id==='previous'){shownMonth=new Date(shownMonth.getFullYear(),shownMonth.getMonth()-1,1);loadEvents().catch(showToast);return;}
+  if(target.id==='next'){shownMonth=new Date(shownMonth.getFullYear(),shownMonth.getMonth()+1,1);loadEvents().catch(showToast);return;}
+  if(target.id==='today'){shownMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);loadEvents().catch(showToast);return;}
+  if(target.id==='addEvent'||target.id==='emptyAdd'){openEvent(null,new Date());return;}
+  if(target.id==='openSettings'){nib.openSettings();return;}
+  if(target.hasAttribute('data-new-day')){const date=fromKey(target.dataset.newDay);openEvent(null,date);return;}
+  if(target.hasAttribute('data-more')){openDay(target.dataset.more);return;}
+  if(target.hasAttribute('data-event')){
+    const found=events.find(item=>String(item.id)===target.dataset.event&&item.source===target.dataset.source);
+    if(found){if($('#dayDialog').open)$('#dayDialog').close();openEvent(found);}
+  }
+});
+$('#allDay').addEventListener('change',event=>setAllDay(event.target.checked));
+$('#eventForm').addEventListener('submit',async event=>{
+  event.preventDefault();if(formBusy)return;
+  const allDay=$('#allDay').checked,startInput=$('#eventStart').value,endInput=$('#eventEnd').value;
+  const start=allDay?startInput:new Date(startInput).toISOString();
+  const end=allDay?localKey(plusDays(fromKey(endInput),1)):new Date(endInput).toISOString();
+  const payload={
+    id:editing?.id,googleId:editing?.googleId,source:editing?.source,
+    title:$('#eventTitle').value,start,end,allDay,
+    location:$('#eventLocation').value,description:$('#eventDescription').value
+  };
+  formBusy=true;$('#saveEvent').disabled=true;$('#dialogNote').textContent='Saving event…';
+  try{
+    const result=await nib.calendarEventSave(payload);
+    if(!result.ok)throw new Error(result.error||'Could not save this event.');
+    $('#eventDialog').close();
+    if(result.warning)showToast(result.warning);else showToast(editing?'Event updated.':'Event added.');
+    await loadEvents();
+  }catch(error){$('#dialogNote').className='dialog-note error';$('#dialogNote').textContent=error.message;}
+  finally{formBusy=false;$('#saveEvent').disabled=false;}
+});
+$('#deleteEvent').addEventListener('click',async()=>{
+  if(!editing||formBusy)return;
+  formBusy=true;$('#deleteEvent').disabled=true;$('#dialogNote').textContent='Removing event…';
+  try{
+    const result=await nib.calendarEventDelete({id:editing.id,googleId:editing.googleId,source:editing.source});
+    if(!result.ok)throw new Error(result.error||'Could not delete this event.');
+    $('#eventDialog').close();showToast('Event removed.');await loadEvents();
+  }catch(error){$('#dialogNote').className='dialog-note error';$('#dialogNote').textContent=error.message;}
+  finally{formBusy=false;$('#deleteEvent').disabled=false;}
+});
+nib.onCalendarUpdate?.(value=>{if(value.refresh)loadEvents().catch(error=>showToast(error.message));});
+loadEvents().catch(error=>{const notice=$('#notice');notice.textContent=error.message;notice.classList.add('show');paint();});
+</script>
+</body>
+</html>

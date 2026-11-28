@@ -9,6 +9,7 @@ process.on('uncaughtException', error => logCrash('uncaughtException', error));
 process.on('unhandledRejection', error => logCrash('unhandledRejection', error));
 const hooks = require('./claude-hooks'), { ask } = require('./chat');
 const files = require('./files'), calendar = require('./calendar'), media = require('./media'), lyrics = require('./lyrics'), ICONS = require('./icons'), spotifyApi = require('./spotify');
+const googleCalendarApi = require('./google-calendar'), localCalendarApi = require('./local-calendar');
 
 const W = 520, H = 400;
 const GATE = new Set(['Bash', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
@@ -35,12 +36,22 @@ const DEF = { v: 3, name: 'Nib', you: '', spotifyId: '', player: 'Spotify', yout
   collapseShortcut: '',
   gameModeAuto: false,
   sounds: { on: true, vol: .7, done: 'chime', ask: 'bell', focus: 'marimba', event: 'soft' } };
-let win, sw, tray, server, spotify, appleCalendarTimer, appleCalendarBusy = false, appleCalendarLoggedError = '', S = { ...DEF }, gateOn = true, history = [];
+let win, sw, calendarWin, tray, server, spotify, googleCalendar, localCalendar, appleCalendarTimer, appleCalendarBusy = false, appleCalendarLoggedError = '', S = { ...DEF }, gateOn = true, history = [];
 
 const sfile = () => path.join(app.getPath('userData'), 'settings.json');
 const keyFile = () => path.join(app.getPath('userData'), 'key.bin');
 const appleCalendarFile = () => path.join(app.getPath('userData'), 'apple-calendar-url.bin');
 const legacyAppleCalendarFile = () => path.join(app.getPath('userData'), 'apple-calendar.bin');
+const localCalendarFile = () => path.join(app.getPath('userData'), 'nib-calendar-events.json');
+const googleCalendarFile = () => path.join(app.getPath('userData'), 'google-calendar.bin');
+const getLocalCalendar = () => localCalendar || (localCalendar = localCalendarApi.create(localCalendarFile()));
+const getGoogleCalendar = () => googleCalendar || (googleCalendar = googleCalendarApi.create({
+  file: googleCalendarFile(),
+  encrypt: value => safeStorage.encryptString(value),
+  decrypt: value => safeStorage.decryptString(value),
+  openExternal: url => shell.openExternal(url),
+  clientId: () => S.googleCalendarClientId
+}));
 const readKey = () => { try { return safeStorage.decryptString(fs.readFileSync(keyFile())); } catch { return ''; } };
 const readAppleCalendarUrl = () => {
   try {
@@ -85,6 +96,15 @@ function openSettings() {
   sw = new BrowserWindow({ width: 1080, height: 720, minWidth: 860, minHeight: 600, title: 'Settings', backgroundColor: '#070707', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js') } });
   sw.setMenu(null); sw.loadFile(path.join(__dirname, 'settings.html'));
+}
+function openCalendar() {
+  if (calendarWin && !calendarWin.isDestroyed()) { calendarWin.show(); calendarWin.focus(); return; }
+  calendarWin = new BrowserWindow({ width: 1180, height: 820, minWidth: 820, minHeight: 620, title: 'Nib Calendar', backgroundColor: '#f6f5f2', autoHideMenuBar: true, show: false,
+    webPreferences: { preload: path.join(__dirname, 'preload.js') } });
+  calendarWin.setMenu(null);
+  calendarWin.on('closed', () => { calendarWin = null; });
+  calendarWin.once('ready-to-show', () => { if (calendarWin && !calendarWin.isDestroyed()) calendarWin.show(); });
+  calendarWin.loadFile(path.join(__dirname, 'calendar.html'));
 }
 function catIcon() {   // 16x16 cat head, drawn in code (BGRA)
   const px = Buffer.alloc(16 * 16 * 4);
@@ -450,7 +470,158 @@ else app.whenReady().then(async () => {
     const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { properties: kind === 'file' ? ['openFile'] : ['openDirectory', 'createDirectory'] });
     return r.canceled ? '' : r.filePaths[0];
   });
+  const isCalendarCaller = e => [win, sw, calendarWin].some(w => w && !w.isDestroyed() && e.sender === w.webContents);
+  const notifyCalendarRefresh = () => {
+    if (win && !win.isDestroyed()) win.webContents.send('calendar:updated', { ok: true, refresh: true });
+  };
+  ipcMain.on('calendar:open', e => { if (isCalendarCaller(e)) openCalendar(); });
   ipcMain.handle('calendar:status', () => calendar.status());
+  ipcMain.handle('calendar:google:status', () => {
+    try { return { ok: true, ...getGoogleCalendar().status() }; }
+    catch (error) { return { ok: false, connected: false, configured: !!S.googleCalendarClientId, error: error.message }; }
+  });
+  ipcMain.handle('calendar:google:connect', async e => {
+    if (!isCalendarCaller(e)) return { ok: false, error: 'Calendar access was not authorized.' };
+    if (!safeStorage.isEncryptionAvailable()) return { ok: false, error: 'Secure credential storage is unavailable on this device.' };
+    try {
+      const google = getGoogleCalendar();
+      await google.connect();
+      let failed = 0;
+      try {
+        const store = getLocalCalendar();
+        for (const event of store.list().filter(item => !item.googleId)) {
+          try { store.linkGoogle(event.id, await google.createEvent(event)); }
+          catch (error) { store.setSyncError(event.id, error.message); failed++; }
+        }
+      } catch (error) { failed++; logCrash('google-calendar-local-sync', error); }
+      notifyCalendarRefresh();
+      return { ok: true, status: google.status(), warning: failed ? `${failed} Nib event(s) could not be copied to Google. They remain saved in Nib.` : '' };
+    } catch (error) { return { ok: false, error: error.message || 'Google Calendar connection failed.' }; }
+  });
+  ipcMain.handle('calendar:google:disconnect', e => {
+    if (!isCalendarCaller(e)) return { ok: false, error: 'Calendar access was not authorized.' };
+    try {
+      if (googleCalendar) googleCalendar.disconnect();
+      else fs.rmSync(googleCalendarFile(), { force: true });
+      let warning = '';
+      try { getLocalCalendar().unlinkGoogle(); }
+      catch (error) { warning = 'Google was disconnected, but local event links could not be reset: ' + error.message; }
+      notifyCalendarRefresh();
+      return { ok: true, status: getGoogleCalendar().status(), warning };
+    } catch (error) { return { ok: false, error: error.message || 'Could not disconnect Google Calendar.' }; }
+  });
+  ipcMain.handle('calendar:events', async (e, range) => {
+    if (!isCalendarCaller(e)) return { ok: false, error: 'Calendar access was not authorized.' };
+    const from = Date.parse(String(range && range.start || '')), to = Date.parse(String(range && range.end || ''));
+    if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from || to - from > 62 * 864e5) {
+      return { ok: false, error: 'Choose a valid calendar date range.' };
+    }
+    const errors = [];
+    let appleStatus = calendar.status(), googleStatus = { connected: false, configured: !!S.googleCalendarClientId };
+    const local = [];
+    const linkedLocalEvents = new Map();
+    const dateKey = time => {
+      const date = new Date(time);
+      return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    };
+    const toTimedEvent = event => {
+      const start = event.allDay ? Date.parse(String(event.start) + 'T00:00:00') : Date.parse(event.start);
+      const end = event.allDay ? Date.parse(String(event.end) + 'T00:00:00') : Date.parse(event.end);
+      return Number.isFinite(start) && Number.isFinite(end) && end > from && start < to
+        ? { ...event, startValue: event.start, endValue: event.end, t: start, end }
+        : null;
+    };
+    try {
+      for (const event of getLocalCalendar().list()) {
+        if (event.googleId) linkedLocalEvents.set(event.googleId, event);
+        const normalized = toTimedEvent(event);
+        if (normalized) local.push(normalized);
+      }
+    } catch (error) { errors.push('Nib events: ' + error.message); }
+    const events = [...local];
+    if (appleStatus.connected) {
+      try {
+        const items = await calendar.range(from, to);
+        for (const event of items) events.push({
+          ...event,
+          id: 'apple:' + event.id,
+          source: 'apple',
+          startValue: event.allDay ? dateKey(event.t) : new Date(event.t).toISOString(),
+          endValue: event.allDay ? dateKey(event.end) : new Date(event.end).toISOString()
+        });
+      } catch (error) { errors.push('Apple Calendar: ' + error.message); }
+      appleStatus = calendar.status();
+    }
+    try {
+      const google = getGoogleCalendar();
+      googleStatus = google.status();
+      if (googleStatus.connected) {
+        const items = await google.listEvents(new Date(from).toISOString(), new Date(to).toISOString());
+        const store = getLocalCalendar();
+        for (const event of items) {
+          const localEvent = linkedLocalEvents.get(event.googleId);
+          if (localEvent) store.updateEvent(localEvent.id, event);
+          const normalized = toTimedEvent(event);
+          if (normalized) events.push(normalized);
+        }
+        for (let index = events.length - 1; index >= 0; index--) {
+          if (events[index].source === 'nib' && events[index].googleId) events.splice(index, 1);
+        }
+      }
+    } catch (error) { errors.push('Google Calendar: ' + error.message); }
+    events.sort((a, b) => a.t - b.t);
+    return { ok: true, events, providers: { apple: appleStatus, google: googleStatus }, errors };
+  });
+  ipcMain.handle('calendar:event:save', async (e, input) => {
+    if (!isCalendarCaller(e)) return { ok: false, error: 'Calendar access was not authorized.' };
+    try {
+      const data = localCalendarApi.normalize(input);
+      if (input && input.source === 'google') {
+        const id = String(input.googleId || input.id || '');
+        await getGoogleCalendar().updateEvent(id, data);
+        notifyCalendarRefresh();
+        return { ok: true, event: { ...data, id, googleId: id, source: 'google' } };
+      }
+      const store = getLocalCalendar();
+      let event = input && input.id ? store.updateEvent(String(input.id), data) : store.createEvent(data);
+      let warning = '';
+      try {
+        const google = getGoogleCalendar();
+        const connected = google.status().connected;
+        if (event.googleId && connected) await google.updateEvent(event.googleId, event);
+        else if (event.googleId) {
+          warning = 'Saved in Nib. Reconnect Google Calendar to sync this change.';
+          store.setSyncError(event.id, warning);
+        } else if (connected) event = store.linkGoogle(event.id, await google.createEvent(event));
+      } catch (error) {
+        warning = 'Saved in Nib, but Google sync failed: ' + error.message;
+        store.setSyncError(event.id, error.message);
+        event = store.list().find(item => item.id === event.id) || event;
+      }
+      notifyCalendarRefresh();
+      return { ok: true, event, warning };
+    } catch (error) { return { ok: false, error: error.message || 'Could not save this event.' }; }
+  });
+  ipcMain.handle('calendar:event:delete', async (e, input) => {
+    if (!isCalendarCaller(e)) return { ok: false, error: 'Calendar access was not authorized.' };
+    try {
+      if (input && input.source === 'google') {
+        await getGoogleCalendar().deleteEvent(String(input.googleId || input.id || ''));
+      } else {
+        const store = getLocalCalendar();
+        const event = store.list().find(item => item.id === String(input && input.id || ''));
+        if (!event) throw new Error('That Nib event no longer exists.');
+        if (event.googleId) {
+          const google = getGoogleCalendar();
+          if (!google.status().connected) throw new Error('Reconnect Google Calendar to remove this synced event there.');
+          await google.deleteEvent(event.googleId);
+        }
+        store.deleteEvent(event.id);
+      }
+      notifyCalendarRefresh();
+      return { ok: true };
+    } catch (error) { return { ok: false, error: error.message || 'Could not delete this event.' }; }
+  });
   ipcMain.handle('calendar:connect', async (_, input) => {
     const publicUrl = String(input && input.url || '').trim();
     if (!publicUrl) return { ok: false, error: 'Paste your public Apple Calendar link.' };

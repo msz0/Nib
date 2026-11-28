@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'self'; object-src 'none'">
+  <meta name="color-scheme" content="dark">
+  <title>Nib Operations</title>
+  <link rel="stylesheet" href="admin-dashboard.css">
+  <script defer src="admin-config.js"></script>
+  <script defer src="admin-dashboard.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Nib Operations home">
+        <span class="brand-mark" aria-hidden="true">n</span>
+        <span>nib<span class="brand-sub">OPERATIONS</span></span>
+      </a>
+      <div class="side-label">CONTROL ROOM</div>
+      <nav aria-label="Admin navigation">
+        <a class="nav-link active" href="#overview" data-page="overview"><span class="nav-icon">◫</span>Overview</a>
+        <a class="nav-link" href="#installations" data-page="installations"><span class="nav-icon">⌘</span>Installations</a>
+        <a class="nav-link" href="#actions" data-page="actions"><span class="nav-icon">↗</span>Action queue</a>
+        <a class="nav-link" href="#diagnostics" data-page="diagnostics"><span class="nav-icon">⌁</span>Diagnostics</a>
+        <a class="nav-link" href="#team" data-page="team"><span class="nav-icon">◎</span>Team access</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <span class="secure-mark">●</span>
+        <span>Team access only<br><small>Protected by Supabase RLS</small></span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb">Nib <span>/</span> Operations</div>
+        <div class="top-actions">
+          <span id="connection-state" class="connection-state"><i></i>Checking setup</span>
+          <button id="refresh-button" class="icon-button" type="button" aria-label="Refresh dashboard" title="Refresh">↻</button>
+          <button id="signout-button" class="text-button" type="button" hidden>Sign out</button>
+        </div>
+      </header>
+
+      <section id="setup-notice" class="notice notice-warn" hidden></section>
+
+      <section id="login-panel" class="login-wrap">
+        <div class="login-card">
+          <div class="eyebrow">PRIVATE ADMIN ACCESS</div>
+          <h1>Good to have you back.</h1>
+          <p>Sign in with a team account. New accounts cannot self-register here; an existing team admin must add your account.</p>
+          <form id="login-form">
+            <label for="login-email">Team email</label>
+            <input id="login-email" name="email" type="email" autocomplete="email" required placeholder="you@yourcompany.com">
+            <button id="login-button" class="primary-button" type="submit">Email me a sign-in link <span>→</span></button>
+          </form>
+          <p id="login-message" class="form-message" role="status" aria-live="polite"></p>
+          <div class="login-foot"><span>✦</span> Your role is checked by the database—not by this page.</div>
+        </div>
+        <div class="login-aside">
+          <div class="aside-kicker">OPERATE WITH CARE</div>
+          <p>Inspect opted-in installations, review action history, and queue only approved Nib operations.</p>
+          <div class="aside-lines"><span>Signed updates</span><span>Least-privilege access</span><span>Auditable actions</span></div>
+        </div>
+      </section>
+
+      <div id="dashboard" hidden>
+        <section class="page-heading" data-section="overview">
+          <div>
+            <div class="eyebrow">ADMINISTRATION / OVERVIEW</div>
+            <h1>Operations, at a glance.</h1>
+            <p>Only team accounts can see registered installations or issue bounded actions.</p>
+          </div>
+          <div id="user-badge" class="user-badge"></div>
+        </section>
+
+        <div id="agent-notice" class="notice notice-warn">
+          <b>Desktop agent not connected yet.</b> Actions can be queued and audited here, but this Nib build does not yet receive or execute remote actions. No command execution or arbitrary patches are supported.
+        </div>
+
+        <section class="metrics" aria-label="Service metrics">
+          <article class="metric-card"><span>REGISTERED INSTALLATIONS</span><strong id="metric-installations">—</strong><small>Opted-in devices</small></article>
+          <article class="metric-card"><span>ACTIVE THIS WEEK</span><strong id="metric-active">—</strong><small>Seen in the last 7 days</small></article>
+          <article class="metric-card"><span>QUEUED ACTIONS</span><strong id="metric-queued">—</strong><small>Awaiting a compatible client</small></article>
+          <article class="metric-card"><span>TEAM MEMBERS</span><strong id="metric-team">—</strong><small>Admin and developer roles</small></article>
+        </section>
+
+        <section class="panel" data-section="installations">
+          <div class="panel-head">
+            <div><div class="eyebrow">FLEET</div><h2>Installations</h2><p>Identifiers and app health only; no personal files or calendar contents.</p></div>
+            <label class="search-box"><span>⌕</span><input id="installation-search" type="search" placeholder="Find an ID or version" aria-label="Search installations"></label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>USER ID</th><th>INSTALLATION ID</th><th>VERSION</th><th>PLATFORM</th><th>LAST SEEN</th><th>CONSENT</th><th></th></tr></thead>
+              <tbody id="installations-body"><tr><td class="empty-row" colspan="7">Sign in to load installations.</td></tr></tbody>
+            </table>
+          </div>
+          <div id="installation-count" class="panel-foot"></div>
+        </section>
+
+        <section class="panel" data-section="actions">
+          <div class="panel-head">
+            <div><div class="eyebrow">AUDIT TRAIL</div><h2>Recent actions</h2><p>Every queued request records who issued it, its target, and its status.</p></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>REQUEST</th><th>TARGET INSTALLATION</th><th>ISSUED BY</th><th>STATUS</th><th>CREATED</th></tr></thead>
+              <tbody id="actions-body"><tr><td class="empty-row" colspan="5">No action history.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" data-section="diagnostics">
+          <div class="panel-head">
+            <div><div class="eyebrow">CONSENTED SIGNALS</div><h2>Diagnostics</h2><p>Only minimized error codes and version metadata are shown; no crash dumps or user content.</p></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>INSTALLATION</th><th>VERSION</th><th>COMPONENT</th><th>ERROR CODE</th><th>REPORTED</th></tr></thead>
+              <tbody id="diagnostics-body"><tr><td class="empty-row" colspan="5">No diagnostics received.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" data-section="team">
+          <div class="panel-head">
+            <div><div class="eyebrow">ACCESS CONTROL</div><h2>Team access</h2><p>Role changes are enforced by row-level security in Supabase.</p></div>
+          </div>
+          <div id="team-admin-tools" class="team-tools" hidden>
+            <form id="team-form" class="team-form">
+              <label for="team-user-id">Existing Supabase user UUID</label>
+              <input id="team-user-id" type="text" inputmode="text" autocomplete="off" placeholder="UUID of an invited team account" required>
+              <label for="team-role">Role</label>
+              <select id="team-role"><option value="developer">Developer</option><option value="admin">Admin</option></select>
+              <button class="secondary-button" type="submit">Grant team access</button>
+            </form>
+            <p class="hint">Invite the person through Supabase Auth first. This form only assigns an existing account a team role.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>USER UUID</th><th>ROLE</th><th>ADDED</th><th></th></tr></thead>
+              <tbody id="team-body"><tr><td class="empty-row" colspan="4">Sign in to load team members.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="footer">Nib Operations <span>·</span> No service-role key is used in this dashboard.</footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="action-dialog" class="action-dialog">
+    <form id="action-form" method="dialog">
+      <div class="dialog-top"><div><div class="eyebrow">BOUNDED REMOTE REQUEST</div><h2>Queue an action</h2></div><button id="close-dialog" class="icon-button" type="button" aria-label="Close">×</button></div>
+      <p class="dialog-note">This request is recorded in the audit queue. A compatible Nib client must be installed before it can run.</p>
+      <label for="action-target">Installation</label>
+      <select id="action-target" required></select>
+      <label for="action-type">Operation</label>
+      <select id="action-type">
+        <option value="require_update">Require a signed release update</option>
+        <option value="feature_flag">Set an approved feature flag</option>
+        <option value="repair_action">Run an approved repair</option>
+        <option value="diagnostics_request">Request consented diagnostics</option>
+      </select>
+      <div id="action-fields"></div>
+      <p id="action-message" class="form-message" role="status" aria-live="polite"></p>
+      <div class="dialog-actions"><button class="secondary-button" id="cancel-action" type="button">Cancel</button><button id="queue-action" class="primary-button" type="submit">Queue request <span>→</span></button></div>
+    </form>
+  </dialog>
+</body>
+</html>

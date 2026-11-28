@@ -49,6 +49,32 @@ END:VCALENDAR`;
   assert.deepEqual(__test.upcoming(parsed, now).map(event => event.title), ['Soon event', 'Later event']);
 });
 
+test('calendar range includes events outside the upcoming week and recurring instances', () => {
+  const ics = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:later
+DTSTART:20261220T100000Z
+DTEND:20261220T110000Z
+SUMMARY:Later event
+END:VEVENT
+BEGIN:VEVENT
+UID:weekly
+DTSTART:20261201T090000Z
+DTEND:20261201T093000Z
+RRULE:FREQ=WEEKLY;COUNT=8
+SUMMARY:Weekly event
+END:VEVENT
+END:VCALENDAR`;
+  const parsed = new ICAL.Component(ICAL.parse(ics));
+  const start = Date.parse('2026-12-15T00:00:00Z');
+  const end = Date.parse('2026-12-25T00:00:00Z');
+  assert.deepEqual(
+    __test.eventsBetween(parsed, start, end).map(event => event.title),
+    ['Weekly event', 'Later event', 'Weekly event']
+  );
+});
+
 test('calendar snapshots distinguish additions and edits without notifying deletions', () => {
   const before = new Map([
     ['same', { title: 'Planning', signature: 'old' }],

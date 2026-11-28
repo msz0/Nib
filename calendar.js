@@ -108,29 +108,28 @@ function eventSnapshot(component) {
   return events;
 }
 
-function upcoming(component, now = Date.now(), max = 6) {
-  const end = now + WEEK;
+function eventsBetween(component, rangeStart, rangeEnd, max = 5000) {
   const out = [];
   for (const item of component.getAllSubcomponents('vevent')) {
     const event = new ICAL.Event(item);
-    const add = (start, finish) => {
-      if (!start || !finish) return;
-      const begins = start.toJSDate().getTime();
-      const ends = finish.toJSDate().getTime();
-      if (ends >= now && begins < end) out.push({
+    const add = (startDate, finishDate) => {
+      if (!startDate || !finishDate) return;
+      const begins = startDate.toJSDate().getTime();
+      const ends = finishDate.toJSDate().getTime();
+      if (ends > rangeStart && begins < rangeEnd) out.push({
+        id: `${event.uid}-${begins}`,
         t: begins,
         end: ends,
         title: event.summary || '(no title)',
-        allDay: start.isDate
+        allDay: startDate.isDate
       });
     };
     if (event.isRecurring()) {
-      const iterator = event.iterator();
+      const iterator = event.iterator(ICAL.Time.fromJSDate(new Date(rangeStart)));
       let occurrence, count = 0;
       while ((occurrence = iterator.next()) && count++ < 4000) {
         const start = occurrence.toJSDate().getTime();
-        if (start >= end) break;
-        if (start < now - 30 * 864e5) continue;
+        if (start >= rangeEnd) break;
         const details = event.getOccurrenceDetails(occurrence);
         add(details.startDate, details.endDate);
       }
@@ -139,6 +138,10 @@ function upcoming(component, now = Date.now(), max = 6) {
     }
   }
   return out.sort((a, b) => a.t - b.t).slice(0, max);
+}
+
+function upcoming(component, now = Date.now(), max = 6) {
+  return eventsBetween(component, now, now + WEEK, max);
 }
 
 function compareSnapshots(previous, next) {
@@ -229,6 +232,16 @@ async function getUpcoming() {
   return lastResult;
 }
 
+async function getRange(start, end) {
+  const from = Number(start), to = Number(end);
+  if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from || to - from > 62 * 864e5) {
+    throw new Error('Choose a valid calendar date range.');
+  }
+  if (!calendarUrl) return [];
+  if (!calendarComponent || Date.now() - lastSync > 30000) await sync();
+  return eventsBetween(calendarComponent, from, to);
+}
+
 function status() {
   return {
     connected: !!calendarUrl,
@@ -242,6 +255,7 @@ module.exports = {
   disconnect,
   sync,
   upcoming: getUpcoming,
+  range: getRange,
   status,
-  __test: { normalizePublicUrl, upcoming, compareSnapshots }
+  __test: { normalizePublicUrl, upcoming, eventsBetween, compareSnapshots }
 };

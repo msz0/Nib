@@ -18,10 +18,14 @@ The core desktop app does not require a Nib account. Optional services such as S
 | AI chat | Your prompts, recent chat context, and API key | Recent conversation held in application memory; API key stored locally using Electron `safeStorage` when supported |
 | Spotify | Access and refresh tokens needed for the connection | Local encrypted token file using Electron `safeStorage` |
 | Apple Calendar | Public iCloud calendar URL (a bearer link that grants read access) | Local encrypted `apple-calendar-url.bin` in the current Windows user's Electron user-data folder |
+| Nib Calendar | Events created in Nib, including title, time, location, notes, and Google event ID when synced | Local `nib-calendar-events.json` in the current Windows user's Electron user-data folder |
+| Google Calendar | OAuth refresh token; the OAuth Client ID is a public app identifier | Refresh token in local encrypted `google-calendar.bin`; Client ID in local `settings.json` |
 | File organizer | Paths of files you drop or choose to tidy | Files are moved locally; a limited Undo history is held in application memory |
 | Claude Code integration | Events sent by Claude Code hooks, including tool names and some tool input | Delivered to the local Nib process for display or permission interaction |
 
 **Important:** A public calendar URL grants read access to anyone who has the link. Treat it as a secret. Nib encrypts the URL with Electron `safeStorage`; it is not included in `settings.json` or sent to a Nib server. Disconnect Apple Calendar in Settings to remove the saved URL.
+
+Google Calendar uses OAuth in the system browser and requests access to calendar events on the signed-in account’s primary calendar. Nib stores the refresh token with Electron `safeStorage`. Calendar event details are read from Google when the calendar view is opened; Nib-created events are also sent to Google when connected. Disconnecting removes Nib’s local token but does not delete Google events or revoke access from Google’s account settings. Events created in Nib are stored locally even when Google is disconnected.
 
 ## When Nib accesses the internet
 
@@ -30,6 +34,7 @@ Nib may communicate with the following services when features are used:
 - **Anthropic API:** If you configure AI chat, your messages and limited recent conversation context are sent to the configured API endpoint with your API key. Consult Anthropic's privacy information for that service's handling of data.
 - **Spotify:** If you connect Spotify, Nib uses Spotify's authorization and playback APIs to obtain and control playback state.
 - **Apple Calendar:** If you connect a public Apple Calendar link, Nib requests its iCloud-hosted calendar feed every 30 seconds while running. The link is sent only to iCloud HTTPS hosts, and anyone holding it may read that public calendar. Nib does not send calendar data to a Nib server and does not create, change, or delete events.
+- **Google Calendar:** If connected, Nib exchanges OAuth authorization with Google and requests events from the account’s primary calendar. Nib may create, update, and delete events there when you perform those actions in Nib. Events you create in Nib are stored locally and copied to Google while connected. Nib does not send Google or local calendar data to a Nib server.
 - **Lyrics and artwork services:** Music metadata may be used to retrieve lyrics or album artwork from third-party services.
 - **GitHub / release infrastructure:** Packaged builds check for updates and can download an update after you agree.
 
@@ -40,6 +45,8 @@ This policy does **not** claim Nib works completely offline or that no network r
 - Enable or remove widgets in Settings.
 - Disconnect Spotify or Claude Code integration.
 - Disconnect Apple Calendar to remove its saved local URL.
+- Disconnect Google Calendar to remove Nib's saved refresh token; manage or revoke the app’s authorization from your Google Account if desired.
+- Delete Nib-created events from the Nib calendar; deleting the local data file does not delete the corresponding events in Google Calendar.
 - Remove the saved AI chat API key using the tray menu.
 - Clear the in-app clipboard list; quitting Nib also clears its in-memory clipboard history.
 - Remove notes and settings from the app, where supported, or delete Nib's user-data folder after closing the app and backing up anything you want to retain.
